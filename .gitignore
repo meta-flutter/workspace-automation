@@ -127,3 +127,19 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# IDEA
+.idea
+
+# Flutter Workspace generated
+.agl
+.config
+.flutter-auto
+.pub_cache
+.tmp
+.vscode
+setup_env.sh
+flutter
+app
+flutter_*.log
+qemu_run.scpt

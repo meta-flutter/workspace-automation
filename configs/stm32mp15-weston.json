@@ -1,0 +1,29 @@
+{
+    "id": "stm32mp15-weston",
+    "load": true,
+    "supported_archs": ["x86_64","arm64"],
+    "supported_host_types": ["darwin","fedora","ubuntu"],
+    "flutter_runtime": "debug",
+    "type": "target",
+    "env": {
+        "DEVICE_HOSTNAME": "stm32mp15-disco.local"
+    },
+    "runtime": {},
+    "overwrite-existing": true,
+    "custom-device": {
+        "id": "stm32mp15-weston",
+        "label": "STM32MP157F-DK2",
+        "sdkNameAndVersion": "STM32 Discovery Board (Dual Cortex-A7)",
+        "platform": "linux-arm",
+        "enabled": true,
+        "ping": "ping -c 1 -w 400 ${DEVICE_HOSTNAME}",
+        "pingSuccessRegex": "[<=]\\d+ms",
+        "postBuild": "bash -c mkdir -p ${localPath}/../../.flutter-auto/data/flutter_assets && cp -r ${localPath}/* ${localPath}/../../.flutter-auto/data/flutter_assets && ssh -t -oBatchMode=yes root@${DEVICE_HOSTNAME} passwd -d weston",
+        "install": "bash -c mkdir -p /tmp/${appName}/data/flutter_assets && cp -r ${BUNDLE_FOLDER}/* /tmp/${appName} && scp -r ${localPath}/* weston@${DEVICE_HOSTNAME}:/tmp/${appName}/data/flutter_assets",
+        "uninstall": "ssh -o BatchMode=yes weston@${DEVICE_HOSTNAME} rm -rf \"/tmp/${appName}\"",
+        "runDebug": "ssh -t -t -o BatchMode=yes weston@${DEVICE_HOSTNAME} flutter-auto --b=/tmp/${appName} --f",
+        "forwardPort": "ssh -o BatchMode=yes -o ExitOnForwardFailure=yes -L 127.0.0.1:${hostPort}:127.0.0.1:${devicePort} weston@${DEVICE_HOSTNAME} echo 'Port forwarding success'; read",
+        "forwardPortSuccessRegex": "Port forwarding success",
+        "screenshot": null
+    }
+}

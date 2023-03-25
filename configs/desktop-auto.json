@@ -1,0 +1,94 @@
+{
+    "id": "desktop-auto",
+    "load": true,
+    "supported_archs": ["x86_64"],
+    "supported_host_types": ["ubuntu"],
+    "flutter_runtime": "debug",
+    "type": "host",
+    "env": {
+      "FLUTTER_AUTO_EXE": "flutter-auto"
+    },
+    "runtime": {
+      "pre-requisites": {
+        "x86_64": {
+          "ubuntu": {
+            "conditionals": [
+              {
+                "path": "/usr/local/bin/docker-compose",
+                "cmds": [
+                  "sudo curl --retry 5 -L \"https://github.com/docker/compose/releases/download/1.25.0/docker-compose-$(uname -s)-$(uname -m)\" -o /usr/local/bin/docker-compose",
+                  "sudo chmod +x /usr/local/bin/docker-compose"
+                ]
+              },
+              {
+                "path": "/usr/bin/docker-compose",
+                "cmds": [
+                  "sudo ln -sfn /usr/local/bin/docker-compose /usr/bin/docker-compose"
+                ]
+              },
+              {
+                "path": "/etc/apt/trusted.gpg.d/llvm.gpg",
+                "cmds": [
+                  "echo 'Installing /etc/apt/trusted.gpg.d/llvm.gpg'",
+                  "sudo sh -l -c 'curl -sSL https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/llvm.gpg >/dev/null 2>&1'"
+                ]
+              }
+            ],
+            "cmds": [
+              "sudo snap install cmake --classic",
+              "sudo apt-get update",
+              "sudo apt-get upgrade -y",
+              "sudo apt-get install -y curl wget libwayland-dev wayland-protocols libxkbcommon-dev",
+              "sudo apt-get install -y mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev vulkan-tools",
+              "sudo apt install -y libunwind-dev",
+              "sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-base gstreamer1.0-gl libavformat-dev",
+              "sudo apt-get install -y clang libc++-dev libc++abi-dev",
+              "sudo apt-get autoremove -y",
+              "sudo apt-get autoclean",
+              "sudo apt-get clean",
+              "cmake --version",
+              "clang++ --version"
+            ]
+          }
+        }
+      },
+      "artifacts": {
+        "github": {
+          "owner": "toyota-connected",
+          "repo": "ivi-homescreen",
+          "workflow": "flutter-auto-linux.yml",
+          "artifact_names": [
+            "flutter-auto-vulkan-dbg.amd64.deb.zip"
+          ],
+          "post_process": [
+            "sudo apt purge -y flutter-auto",
+            "sudo apt purge -y flutter-auto-dbg",
+            "bash -c 'export FLUTTER_AUTO_DEB=`ls flutter-auto*.deb` && sudo apt install -y ./${FLUTTER_AUTO_DEB}'",
+            "find -name '*deb' -exec rm {} \\;"
+          ]
+        }
+      },
+      "config": {
+        "width": 1920,
+        "height": 1080,
+        "cursor_theme": "DMZ-White"
+      }
+    },
+    "overwrite-existing": true,
+    "custom-device": {
+      "id": "desktop-auto",
+      "label": "Toyota flutter-auto",
+      "sdkNameAndVersion": "flutter-auto x86_64",
+      "platform":  "linux-x64",
+      "enabled": true,
+      "ping": "bash -c \"loginctl show-session $(awk '/tty/ {print $1}' <(loginctl)) -p Type\"",
+      "pingSuccessRegex": "Type=wayland",
+      "postBuild": "rm -rf ${PLATFORM_ID_DIR_RELATIVE}",
+      "install": "bash -c 'mkdir -p ${PLATFORM_ID_DIR_RELATIVE}/data && cp -r ${FLUTTER_WORKSPACE}/${PLATFORM_ID_DIR_RELATIVE}/* ${PLATFORM_ID_DIR_RELATIVE}/ && ln -rsf build/flutter_assets ${PLATFORM_ID_DIR_RELATIVE}/data/flutter_assets'",
+      "uninstall": "rm -rf ${PLATFORM_ID_DIR_RELATIVE}",
+      "runDebug": "${FLUTTER_AUTO_EXE} --j=${PLATFORM_ID_DIR_RELATIVE}/default_config.json --b=${PLATFORM_ID_DIR_RELATIVE}",
+      "forwardPort": null,
+      "forwardPortSuccessRegex": null,
+      "screenshot": null
+    }
+}
