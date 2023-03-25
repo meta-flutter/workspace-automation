@@ -72,7 +72,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--clean', default=False, action='store_true', help='Wipes workspace clean')
-    parser.add_argument('--workspace-cfg', default='', type=str, help='Selects custom workspace configuration file')
+    parser.add_argument('--config', default='configs', type=str, help='Selects custom workspace configuration folder')
     parser.add_argument('--flutter-version', default='', type=str,
                         help='Select flutter version.  Overrides config file key:'
                              ' flutter-version')
@@ -131,15 +131,9 @@ def main():
     #
     # Workspace Configuration
     #
-
-    workspace_configuration = 'flutter_workspace_config.json'
-    if args.workspace_cfg:
-        workspace_configuration = args.workspace_cfg
-        print("\n** Custom Workspace Configuration file: %s\n" % workspace_configuration)
-    else:
-        print("\n** Default Workspace Configuration file: %s\n" % workspace_configuration)
-
-    config = get_workspace_config(workspace_configuration)
+    config = get_workspace_config(args.config)
+    print_banner(config)
+    globals = config.get('globals')
 
     platforms = config.get('platforms')
     for platform_ in platforms:
@@ -193,8 +187,8 @@ def main():
     if args.flutter_version:
         flutter_version = args.flutter_version
     else:
-        if 'flutter-version' in config:
-            flutter_version = config['flutter-version']
+        if 'flutter-version' in globals:
+            flutter_version = globals['flutter-version']
         else:
             flutter_version = "master"
 
@@ -238,12 +232,12 @@ def main():
     #
     # Create environmental setup script
     #
-    write_env_scipt(workspace)
+    write_env_scipt_header(workspace)
 
     #
     # Setup Platform(s)
     #
-    setup_platforms(platforms, config.get('github_token'), config.get('cookie_file'))
+    setup_platforms(platforms, globals.get('github_token'), globals.get('cookie_file'))
 
     #
     # Create script to setup environment
@@ -254,11 +248,6 @@ def main():
     # Get runtime artifacts
     #
     # get_artifacts(config, flutter_sdk_path, flutter_auto_folder, agl_folder)
-
-    #
-    # custom-devices
-    #
-    # update_flutter_custom_devices_list(platforms)
 
     if flutter_version == "master":
         cmd = ['flutter', 'custom-devices', 'list']
@@ -308,26 +297,53 @@ def clear_folder(dir_):
         shutil.rmtree(dir_)
 
 
-def get_workspace_config(config_file):
+def get_workspace_config(path):
     """ Returns workspace config """
 
-    data = None
-    file_exists = os.path.exists(config_file)
-    if not file_exists:
-        print("Missing %s file" % config_file)
-        default_channel = "stable"
-        print("Defaulting to %s channel\n" % default_channel)
-        data = json.loads('{"flutter-version":"%s","platforms":[],"repos":[]}' % default_channel)
-        return data
+    if os.path.isdir(path):
 
-    f = open(config_file)
-    try:
-        data = json.load(f)
-    except json.decoder.JSONDecodeError:
-        print("Invalid JSON in %s" % config_file)  # in case json is invalid
-        exit(1)
+        data = {'globals': None, 'repos': None, 'platforms': []}
 
-    f.close()
+        import glob
+        for filename in glob.glob(os.path.join(path, '*.json')):
+
+            with open(os.path.join(os.getcwd(), filename), 'r') as f:
+
+                head, tail = os.path.split(filename)
+                head = head
+
+                if tail == 'repos.json':
+                    try:
+                        data['repos'] = json.load(f)
+                    except json.decoder.JSONDecodeError:
+                        print("Invalid JSON in %s" % f)
+                        exit(1)
+
+                elif tail == 'globals.json':
+                    try:
+                        data['globals'] = json.load(f)
+                    except json.decoder.JSONDecodeError:
+                        print("Invalid JSON in %s" % f)
+                        exit(1)
+
+                else:
+                    try:
+                        platform = json.load(f)
+                        if 'load' in platform:
+                            if not platform['load']:
+                                continue
+                        data['platforms'].append(platform)
+                    except json.decoder.JSONDecodeError:
+                        print("Invalid JSON in %s" % f)
+                        exit(1)
+
+    elif os.path.isfile(path):
+        with open(path, 'r') as f:
+            try:
+                data = json.load(f)
+            except json.decoder.JSONDecodeError:
+                print("Invalid JSON in %s" % f)
+                exit(1)
 
     return data
 
@@ -337,6 +353,18 @@ def validate_platform_config(platform_):
 
     if 'id' not in platform_:
         print_banner("Missing 'id' key in platform config")
+        return False
+    if 'load' not in platform_:
+        print_banner("Missing 'load' key in platform config")
+        return False
+    if 'supported_archs' not in platform_:
+        print_banner("Missing 'supported_archs' key in platform config")
+        return False
+    if 'supported_host_types' not in platform_:
+        print_banner("Missing 'supported_host_types' key in platform config")
+        return False
+    if 'flutter_runtime' not in platform_:
+        print_banner("Missing 'flutter_runtime' key in platform config")
         return False
     if 'type' not in platform_:
         print_banner("Missing 'type' key in platform config")
@@ -350,9 +378,6 @@ def validate_platform_config(platform_):
             print("Platform ID: %s" % (platform_['id']))
 
         elif platform_['type'] == 'host':
-            if 'flutter_runtime' not in platform_:
-                print_banner("Missing 'flutter_runtime' key in platform config")
-                return False
             if 'runtime' not in platform_:
                 print_banner("Missing 'runtime' key in platform config")
                 return False
@@ -386,8 +411,11 @@ def validate_platform_config(platform_):
             print("Platform ID: %s" % (platform_['id']))
 
         elif platform_['type'] == 'target':
-            if 'flutter_runtime' not in platform_:
-                print_banner("Missing 'flutter_runtime' key in platform config")
+            if 'custom-device' not in platform_:
+                print_banner("Missing 'custom-device' key in platform config")
+                return False
+            if 'overwrite-existing' not in platform_:
+                print_banner("Missing 'overwrite-existing' key in platform config")
                 return False
 
             print("Platform ID: %s" % (platform_['id']))
@@ -655,16 +683,10 @@ def fixup_custom_device(obj):
     obj['id'] = os.path.expandvars(obj['id'])
     obj['label'] = os.path.expandvars(obj['label'])
     obj['sdkNameAndVersion'] = os.path.expandvars(obj['sdkNameAndVersion'])
-    if host_arch == 'x86_64':
-        obj['platform'] = 'linux-x64'
-    elif host_arch == 'arm64':
-        obj['platform'] = 'linux-arm64'
-
+    obj['platform'] = os.path.expandvars(obj['platform'])
     obj['ping'] = os.path.expandvars(obj['ping'])
     obj['ping'] = shlex.split(obj['ping'])
-
     obj['pingSuccessRegex'] = os.path.expandvars(obj['pingSuccessRegex'])
-
     if obj['postBuild']:
         obj['postBuild'] = os.path.expandvars(obj['postBuild'])
         obj['postBuild'] = shlex.split(obj['postBuild'])
@@ -682,7 +704,6 @@ def fixup_custom_device(obj):
         obj['forwardPort'] = shlex.split(obj['forwardPort'])
     if obj['forwardPortSuccessRegex']:
         obj['forwardPortSuccessRegex'] = os.path.expandvars(obj['forwardPortSuccessRegex'])
-        obj['forwardPortSuccessRegex'] = shlex.split(obj['forwardPortSuccessRegex'])
     if obj['screenshot']:
         obj['screenshot'] = os.path.expandvars(obj['screenshot'])
         obj['screenshot'] = shlex.split(obj['screenshot'])
@@ -795,29 +816,6 @@ def handle_custom_devices(platform_):
                     remove_flutter_custom_devices_id(id_)
 
     add_flutter_custom_device_ex(platform_['custom-device'], platform_['flutter_runtime'])
-
-
-def update_flutter_custom_devices_list(platforms):
-    """ Updates the custom_devices.json with all custom-devices in
-    platforms dict """
-
-    for platform_ in platforms:
-
-        custom_devices = get_flutter_custom_devices()
-
-        overwrite_existing = platform_.get('overwrite-existing')
-
-        # check if id already exists, remove if overwrite enabled, otherwise
-        # skip
-        if custom_devices:
-            for custom_device in custom_devices:
-                if 'id' in custom_device:
-                    id_ = custom_device['id']
-                    if overwrite_existing and (id_ == platform_['id']):
-                        # print("attempting to remove custom-device: %s" % id_)
-                        remove_flutter_custom_devices_id(id_)
-
-        add_flutter_custom_device(platform_['custom-device'], platform_['flutter_runtime'])
 
 
 def configure_flutter_sdk():
@@ -1482,12 +1480,35 @@ def create_platform_config_file(obj, cwd):
         json.dump(config, default_config_file, indent=2)
 
 
+def is_host_type_supported(host_types):
+    """Return true if host type is contained in host_types variable, false otherwise"""
+    host_type = get_host_type()
+
+    if host_type == 'linux':
+        host_type = get_freedesktop_os_release().get('NAME').lower()
+
+    if not host_type in host_types:
+        return False
+    return True
+
+
 def setup_platforms(platforms, git_token, cookie_file):
+    """ Sets up each occuring platform defined """
     for platform_ in platforms:
+
         # if platform_['type'] == 'docker':
         runtime = platform_['runtime']
 
+        # skip if architecture not supported
         host_machine_arch = get_host_machine_arch()
+        if not host_machine_arch in platform_['supported_archs']:
+            print_banner("\"%s\" not supported on this machine" % platform_['id'])
+            continue
+
+        # skip if distro not supported
+        if not is_host_type_supported(platform_['supported_host_types']):
+            print_banner("\"%s\" not supported on this host type" % platform_['id'])
+            continue
 
         print_banner("Setting up Platform %s - %s" % (platform_['id'], host_machine_arch))
 
@@ -2104,10 +2125,7 @@ echo \"* ${FLUTTER_WORKSPACE}\"
 echo \"********************************************\"
 
 flutter doctor -v
-echo \"\"
-
 flutter custom-devices list
-echo \"\"
 '''
 
 env_qemu = '''
@@ -2141,7 +2159,7 @@ end tell
 '''
 
 
-def write_env_scipt(workspace):
+def write_env_scipt_header(workspace):
     """ Create environmental variable bash script """
     environment_script = os.path.join(workspace, 'setup_env.sh')
 
