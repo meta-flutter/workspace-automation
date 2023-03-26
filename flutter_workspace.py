@@ -132,7 +132,6 @@ def main():
     # Workspace Configuration
     #
     config = get_workspace_config(args.config)
-    print_banner(config)
     globals = config.get('globals')
 
     platforms = config.get('platforms')
@@ -228,6 +227,11 @@ def main():
     # Configure SDK
     #
     configure_flutter_sdk()
+
+    #
+    # Flutter Engine Runtime
+    #
+    get_flutter_engine_runtime()
 
     #
     # Create environmental setup script
@@ -517,9 +521,9 @@ def get_repo(base_folder, uri, branch, rev):
         subprocess.check_call(cmd, cwd=git_folder)
 
     # get all submodules
-    git_submodules_file = os.path.join(base_folder, repo_name, '.gitmodules')
-    if os.path.exists(git_submodules_file):
-        cmd = ['git', 'submodules', 'update', '--init', '--recursive']
+    git_submodule_file = os.path.join(base_folder, repo_name, '.gitmodules')
+    if os.path.exists(git_submodule_file):
+        cmd = ['git', 'submodule', 'update', '--init', '--recursive']
         subprocess.check_call(cmd, cwd=git_folder)
 
 
@@ -949,7 +953,13 @@ def get_freedesktop_os_release():
         return d
 
 
+def get_freedesktop_os_release_name():
+    """Returns OS Release Name"""
+    return get_freedesktop_os_release().get('NAME').lower().rstrip()
+
+
 def get_host_type():
+    """Returns host system"""
     return system().lower().rstrip()
 
 
@@ -1025,6 +1035,79 @@ def get_host_machine_arch():
     return platform.machine()
 
 
+def get_google_flutter_engine_url():
+    workspace = os.environ.get('FLUTTER_WORKSPACE')
+    flutter_sdk_path = os.path.join(workspace, 'flutter')
+    arch = get_host_machine_arch()
+
+    engine_version = get_flutter_engine_version(flutter_sdk_path)
+    if arch == 'x86_64':
+        url = 'https://storage.googleapis.com/flutter_infra_release/flutter/%s/linux-x64/linux-x64-embedder' % \
+                engine_version
+    elif arch == 'arm64':
+        url = 'https://storage.googleapis.com/flutter_infra_release/flutter/%s/linux-arm64/artifacts.zip' % \
+                engine_version
+    return url
+
+
+def get_flutter_engine_runtime():
+    """Downloads Flutter Engine Runtime"""
+
+    base_url = get_google_flutter_engine_url()
+
+    head, tail = os.path.split(base_url)
+    head = head
+    filename = tail + '.zip'
+
+    cwd = get_platform_working_dir('flutter-engine')
+
+    download_https_file(cwd, base_url, filename, None, None, None, None)
+
+    bundle_folder = os.path.join(cwd, 'bundle')
+    os.environ['BUNDLE_FOLDER'] = bundle_folder
+
+    lib_folder = os.path.join(bundle_folder, 'lib')
+    make_sure_path_exists(lib_folder)
+
+    data_folder = os.path.join(bundle_folder, 'data')
+    make_sure_path_exists(data_folder)
+
+    workspace = os.environ.get('FLUTTER_WORKSPACE')
+    flutter_sdk_path = os.path.join(workspace, 'flutter')
+
+    host_type = get_host_type()
+
+    icudtl_source = os.path.join(
+                        flutter_sdk_path,
+                        "bin/cache/artifacts/engine/%s/icudtl.dat" %
+                        'linux-x64'
+                        if host_type == 'linux'
+                        else 'darwin-x64')
+
+    if not os.path.exists(icudtl_source):
+        cmd = ["flutter", "doctor", "-v"]
+        subprocess.check_call(cmd, cwd=flutter_sdk_path)
+
+    icudtl_source = os.path.join(
+                        flutter_sdk_path,
+                        "bin/cache/artifacts/engine/%s-x64/icudtl.dat" %
+                        host_type)
+
+    subprocess.check_call(["cp", icudtl_source, "%s/" % data_folder])
+
+    archive = os.path.join(cwd, filename)
+
+    with zipfile.ZipFile(archive, "r") as zip_ref:
+        zip_ref.extractall(lib_folder)
+
+    if host_type == 'linux':
+        cmd = ["rm", "flutter_embedder.h"]
+        subprocess.check_call(cmd, cwd=lib_folder)
+
+    cmd = ["rm", archive]
+    subprocess.check_output(cmd, cwd=cwd)
+
+
 def get_artifacts(config, flutter_sdk_path, flutter_auto_folder, agl_folder):
     """ Get x86_64 Engine artifacts """
 
@@ -1044,12 +1127,12 @@ def get_artifacts(config, flutter_sdk_path, flutter_auto_folder, agl_folder):
 
         flutter_runtime = platform_['flutter_runtime']
 
-        if platform_['id'] == 'AGL-qemu' and platform_['type'] == 'qemu':
-            install_agl_qemu_image(agl_folder, config, platform_)
+#        if platform_['id'] == 'AGL-qemu' and platform_['type'] == 'qemu':
+#            install_agl_qemu_image(agl_folder, config, platform_)
 
-        if get_host_type() == 'linux' and arch == "x86_64":
-            if platform_['id'] == 'desktop-auto' and platform_['type'] == 'host':
-                install_flutter_auto(flutter_auto_folder, config, platform_)
+#        if get_host_type() == 'linux' and arch == "x86_64":
+#            if platform_['id'] == 'desktop-auto' and platform_['type'] == 'host':
+#                install_flutter_auto(flutter_auto_folder, config, platform_)
 
     if fetch_linux_engine:
 
@@ -1145,9 +1228,9 @@ def handle_pre_requisites(obj, host_machine_arch, cwd):
 
         host_type = get_host_type()
         if host_type == "linux":
-            os_release = get_freedesktop_os_release().get('NAME').lower()
-            if os_release in host_specific_pre_requisites:
-                distro = host_specific_pre_requisites[os_release]
+            os_release_name = get_freedesktop_os_release_name()
+            if os_release_name in host_specific_pre_requisites:
+                distro = host_specific_pre_requisites[os_release_name]
 
                 handle_conditionals(distro.get('conditionals'), cwd)
 
@@ -1303,12 +1386,33 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
                 download_https_file(cwd, base_url, filename, cookie_file, netrc, md5, sha1)
 
 
+def handle_commands_obj(list, cwd):
+    if list is None:
+        return
+
+    for obj in list:
+        print(obj)
+        if 'cmds' not in obj:
+            return
+
+        if 'cwd' in obj:
+            cwd = os.path.expandvars(obj.get('cwd'))
+            make_sure_path_exists(cwd)
+
+        cmds = obj.get('cmds')
+        for cmd in cmds:
+            expanded_cmd = os.path.expandvars(cmd)
+            print(expanded_cmd)
+            cmd_arr = shlex.split(expanded_cmd)
+            print(cmd_arr)
+            subprocess.check_call(cmd_arr, cwd=cwd)
+
+
 def handle_commands(cmds, cwd):
     if cmds:
         for cmd in cmds:
             expanded_cmd = os.path.expandvars(cmd)
             cmd_arr = shlex.split(expanded_cmd)
-            # print(cmd_arr)
             subprocess.check_call(cmd_arr, cwd=cwd)
 
 
@@ -1446,12 +1550,6 @@ def get_platform_working_dir(platform_id):
 def create_platform_config_file(obj, cwd):
     if obj is None:
         return
-        #config_window_type = DEFAULT_WINDOW_TYPE
-        #config_width = DEFAULT_WIDTH
-        #config_height = DEFAULT_HEIGHT
-        #config_fullscreen = DEFAULT_FULLSCREEN
-        #config_cursor_theme = DEFAULT_CURSOR_THEME
-
     else:
         config_width = obj.get('width')
         if config_width is None:
@@ -1485,9 +1583,9 @@ def is_host_type_supported(host_types):
     host_type = get_host_type()
 
     if host_type == 'linux':
-        host_type = get_freedesktop_os_release().get('NAME').lower()
-
-    if not host_type in host_types:
+        host_type = get_freedesktop_os_release_name()
+        
+    if host_type not in host_types:
         return False
     return True
 
@@ -1524,10 +1622,12 @@ def setup_platforms(platforms, git_token, cookie_file):
         subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
         handle_docker_obj(runtime.get('docker'), host_machine_arch, cwd)
         subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
-        create_platform_config_file(runtime.get('config'), cwd)    
+        create_platform_config_file(runtime.get('config'), cwd)
         subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
         handle_conditionals(runtime.get('conditionals'), cwd)
         subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+        handle_commands_obj(runtime.get('post_cmds'), cwd)
+
         handle_custom_devices(platform_)
 
 
@@ -1745,9 +1845,9 @@ def install_minimum_runtime_deps():
 
     if host_type == "linux":
 
-        os_release = get_freedesktop_os_release().get('NAME')
+        os_release_name = get_freedesktop_os_release_name()
 
-        if os_release == 'Ubuntu':
+        if os_release_name == 'ubuntu':
             cmd = ["sudo", "apt", "update", "-y"]
             subprocess.check_output(cmd)
             ubuntu_install_pkg_if_not_installed("curl")
@@ -1757,7 +1857,7 @@ def install_minimum_runtime_deps():
             ubuntu_install_pkg_if_not_installed("python3-pycurl")
             ubuntu_install_pkg_if_not_installed("python3-pip")
 
-        elif os_release == 'Fedora Linux':
+        elif os_release_name == 'fedora linux':
             cmd = ["sudo", "dnf", "update", "-y"]
             subprocess.check_output(cmd)
             fedora_install_pkg_if_not_installed("curl")
@@ -1779,307 +1879,6 @@ def install_minimum_runtime_deps():
             '--install-option="--with-openssl" --install-option="--openssl-dir=%s" pycurl' % (get_mac_openssl_prefix()))
 
         mac_install_cocoapods_if_not_installed()
-
-
-def install_agl_qemu_image(folder, config, platform_):
-    del config
-    host_type = get_host_type()
-
-    print_banner("Installing AGL emulator image")
-
-    runtime = platform_['runtime']
-
-    config = runtime.get('config')
-    if config is None:
-        config_window_type = QEMU_DEFAULT_WINDOW_TYPE
-        config_width = QEMU_DEFAULT_WIDTH
-        config_height = QEMU_DEFAULT_HEIGHT
-        config_fullscreen = QEMU_DEFAULT_FULLSCREEN
-
-    else:
-        config_width = config.get('width')
-        if config_width is None:
-            config_width = QEMU_DEFAULT_WIDTH
-
-        config_height = config.get('height')
-        if config_height is None:
-            config_height = QEMU_DEFAULT_HEIGHT
-
-        config_fullscreen = config.get('fullscreen')
-        if config_fullscreen is None:
-            config_fullscreen = QEMU_DEFAULT_FULLSCREEN
-
-        config_window_type = config.get('window_type')
-        if config_window_type is None:
-            config_window_type = QEMU_DEFAULT_WINDOW_TYPE
-
-    make_sure_path_exists(folder)
-    default_config_filepath = os.path.join(folder, 'default_config.json')
-    with open(default_config_filepath, 'w+') as default_config_file:
-        config = {"view": {"window_type": config_window_type, "width": config_width, "height": config_height,
-                           "fullscreen": config_fullscreen}}
-        json.dump(config, default_config_file, indent=2)
-
-    if runtime.get('install_dependent_packages'):
-
-        if host_type == "darwin":
-            host_arch = get_host_machine_arch()
-            if host_arch == 'arm64':
-                subprocess.call(["arch", "-arm64", "brew", "reinstall", "qemu"])
-            else:
-                subprocess.call(["brew", "reinstall", "qemu"])
-
-        elif host_type == "linux":
-
-            os_release = get_freedesktop_os_release()
-
-            username = os.environ.get('USER')
-
-            if os_release.get('NAME') == 'Ubuntu':
-                subprocess.call(["sudo", "apt-get", "install", "-y", "qemu-system-x86", "ovmf"])
-                if is_linux_host_kvm_capable():
-                    print_banner("KVM is supported")
-                    subprocess.call(["sudo", "apt-get", "install", "-y", "qemu-kvm",
-                                     "libvirt-daemon-system", "libvirt-clients", "bridge-utils"])
-                    subprocess.call(["sudo", "adduser", username, "libvirt"])
-                    subprocess.call(["sudo", "adduser", username, "kvm"])
-                    subprocess.call(["sudo", "systemctl", "status", "libvirtd", "--no-pager", "-l"])
-                else:
-                    print_banner("KVM is not supported.  Consider enabling in BIOS for better performance.")
-
-            elif os_release.get('NAME') == 'Fedora Linux':
-                subprocess.call(["sudo", "dnf", "install", "-y", "qemu-system-x86", "edk2-ovmf"])
-                if is_linux_host_kvm_capable():
-                    subprocess.call(["sudo", "dnf", "install", "-y", "bridge-utils", "libvirt",
-                                     "virt-install", "qemu-kvm"])
-                    subprocess.call(["sudo", "systemctl", "status", "libvirtd", "--no-pager", "-l"])
-                    subprocess.call(["sudo", "dnf", "install", "-y", "libvirt-devel", "virt-top",
-                                     "libguestfs-tools", "guestfs-tools"])
-
-    if runtime.get('artifact_source') == "github":
-        github_artifact = runtime.get('github_artifact')
-        if '${FLUTTER_RUNTIME}' in github_artifact:
-            github_artifact = github_artifact.replace('${FLUTTER_RUNTIME}', platform_.get('flutter_runtime'))
-
-        arch = get_host_machine_arch()
-        if '${MACHINE_ARCH_HYPHEN}' in github_artifact:
-            github_artifact = github_artifact.replace('${MACHINE_ARCH_HYPHEN}', arch.replace('_', '-'))
-
-        github_workflow = runtime.get('github_workflow')
-        if '${MACHINE_ARCH}' in github_workflow:
-            github_workflow = github_workflow.replace('${MACHINE_ARCH}', arch)
-
-        install_github_artifact_agl_emu_image(get_github_token(config.get('github_token')),
-                                              runtime.get('github_owner'), runtime.get('github_repo'),
-                                              github_workflow, github_artifact)
-
-
-def install_github_artifact_agl_emu_image(token, owner, repo, workflow, artifact_name):
-    """Installs AGL emulation image GitHub artifact"""
-
-    if token and owner and repo and workflow and artifact_name:
-
-        workflow_runs = get_github_workflow_runs(token, owner, repo, workflow)
-        run_id = None
-        for run in workflow_runs:
-            if run['conclusion'] == "success":
-                run_id = run['id']
-                break
-
-        artifacts = get_github_workflow_artifacts(token, owner, repo, run_id)
-
-        for artifact in artifacts:
-
-            name = artifact.get('name')
-
-            if name == artifact_name:
-
-                url = artifact.get('archive_download_url')
-
-                print("Downloading %s run_id: %s via %s" % (workflow, run_id, url))
-
-                filename = "%s.zip" % name
-                downloaded_file = get_github_artifact(token, url, filename)
-                if downloaded_file is None:
-                    print_banner("Failed to download %s" % filename)
-                    break
-
-                print("Downloaded: %s" % downloaded_file)
-
-                workspace = os.getenv('FLUTTER_WORKSPACE')
-
-                image_path = os.path.join(workspace, '.agl')
-                with zipfile.ZipFile(downloaded_file, "r") as zip_ref:
-                    zip_ref.extractall(image_path)
-
-                cmd = ["rm", downloaded_file]
-                subprocess.check_output(cmd)
-                break
-
-
-def install_flutter_auto(folder, config, platform_):
-    del config
-    host_type = get_host_type()
-
-    if host_type == "linux":
-
-        print_banner("Installing flutter-auto")
-
-        runtime = platform_['runtime']
-
-        config = runtime.get('config')
-        if config is None:
-            config_width = FLUTTER_AUTO_DEFAULT_WIDTH
-            config_height = FLUTTER_AUTO_DEFAULT_HEIGHT
-            config_cursor_theme = FLUTTER_AUTO_DEFAULT_CURSOR_THEME
-
-        else:
-            config_width = config.get('width')
-            if config_width is None:
-                config_width = FLUTTER_AUTO_DEFAULT_WIDTH
-
-            config_height = config.get('height')
-            if config_height is None:
-                config_height = FLUTTER_AUTO_DEFAULT_HEIGHT
-
-            config_cursor_theme = config.get('cursor_theme')
-            if config_cursor_theme is None:
-                config_cursor_theme = FLUTTER_AUTO_DEFAULT_CURSOR_THEME
-
-        make_sure_path_exists(folder)
-        default_config_filepath = os.path.join(folder, 'default_config.json')
-        with open(default_config_filepath, 'w+') as default_config_file:
-            config = {"cursor_theme": config_cursor_theme, "view": {"width": config_width, "height": config_height}}
-            json.dump(config, default_config_file, indent=2)
-
-        if runtime.get('install_dependent_packages'):
-
-            os_release = get_freedesktop_os_release()
-
-            if os_release.get('NAME') == 'Ubuntu':
-
-                subprocess.call(["sudo", "snap", "install", "cmake", "--classic"])
-                subprocess.call(["sudo", "add-apt-repository", "-y", "ppa:kisak/kisak-mesa"])
-                subprocess.call(["sudo", "apt", "update", "-y"])
-                subprocess.call(
-                    ["sudo", "apt-get", "-y", "install", "libwayland-dev", "wayland-protocols", "mesa-common-dev",
-                     "libegl1-mesa-dev", "libgles2-mesa-dev", "mesa-utils", "clang-12", "lldb-12", "lld-12",
-                     "libc++-12-dev", "libc++abi-12-dev", "libunwind-dev", "libxkbcommon-dev", "vulkan-tools",
-                     "libgstreamer1.0-dev", "libgstreamer-plugins-base1.0-dev", "gstreamer1.0-plugins-base",
-                     "gstreamer1.0-gl", "libavformat-dev"])
-
-            elif os_release.get('NAME') == 'Fedora Linux':
-
-                subprocess.call(["sudo", "dnf", "-y", "install", "wayland-devel", "wayland-protocols-devel",
-                                 "mesa-dri-drivers", "mesa-filesystem", "mesa-libEGL-devel", "mesa-libGL-devel",
-                                 "mesa-libGLU-devel", "mesa-libgbm-devel", "mesa-libglapi", "mesa-libxatracker",
-                                 "mesa-vulkan-drivers", "vulkan-tools", "libunwind-devel", "libxkbcommon-devel",
-                                 "clang", "clang-analyzer", "clang-devel", "clang-libs", "clang-resource-filesystem",
-                                 "clang-tools-extra", "lld", "lld-libs", "lldb", "libcxx", "libcxx-devel",
-                                 "libcxx-static", "libcxxabi", "libcxxabi-devel", "libcxxabi-static",
-                                 "gstreamer1-devel", "gstreamer1-plugins-base-devel",
-                                 "gstreamer1-plugins-bad-free-devel",
-                                 "gstreamer1-plugins-bad-free-extras", "gstreamer1-plugins-base-tools",
-                                 "gstreamer1-plugins-good", "gstreamer1-plugins-good-extras",
-                                 "gstreamer1-plugins-ugly-free", "ffmpeg-devel", "cmake"])
-
-            print("** CMake Version")
-            subprocess.call(["cmake", "--version"])
-
-            print("** Clang Version")
-            subprocess.call(["/usr/bin/clang++", "--version"])
-
-        if 'github' == runtime.get('artifact_source'):
-
-            github_artifact = runtime.get('github_artifact')
-            if '${BACKEND}' in github_artifact:
-                backend = runtime.get('backend')
-                github_artifact = github_artifact.replace('${BACKEND}', backend)
-
-            install_flutter_auto_github_artifact(get_github_token(config.get('github_token')),
-                                                 runtime.get('github_owner'), runtime.get('github_repo'),
-                                                 runtime.get('github_workflow'), github_artifact)
-
-
-def install_flutter_auto_github_artifact(token, owner, repo, workflow, github_artifact):
-    """Installs flutter-auto GitHub artifact"""
-
-    os_release = get_freedesktop_os_release().get('NAME')
-
-    if os_release == 'Ubuntu':
-        github_artifact = "%s.amd64.deb.zip" % github_artifact
-    elif os_release == 'Fedora Linux':
-        github_artifact = "%s.x86_64.rpm.zip" % github_artifact
-
-    if token and owner and repo and workflow and github_artifact:
-
-        workflow_runs = get_github_workflow_runs(token, owner, repo, workflow)
-        run_id = None
-        for run in workflow_runs:
-            if "success" == run['conclusion']:
-                run_id = run['id']
-                break
-
-        artifacts = get_github_workflow_artifacts(token, owner, repo, run_id)
-
-        for artifact in artifacts:
-
-            if github_artifact in artifact.get('name'):
-
-                url = artifact.get('archive_download_url')
-
-                print("** Downloading %s run_id: %s via %s" % (workflow, run_id, url))
-
-                downloaded_file = get_github_artifact(token, url, github_artifact)
-                print("** Downloaded: %s" % downloaded_file)
-
-                files_to_remove = None
-                with zipfile.ZipFile(downloaded_file, "r") as zip_ref:
-                    filelist = zip_ref.namelist()
-                    files_to_remove = filelist
-                    zip_ref.extractall()
-
-                cmd = ["rm", downloaded_file]
-                subprocess.check_output(cmd)
-
-                if os_release == 'Ubuntu':
-
-                    deb_file = None
-                    for f in filelist:
-                        if ".deb" in f:
-                            deb_file = f
-                            break
-
-                    cmd = ["sudo", "apt", "purge", "-y", "flutter-auto"]
-                    subprocess.call(cmd)
-
-                    cmd = ["sudo", "apt", "purge", "-y", "flutter-auto-dbg"]
-                    subprocess.call(cmd)
-
-                    cmd = ["sudo", "apt", "install", "-y", "./%s" % deb_file]
-                    subprocess.call(cmd)
-
-                if os_release == 'Fedora Linux':
-
-                    rpm_file = None
-                    for f in filelist:
-                        if ".rpm" in f:
-                            rpm_file = f
-                            break
-
-                    cmd = ["sudo", "dnf", "remove", "-y", "flutter-auto"]
-                    subprocess.call(cmd)
-
-                    cmd = ["sudo", "dnf", "remove", "-y", "flutter-auto-dbg"]
-                    subprocess.call(cmd)
-
-                    cmd = ["sudo", "dnf", "install", "-y", "./%s" % rpm_file]
-                    subprocess.call(cmd)
-
-                for f in files_to_remove:
-                    cmd = ["rm", f]
-                    subprocess.check_output(cmd)
-                    break
 
 
 def is_repo(path):
@@ -2200,38 +1999,38 @@ def setup_env_script(workspace, args, platform_):
                     if arch == 'x86_64':
 
                         # args
-                        if args == None:
+                        if args is None:
                             args = runtime.get('args_x86_64')
 
                         if '${KERNEL}' in args:
-                            if kernel == None:
+                            if kernel is None:
                                 kernel = runtime.get('kernel_x86_64')
-                                if kernel == None:
+                                if kernel is None:
                                     print_banner('Missing kernel_x86_64 key value in config')
                                     exit(1)
                             args = args.replace('${KERNEL}', kernel)
 
                         # qemu image
-                        if qemu_image == None:
+                        if qemu_image is None:
                             qemu_image = runtime.get('qemu_image_x86_64')
 
 
                     elif arch == 'arm64':
 
                         # args
-                        if args == None:
+                        if args is None:
                             args = runtime.get('args_arm64')
 
                         if '${KERNEL}' in args:
-                            if kernel == None:
+                            if kernel is None:
                                 kernel = runtime.get('kernel_arm64')
-                                if kernel == None:
+                                if kernel is None:
                                     print_banner('Missing kernel_arm64 key value in config')
                                     exit(1)
                             args = args.replace('${KERNEL}', kernel)
 
                         # qemu image
-                        if qemu_image == None:
+                        if qemu_image is None:
                             qemu_image = runtime.get('qemu_image_arm64')
 
                         if '${QEMU_IMAGE}' in args:
@@ -2258,13 +2057,13 @@ def setup_env_script(workspace, args, platform_):
 
                     if host_type == "linux":
 
-                        os_release = get_freedesktop_os_release().get('NAME')
-
-                        if os_release == 'Ubuntu':
+                        os_release_name = get_freedesktop_os_release_name()
+                        
+                        if os_release_name == 'ubuntu':
                             print_banner('QEMU_EXTRA: %s' % runtime.get('qemu_extra_ubuntu'))
                             qemu_extra = runtime.get('qemu_extra_ubuntu')
 
-                        elif os_release == 'Fedora Linux':
+                        elif os_release_name == 'fedora linux':
                             print_banner('QEMU_EXTRA: %s' % runtime.get('qemu_extra_fedora'))
                             qemu_extra = runtime.get('qemu_extra_fedora')
 

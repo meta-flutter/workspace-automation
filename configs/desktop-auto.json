@@ -6,34 +6,18 @@
     "flutter_runtime": "debug",
     "type": "host",
     "env": {
-      "FLUTTER_AUTO_EXE": "flutter-auto"
+      "FLUTTER_AUTO_SRC_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen",
+      "FLUTTER_AUTO_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen/build",
+      "FLUTTER_AUTO_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Debug",
+      "COMP_SURF_PBR_SRC_DIR": "${FLUTTER_WORKSPACE}/app/comp_surf_pbr",
+      "COMP_SURF_PBR_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/comp_surf_pbr/build",
+      "COMP_SURF_PBR_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Debug",
+      "FLUTTER_AUTO_EXE": "LD_LIBRARY_PATH=${COMP_SURF_PBR_BUILD_DIR} ${FLUTTER_AUTO_BUILD_DIR}/shell/flutter-auto"
     },
     "runtime": {
       "pre-requisites": {
         "x86_64": {
           "ubuntu": {
-            "conditionals": [
-              {
-                "path": "/usr/local/bin/docker-compose",
-                "cmds": [
-                  "sudo curl --retry 5 -L \"https://github.com/docker/compose/releases/download/1.25.0/docker-compose-$(uname -s)-$(uname -m)\" -o /usr/local/bin/docker-compose",
-                  "sudo chmod +x /usr/local/bin/docker-compose"
-                ]
-              },
-              {
-                "path": "/usr/bin/docker-compose",
-                "cmds": [
-                  "sudo ln -sfn /usr/local/bin/docker-compose /usr/bin/docker-compose"
-                ]
-              },
-              {
-                "path": "/etc/apt/trusted.gpg.d/llvm.gpg",
-                "cmds": [
-                  "echo 'Installing /etc/apt/trusted.gpg.d/llvm.gpg'",
-                  "sudo sh -l -c 'curl -sSL https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/llvm.gpg >/dev/null 2>&1'"
-                ]
-              }
-            ],
             "cmds": [
               "sudo snap install cmake --classic",
               "sudo apt-get update",
@@ -52,26 +36,27 @@
           }
         }
       },
-      "artifacts": {
-        "github": {
-          "owner": "toyota-connected",
-          "repo": "ivi-homescreen",
-          "workflow": "flutter-auto-linux.yml",
-          "artifact_names": [
-            "flutter-auto-vulkan-dbg.amd64.deb.zip"
-          ],
-          "post_process": [
-            "sudo apt purge -y flutter-auto",
-            "sudo apt purge -y flutter-auto-dbg",
-            "bash -c 'export FLUTTER_AUTO_DEB=`ls flutter-auto*.deb` && sudo apt install -y ./${FLUTTER_AUTO_DEB}'",
-            "find -name '*deb' -exec rm {} \\;"
+      "post_cmds": [
+        {
+          "cwd": "${FLUTTER_AUTO_BUILD_DIR}",
+          "cmds": [
+            "cmake ${FLUTTER_AUTO_SRC_DIR}  ${FLUTTER_AUTO_CMAKE_ARGS}",
+            "make -j"
+          ]
+        },
+        {
+          "cwd": "${COMP_SURF_PBR_BUILD_DIR}",
+          "cmds": [
+            "cmake ${COMP_SURF_PBR_SRC_DIR}  ${COMP_SURF_PBR_CMAKE_ARGS}",
+            "make -j"
           ]
         }
-      },
+      ],
       "config": {
         "width": 1920,
         "height": 1080,
-        "cursor_theme": "DMZ-White"
+        "cursor_theme": "DMZ-White",
+        "fullscreen": false
       }
     },
     "overwrite-existing": true,
@@ -84,9 +69,9 @@
       "ping": "bash -c \"loginctl show-session $(awk '/tty/ {print $1}' <(loginctl)) -p Type\"",
       "pingSuccessRegex": "Type=wayland",
       "postBuild": "rm -rf ${PLATFORM_ID_DIR_RELATIVE}",
-      "install": "bash -c 'mkdir -p ${PLATFORM_ID_DIR_RELATIVE}/data && cp -r ${FLUTTER_WORKSPACE}/${PLATFORM_ID_DIR_RELATIVE}/* ${PLATFORM_ID_DIR_RELATIVE}/ && ln -rsf build/flutter_assets ${PLATFORM_ID_DIR_RELATIVE}/data/flutter_assets'",
+      "install": "bash -c \"mkdir -p ${PLATFORM_ID_DIR_RELATIVE}/data && cp -r ${PLATFORM_ID_DIR}/* ${PLATFORM_ID_DIR_RELATIVE}/ && cp -r ${BUNDLE_FOLDER}/* ${PLATFORM_ID_DIR_RELATIVE}/ && ln -rsf build/flutter_assets ${PLATFORM_ID_DIR_RELATIVE}/data/flutter_assets\"",
       "uninstall": "rm -rf ${PLATFORM_ID_DIR_RELATIVE}",
-      "runDebug": "${FLUTTER_AUTO_EXE} --j=${PLATFORM_ID_DIR_RELATIVE}/default_config.json --b=${PLATFORM_ID_DIR_RELATIVE}",
+      "runDebug": "bash -c \"${FLUTTER_AUTO_EXE} --j=${PLATFORM_ID_DIR_RELATIVE}/default_config.json --b=${PLATFORM_ID_DIR_RELATIVE}\"",
       "forwardPort": null,
       "forwardPortSuccessRegex": null,
       "screenshot": null
