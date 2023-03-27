@@ -914,9 +914,6 @@ def get_flutter_sdk(version):
 
     print_banner("FLUTTER_SDK: %s" % flutter_sdk_path)
 
-    cmd = ['git', 'log', '-1']
-    subprocess.check_call(cmd, cwd=flutter_sdk_path)
-
     return flutter_sdk_path
 
 
