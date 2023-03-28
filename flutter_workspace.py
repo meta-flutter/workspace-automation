@@ -1807,7 +1807,8 @@ def mac_is_cocoapods_installed():
 
 def mac_install_cocoapods_if_not_installed():
     if not mac_is_cocoapods_installed():
-        subprocess.run(['sudo', 'gem', 'install', 'cocoapods'])
+        subprocess.check_output(['sudo', 'gem', '-y', 'install', 'activesupport', '-v', '6.1.7.3'])
+        subprocess.check_output(['sudo', 'gem', '-y', 'install', 'cocoapods'])
         subprocess.run(
             ['sudo', 'gem', 'uninstall', 'ffi', '&&', 'sudo', 'gem', 'install', 'ffi', '--', '--enable-libffi-alloc'])
 
@@ -1837,7 +1838,7 @@ def install_minimum_runtime_deps():
     elif host_type == "darwin":
         brew_path = get_mac_brew_path()
         if brew_path == '':
-            sys.exit("brew is required for this script.  Please install")
+            sys.exit("brew is required for this script.  Please install.  https://brew.sh")
 
         mac_brew_reinstall_package('openssl@3')
 

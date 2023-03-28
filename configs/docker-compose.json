@@ -1,6 +1,6 @@
 {
     "id": "docker-compose",
-    "load": true,
+    "load": false,
     "supported_archs": ["x86_64"],
     "supported_host_types": ["ubuntu","fedora linux"],
     "type": "generic",
