@@ -38,17 +38,13 @@ from sys import stderr as stream
 
 import pkg_resources
 
-FLUTTER_AUTO_DEFAULT_WIDTH = 1920
-FLUTTER_AUTO_DEFAULT_HEIGHT = 1080
-FLUTTER_AUTO_DEFAULT_CURSOR_THEME = "DMZ-White"
-
 QEMU_DEFAULT_WINDOW_TYPE = "BG"
 QEMU_DEFAULT_WIDTH = 1920
 QEMU_DEFAULT_HEIGHT = 1080
 QEMU_DEFAULT_FULLSCREEN = True
 
 DEFAULT_WINDOW_TYPE = "Normal"
-DEFAULT_FULLSCREEN = True
+DEFAULT_FULLSCREEN = False
 DEFAULT_WIDTH = 1920
 DEFAULT_HEIGHT = 1080
 DEFAULT_CURSOR_THEME = "DMZ-White"
@@ -76,6 +72,7 @@ def main():
     parser.add_argument('--flutter-version', default='', type=str,
                         help='Select flutter version.  Overrides config file key:'
                              ' flutter-version')
+    parser.add_argument('--version-files', default=False, type=str, help='Create JSON file correlating Flutter SDK and Dart version tag')
     parser.add_argument('--target-user', default='', type=str, help='Sets custom-device target user name')
     parser.add_argument('--target-address', default='', type=str, help='Sets custom-device target address')
     parser.add_argument('--stdin-file', default='', type=str, help='Use for passing stdin for debugging')
@@ -117,6 +114,14 @@ def main():
     # Control+C handler
     #
     signal.signal(signal.SIGINT, handle_ctrl_c)
+
+    #
+    # Version Files
+    #
+    if args.version_files:
+        print_banner("Generating Version files")
+        get_version_files(args.version_files)
+        return
 
     #
     # Create Workspace
@@ -231,7 +236,7 @@ def main():
     #
     # Flutter Engine Runtime
     #
-    get_flutter_engine_runtime()
+    get_flutter_engine_runtime(clean_workspace)
 
     #
     # Create environmental setup script
@@ -247,11 +252,6 @@ def main():
     # Create script to setup environment
     #
     # setup_env_script(workspace, args, platforms)
-
-    #
-    # Get runtime artifacts
-    #
-    # get_artifacts(config, flutter_sdk_path, flutter_auto_folder, agl_folder)
 
     if flutter_version == "master":
         cmd = ['flutter', 'custom-devices', 'list']
@@ -529,18 +529,26 @@ def get_repo(base_folder, uri, branch, rev):
 
 def get_workspace_repos(base_folder, config):
     """ Clone GIT repos referenced in config repos dict to base_folder """
+    import concurrent.futures
 
-    if 'repos' in config:
-        repos = config['repos']
+    if 'repos' not in config:
+        return
+    
+    repos = config['repos']
 
-    else:
-        repos = None
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = []
+        for repo in repos:
+            futures.append(executor.submit(get_repo, base_folder=base_folder, uri=repo.get('uri'), branch=repo.get('branch'), rev=repo.get('rev')))
+            subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
 
-    for repo in repos:
-        get_repo(base_folder, repo.get('uri'), repo.get('branch'), repo.get('rev'))
+        for future in concurrent.futures.as_completed(futures):
+            subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
 
-        # reset sudo timeout
-        subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    print_banner("Repos Cloned")
+
+    # reset sudo timeout
+    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
 
     #
     # Create vscode startup tasks
@@ -1047,7 +1055,7 @@ def get_google_flutter_engine_url():
     return url
 
 
-def get_flutter_engine_runtime():
+def get_flutter_engine_runtime(clean_workspace):
     """Downloads Flutter Engine Runtime"""
 
     base_url = get_google_flutter_engine_url()
@@ -1058,10 +1066,26 @@ def get_flutter_engine_runtime():
 
     cwd = get_platform_working_dir('flutter-engine')
 
-    download_https_file(cwd, base_url, filename, None, None, None, None)
+    archive_path = os.path.join(cwd, filename)
+
+    if clean_workspace:
+        if os.path.exists(archive_path):
+            cmd = ["rm", archive_path]
+            subprocess.check_output(cmd)
+
+    if os.path.exists(archive_path):
+        print_banner("Skipping Engine artifact download")
+    else:
+        print_banner("Downloading Engine artifact")
+        download_https_file(cwd, base_url, filename, None, None, None, None)
 
     bundle_folder = os.path.join(cwd, 'bundle')
     os.environ['BUNDLE_FOLDER'] = bundle_folder
+
+    if clean_workspace:
+        if os.path.exists(bundle_folder):
+            cmd = ["rm", "-rf", bundle_folder]
+            subprocess.check_output(cmd, cwd=cwd)
 
     lib_folder = os.path.join(bundle_folder, 'lib')
     make_sure_path_exists(lib_folder)
@@ -1101,102 +1125,6 @@ def get_flutter_engine_runtime():
         cmd = ["rm", "flutter_embedder.h"]
         subprocess.check_call(cmd, cwd=lib_folder)
 
-    cmd = ["rm", archive]
-    subprocess.check_output(cmd, cwd=cwd)
-
-
-def get_artifacts(config, flutter_sdk_path, flutter_auto_folder, agl_folder):
-    """ Get x86_64 Engine artifacts """
-
-    tmp_folder = get_workspace_tmp_folder()
-    make_sure_path_exists(tmp_folder)
-
-    arch = get_host_machine_arch()
-
-    fetch_linux_engine = False
-    flutter_runtime = 'debug'
-
-    platforms = config['platforms']
-
-    for platform_ in platforms:
-
-        fetch_linux_engine = True
-
-        flutter_runtime = platform_['flutter_runtime']
-
-#        if platform_['id'] == 'AGL-qemu' and platform_['type'] == 'qemu':
-#            install_agl_qemu_image(agl_folder, config, platform_)
-
-#        if get_host_type() == 'linux' and arch == "x86_64":
-#            if platform_['id'] == 'desktop-auto' and platform_['type'] == 'host':
-#                install_flutter_auto(flutter_auto_folder, config, platform_)
-
-    if fetch_linux_engine:
-
-        engine_arch = 'x64' if arch == 'x86_64' else 'arm64'
-        print_banner("Fetching linux-%s Flutter Engine" % engine_arch)
-
-        engine_version = get_flutter_engine_version(flutter_sdk_path)
-        if arch == 'x86_64':
-            url = 'https://storage.googleapis.com/flutter_infra_release/flutter/%s/linux-x64/linux-x64-embedder' % \
-                  engine_version
-        elif arch == 'arm64':
-            # download something as a place holder for later
-            url = 'https://storage.googleapis.com/flutter_infra_release/flutter/%s/linux-arm64/artifacts.zip' % \
-                  engine_version
-        else:
-            print("arch %s not supported" % arch)
-            return
-
-        flutter_engine_zip = "%s/embedder.zip" % tmp_folder
-
-        host_type = get_host_type()
-
-        print("** Downloading %s via %s" % (flutter_engine_zip, url))
-        res = fetch_https_binary_file(url, flutter_engine_zip, False, None, None, None)
-        print(res)
-        if not res:
-            print_banner("Failed to download %s" % flutter_engine_zip)
-            return
-        if not os.path.exists(flutter_engine_zip):
-            print_banner("Failed to download %s" % flutter_engine_zip)
-            return
-        print("** Downloaded %s" % flutter_engine_zip)
-
-        bundle_folder = os.path.join(flutter_auto_folder, engine_version[0:7], '%s-x64' % host_type, flutter_runtime,
-                                     'bundle')
-        os.environ['BUNDLE_FOLDER'] = bundle_folder
-
-        lib_folder = os.path.join(bundle_folder, 'lib')
-        make_sure_path_exists(lib_folder)
-
-        data_folder = os.path.join(bundle_folder, 'data')
-        make_sure_path_exists(data_folder)
-
-        icudtl_source = os.path.join(flutter_sdk_path,
-                                     "bin/cache/artifacts/engine/%s/icudtl.dat" %
-                                     'linux-x64' if get_host_type() == 'linux' else 'darwin-x64')
-        if not os.path.exists(icudtl_source):
-            cmd = ["flutter", "doctor", "-v"]
-            subprocess.check_call(cmd, cwd=flutter_sdk_path)
-
-        icudtl_source = os.path.join(flutter_sdk_path, "bin/cache/artifacts/engine/%s-x64/icudtl.dat" % host_type)
-        subprocess.check_call(["cp", icudtl_source, "%s/" % data_folder])
-
-        with zipfile.ZipFile(flutter_engine_zip, "r") as zip_ref:
-            zip_ref.extractall(lib_folder)
-
-        # remove archive
-        cmd = ["rm", flutter_engine_zip]
-        subprocess.check_output(cmd)
-
-        # remove unused file
-        if host_type == 'linux':
-            cmd = ["rm", "flutter_embedder.h"]
-            subprocess.check_call(cmd, cwd=lib_folder)
-
-    clear_folder(tmp_folder)
-
 
 def handle_conditionals(conditionals, cwd):
     if not conditionals:
@@ -1216,16 +1144,21 @@ def handle_conditionals(conditionals, cwd):
                 subprocess.call(cmd_arr, cwd=cwd)
 
 
-def handle_pre_requisites(obj, host_machine_arch, cwd):
+def handle_pre_requisites(obj, cwd):
     if not obj:
         return
+
+    host_machine_arch = get_host_machine_arch()
 
     if host_machine_arch in obj:
         host_specific_pre_requisites = obj[host_machine_arch]
 
         host_type = get_host_type()
+
         if host_type == "linux":
+
             os_release_name = get_freedesktop_os_release_name()
+
             if os_release_name in host_specific_pre_requisites:
                 distro = host_specific_pre_requisites[os_release_name]
 
@@ -1587,45 +1520,55 @@ def is_host_type_supported(host_types):
     return True
 
 
+def setup_platform(platform_, git_token, cookie_file):
+    """ Sets up platform """
+    # if platform_['type'] == 'docker':
+    runtime = platform_['runtime']
+
+    # skip if architecture not supported
+    host_machine_arch = get_host_machine_arch()
+    if not host_machine_arch in platform_['supported_archs']:
+        print_banner("\"%s\" not supported on this machine" % platform_['id'])
+        return
+
+    # skip if distro not supported
+    if not is_host_type_supported(platform_['supported_host_types']):
+        print_banner("\"%s\" not supported on this host type" % platform_['id'])
+        return
+
+    print_banner("Setting up Platform %s - %s" % (platform_['id'], host_machine_arch))
+
+    cwd = get_platform_working_dir(platform_['id'])
+
+    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+
+    handle_dotenv(platform_.get('dotenv'))
+    handle_env(platform_.get('env'))
+    handle_pre_requisites(runtime.get('pre-requisites'), cwd)
+    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    handle_artifacts_obj(runtime.get('artifacts'), host_machine_arch, cwd, git_token, cookie_file)
+    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    handle_docker_obj(runtime.get('docker'), host_machine_arch, cwd)
+    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    create_platform_config_file(runtime.get('config'), cwd)
+    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    handle_conditionals(runtime.get('conditionals'), cwd)
+    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    handle_commands_obj(runtime.get('post_cmds'), cwd)
+
+    handle_custom_devices(platform_)
+
+
 def setup_platforms(platforms, git_token, cookie_file):
     """ Sets up each occuring platform defined """
+
     for platform_ in platforms:
+        setup_platform(platform_, git_token, cookie_file)
 
-        # if platform_['type'] == 'docker':
-        runtime = platform_['runtime']
-
-        # skip if architecture not supported
-        host_machine_arch = get_host_machine_arch()
-        if not host_machine_arch in platform_['supported_archs']:
-            print_banner("\"%s\" not supported on this machine" % platform_['id'])
-            continue
-
-        # skip if distro not supported
-        if not is_host_type_supported(platform_['supported_host_types']):
-            print_banner("\"%s\" not supported on this host type" % platform_['id'])
-            continue
-
-        print_banner("Setting up Platform %s - %s" % (platform_['id'], host_machine_arch))
-
-        cwd = get_platform_working_dir(platform_['id'])
-
+        # reset sudo timeout
         subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
 
-        handle_dotenv(platform_.get('dotenv'))
-        handle_env(platform_.get('env'))
-        handle_pre_requisites(runtime.get('pre-requisites'), host_machine_arch, cwd)
-        subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
-        handle_artifacts_obj(runtime.get('artifacts'), host_machine_arch, cwd, git_token, cookie_file)
-        subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
-        handle_docker_obj(runtime.get('docker'), host_machine_arch, cwd)
-        subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
-        create_platform_config_file(runtime.get('config'), cwd)
-        subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
-        handle_conditionals(runtime.get('conditionals'), cwd)
-        subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
-        handle_commands_obj(runtime.get('post_cmds'), cwd)
-
-        handle_custom_devices(platform_)
+    print_banner("Platform Setup Complete")
 
 
 def base64_to_string(b):
@@ -1924,6 +1867,15 @@ flutter doctor -v
 flutter custom-devices list
 '''
 
+
+def write_env_scipt_header(workspace):
+    """ Create environmental variable bash script """
+    environment_script = os.path.join(workspace, 'setup_env.sh')
+
+    with open(environment_script, 'w+') as script:
+        script.write(env_prefix)
+
+
 env_qemu = '''
 echo \"********************************************\"
 echo \"* Type 'qemu_run' to start the emulator    *\"
@@ -1953,14 +1905,6 @@ tell application "Finder"
     end tell
 end tell
 '''
-
-
-def write_env_scipt_header(workspace):
-    """ Create environmental variable bash script """
-    environment_script = os.path.join(workspace, 'setup_env.sh')
-
-    with open(environment_script, 'w+') as script:
-        script.write(env_prefix)
 
 
 def setup_env_script(workspace, args, platform_):
@@ -2097,6 +2041,83 @@ def get_platform_ids(platforms):
     for platform_ in platforms:
         res.append(platform_.get('id'))
     return res
+
+
+def get_engine_commit(version, hash):
+    """Get matching engine commit hash."""
+    import pycurl
+    import certifi
+    from io import BytesIO
+
+    buffer = BytesIO()
+    c = pycurl.Curl()
+    c.setopt(c.URL, f'https://raw.githubusercontent.com/flutter/flutter/{hash}/bin/internal/engine.version')
+    c.setopt(c.WRITEDATA, buffer)
+    c.setopt(c.CAINFO, certifi.where())
+    c.perform()
+    c.close()
+
+    get_body = buffer.getvalue()
+
+    return version, get_body.decode('utf8').strip()
+
+
+def get_linux_release_file():
+    """Returns dictionary of releases_linux.json"""
+
+    cwd = get_platform_working_dir('flutter-engine')
+
+    filename = 'releases_linux.json'
+    url = 'https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json'
+
+    download_https_file(cwd, url, filename, None, None, None, None)
+
+    return os.path.join(cwd, filename)
+
+
+def get_version_files(cwd):
+    """Get Dart and Engine Version files"""
+    import concurrent.futures
+
+    if cwd is None:
+        cwd = get_platform_working_dir('flutter-engine')
+    else:
+        make_sure_path_exists(cwd)
+
+    release_linux = get_linux_release_file()
+
+    res = {}
+    with open(release_linux, 'r') as f:
+        for release in json.load(f).get('releases', []):
+            if 'dart_sdk_version' in release:
+                res[release['version']] = release['dart_sdk_version']
+
+    dest_file = os.path.join(cwd, 'dart-revision.json')
+    print_banner("Writing %s" % dest_file)
+    with open(dest_file, 'w+') as o:
+        json.dump(res, o, sort_keys=True, indent=2)
+
+
+    engine_revs = {}
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = []
+        with open(release_linux, 'r') as f:
+            for release in json.load(f).get('releases', []):
+                futures.append(executor.submit(get_engine_commit, version=release['version'], hash=release['hash']))
+                subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+
+            for future in concurrent.futures.as_completed(futures):
+                res = future.result()
+                engine_revs[res[0]] = res[1]
+                subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+
+
+    dest_file = os.path.join(cwd, 'engine-revision.json')
+    print_banner("Writing %s" % dest_file)
+    with open(dest_file, 'w+') as o:
+        json.dump(engine_revs, o, sort_keys=True, indent=2)
+
+    print_banner("Done")
 
 
 def get_launch_obj(repo, device_id):

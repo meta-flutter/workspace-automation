@@ -2,7 +2,7 @@
     "id": "desktop-auto",
     "load": true,
     "supported_archs": ["x86_64"],
-    "supported_host_types": ["ubuntu"],
+    "supported_host_types": ["ubuntu","fedora linux"],
     "flutter_runtime": "debug",
     "type": "host",
     "env": {
@@ -12,7 +12,8 @@
       "COMP_SURF_PBR_SRC_DIR": "${FLUTTER_WORKSPACE}/app/comp_surf_pbr",
       "COMP_SURF_PBR_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/comp_surf_pbr/build",
       "COMP_SURF_PBR_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Debug",
-      "FLUTTER_AUTO_EXE": "LD_LIBRARY_PATH=${COMP_SURF_PBR_BUILD_DIR} ${FLUTTER_AUTO_BUILD_DIR}/shell/flutter-auto",
+      "FLUTTER_AUTO_EXE": "LD_LIBRARY_PATH=${COMP_SURF_PBR_BUILD_DIR} ${FLUTTER_AUTO_BUILD_DIR}/shell/flutter-auto --j=${PLATFORM_ID_DIR_RELATIVE}/default_config.json --b=${PLATFORM_ID_DIR_RELATIVE}",
+      "PING_CMD": "loginctl show-session $(awk '/tty/ {print $1}' <(loginctl)) -p Type",
       "CREATE_BUNDLE_FOLDER": "mkdir -p ${PLATFORM_ID_DIR_RELATIVE}/data",
       "COPY_PLATFORM_ID_TO_BUNDLE_FOLDER": "cp -r ${PLATFORM_ID_DIR}/* ${PLATFORM_ID_DIR_RELATIVE}/",
       "COPY_BUNDLE_FOLDER_TO_PLATOFRM_ID": "cp -r ${BUNDLE_FOLDER}/* ${PLATFORM_ID_DIR_RELATIVE}/",
@@ -27,14 +28,20 @@
               "sudo snap install cmake --classic",
               "sudo apt-get update",
               "sudo apt-get upgrade -y",
-              "sudo apt-get install -y curl wget libwayland-dev wayland-protocols libxkbcommon-dev",
-              "sudo apt-get install -y mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev vulkan-tools",
-              "sudo apt install -y libunwind-dev",
-              "sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-base gstreamer1.0-gl libavformat-dev",
-              "sudo apt-get install -y clang libc++-dev libc++abi-dev",
+              "sudo apt-get install -y curl wget libwayland-dev wayland-protocols libxkbcommon-dev mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev vulkan-tools libunwind-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-base gstreamer1.0-gl libavformat-dev clang libc++-dev libc++abi-dev",
               "sudo apt-get autoremove -y",
               "sudo apt-get autoclean",
               "sudo apt-get clean",
+              "cmake --version",
+              "clang++ --version"
+            ]
+          },
+          "fedora linux": {
+            "cmds": [
+              "sudo dnf -y update",
+              "sudo dnf -y upgrade",
+              "sudo dnf -y install wayland-devel wayland-protocols-devel libxkbcommon-devel cmake ninja-build mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libglapi mesa-libxatracker mesa-vulkan-drivers vulkan-tools libunwind-devel clang clang-analyzer clang-devel clang-libs clang-resource-filesystem llvm-devel clang-tools-extra lld lld-libs lldb libcxx libcxx-devel libcxx-static libcxxabi libcxxabi-devel libcxxabi-static gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel gstreamer1-plugins-bad-free-extras gstreamer1-plugins-base-tools gstreamer1-plugins-good gstreamer1-plugins-good-extras gstreamer1-plugins-ugly-free",
+              "sudo dnf autoremove",
               "cmake --version",
               "clang++ --version"
             ]
@@ -71,12 +78,12 @@
       "sdkNameAndVersion": "flutter-auto x86_64",
       "platform":  "linux-x64",
       "enabled": true,
-      "ping": "bash -c \"loginctl show-session $(awk '/tty/ {print $1}' <(loginctl)) -p Type\"",
+      "ping": "bash -c \"${PING_CMD}\"",
       "pingSuccessRegex": "Type=wayland",
       "postBuild": "bash -c \"rm -rf ${PLATFORM_ID_DIR_RELATIVE}\"",
       "install": "bash -c \"${STAGE_BUNDLE_FOLDER}\"",
       "uninstall": "bash -c \"rm -rf ${PLATFORM_ID_DIR_RELATIVE}\"",
-      "runDebug": "bash -c \"${FLUTTER_AUTO_EXE} --j=${PLATFORM_ID_DIR_RELATIVE}/default_config.json --b=${PLATFORM_ID_DIR_RELATIVE}\"",
+      "runDebug": "bash -c \"${FLUTTER_AUTO_EXE}\"",
       "forwardPort": null,
       "forwardPortSuccessRegex": null,
       "screenshot": null
