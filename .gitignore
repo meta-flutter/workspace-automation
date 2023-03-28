@@ -143,3 +143,6 @@ flutter
 app
 flutter_*.log
 qemu_run.scpt
+
+dart-revision.json
+engine-revision.json

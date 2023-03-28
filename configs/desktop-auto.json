@@ -8,7 +8,7 @@
     "env": {
       "FLUTTER_AUTO_SRC_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen",
       "FLUTTER_AUTO_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen/build",
-      "FLUTTER_AUTO_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Debug",
+      "FLUTTER_AUTO_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Debug -DBUILD_PLUGIN_GSTREAMER_EGL=ON",
       "COMP_SURF_PBR_SRC_DIR": "${FLUTTER_WORKSPACE}/app/comp_surf_pbr",
       "COMP_SURF_PBR_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/comp_surf_pbr/build",
       "COMP_SURF_PBR_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Debug",
@@ -21,6 +21,12 @@
       "STAGE_BUNDLE_FOLDER": "${CREATE_BUNDLE_FOLDER} && ${COPY_PLATFORM_ID_TO_BUNDLE_FOLDER} && ${COPY_BUNDLE_FOLDER_TO_PLATOFRM_ID} && ${CREATE_ASSET_SYMLINK}"
     },
     "runtime": {
+      "config": {
+        "width": 1920,
+        "height": 1080,
+        "cursor_theme": "DMZ-White",
+        "fullscreen": false
+      },
       "pre-requisites": {
         "x86_64": {
           "ubuntu": {
@@ -41,7 +47,7 @@
               "sudo dnf -y update",
               "sudo dnf -y upgrade",
               "sudo dnf -y install wayland-devel wayland-protocols-devel libxkbcommon-devel cmake ninja-build mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libglapi mesa-libxatracker mesa-vulkan-drivers vulkan-tools libunwind-devel clang clang-analyzer clang-devel clang-libs clang-resource-filesystem llvm-devel clang-tools-extra lld lld-libs lldb libcxx libcxx-devel libcxx-static libcxxabi libcxxabi-devel libcxxabi-static gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel gstreamer1-plugins-bad-free-extras gstreamer1-plugins-base-tools gstreamer1-plugins-good gstreamer1-plugins-good-extras gstreamer1-plugins-ugly-free",
-              "sudo dnf autoremove",
+              "sudo dnf -y autoremove",
               "cmake --version",
               "clang++ --version"
             ]
@@ -63,13 +69,7 @@
             "make -j"
           ]
         }
-      ],
-      "config": {
-        "width": 1920,
-        "height": 1080,
-        "cursor_theme": "DMZ-White",
-        "fullscreen": false
-      }
+      ]
     },
     "overwrite-existing": true,
     "custom-device": {

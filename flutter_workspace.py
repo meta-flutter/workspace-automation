@@ -72,9 +72,8 @@ def main():
     parser.add_argument('--flutter-version', default='', type=str,
                         help='Select flutter version.  Overrides config file key:'
                              ' flutter-version')
-    parser.add_argument('--version-files', default=False, type=str, help='Create JSON file correlating Flutter SDK and Dart version tag')
-    parser.add_argument('--target-user', default='', type=str, help='Sets custom-device target user name')
-    parser.add_argument('--target-address', default='', type=str, help='Sets custom-device target address')
+    parser.add_argument('--fetch-engine', default=False, action='store_true', help='Fetch Engine artifacts')
+    parser.add_argument('--version-files', default='', type=str, help='Create JSON files correlating Flutter SDK to Engine and Dart commits')
     parser.add_argument('--stdin-file', default='', type=str, help='Use for passing stdin for debugging')
     args = parser.parse_args()
 
@@ -114,6 +113,14 @@ def main():
     # Control+C handler
     #
     signal.signal(signal.SIGINT, handle_ctrl_c)
+
+    #
+    # Fetch Engine Artifacts
+    #
+    if args.fetch_engine:
+        print_banner("Fetching Engine Artifacts")
+        get_flutter_engine_runtime(True)
+        return
 
     #
     # Version Files
@@ -367,9 +374,6 @@ def validate_platform_config(platform_):
     if 'supported_host_types' not in platform_:
         print_banner("Missing 'supported_host_types' key in platform config")
         return False
-    if 'flutter_runtime' not in platform_:
-        print_banner("Missing 'flutter_runtime' key in platform config")
-        return False
     if 'type' not in platform_:
         print_banner("Missing 'type' key in platform config")
         return False
@@ -378,15 +382,6 @@ def validate_platform_config(platform_):
             if 'runtime' not in platform_:
                 print_banner("Missing 'runtime' key in platform config")
                 return False
-
-            print("Platform ID: %s" % (platform_['id']))
-
-        elif platform_['type'] == 'host':
-            if 'runtime' not in platform_:
-                print_banner("Missing 'runtime' key in platform config")
-                return False
-
-            print("Platform ID: %s" % (platform_['id']))
 
         elif platform_['type'] == 'qemu':
             if 'flutter_runtime' not in platform_:
@@ -399,22 +394,13 @@ def validate_platform_config(platform_):
                 print_banner("Missing 'custom-device' key in platform config")
                 return False
 
-            print("Platform ID: %s" % (platform_['id']))
-
         elif platform_['type'] == 'docker':
-            if 'id' not in platform_:
-                print_banner("Missing 'id' key in platform config")
-                return False
             if 'runtime' not in platform_:
                 print_banner("Missing 'runtime' key in platform config")
                 return False
-            if 'custom-device' not in platform_:
-                print_banner("Missing 'custom-device' key in platform config")
+            if 'flutter_runtime' not in platform_:
+                print_banner("Missing 'flutter_runtime' key in platform config")
                 return False
-
-            print("Platform ID: %s" % (platform_['id']))
-
-        elif platform_['type'] == 'target':
             if 'custom-device' not in platform_:
                 print_banner("Missing 'custom-device' key in platform config")
                 return False
@@ -422,10 +408,39 @@ def validate_platform_config(platform_):
                 print_banner("Missing 'overwrite-existing' key in platform config")
                 return False
 
-            print("Platform ID: %s" % (platform_['id']))
+        elif platform_['type'] == 'host':
+            if 'runtime' not in platform_:
+                print_banner("Missing 'runtime' key in platform config")
+                return False
+            if 'flutter_runtime' not in platform_:
+                print_banner("Missing 'flutter_runtime' key in platform config")
+                return False
+            if 'custom-device' not in platform_:
+                print_banner("Missing 'custom-device' key in platform config")
+                return False
+            if 'overwrite-existing' not in platform_:
+                print_banner("Missing 'overwrite-existing' key in platform config")
+                return False
+
+        elif platform_['type'] == 'remote':
+            if 'runtime' not in platform_:
+                print_banner("Missing 'runtime' key in platform config")
+                return False
+            if 'flutter_runtime' not in platform_:
+                print_banner("Missing 'flutter_runtime' key in platform config")
+                return False
+            if 'custom-device' not in platform_:
+                print_banner("Missing 'custom-device' key in platform config")
+                return False
+            if 'overwrite-existing' not in platform_:
+                print_banner("Missing 'overwrite-existing' key in platform config")
+                return False
 
         else:
             print("platform type %s is not currently supported." % (platform_['type']))
+            return False
+
+        print("Platform ID: %s" % (platform_['id']))
 
     return True
 
@@ -929,6 +944,9 @@ def get_flutter_engine_version(flutter_sdk_path):
     """ Get Engine Commit from Flutter SDK """
 
     engine_version_file = os.path.join(flutter_sdk_path, 'bin/internal/engine.version')
+
+    if not os.path.exists(engine_version_file):
+        sys.exit("Missing Flutter SDK")
 
     with open(engine_version_file) as f:
         engine_version = f.read()
@@ -1645,7 +1663,7 @@ def get_github_workflow_artifacts(token, owner, repo, id_):
     return {}
 
 
-def get_workspace_tmp_folder():
+def get_workspace_tmp_folder() -> str:
     """ Gets tmp folder path located in workspace"""
     workspace = os.getenv("FLUTTER_WORKSPACE")
     tmp_folder = os.path.join(workspace, '.config', 'flutter_workspace', 'tmp')
@@ -1653,7 +1671,7 @@ def get_workspace_tmp_folder():
     return tmp_folder
 
 
-def get_github_artifact(token, url, filename):
+def get_github_artifact(token: str, url: str, filename: str) -> str:
     """ Gets artifact via GitHub URL"""
 
     tmp_file = "%s/%s" % (get_workspace_tmp_folder(), filename)
@@ -1665,7 +1683,7 @@ def get_github_artifact(token, url, filename):
     return None
 
 
-def ubuntu_is_pkg_installed(package):
+def ubuntu_is_pkg_installed(package: str) -> bool:
     """Ubuntu - checks if package is installed"""
 
     cmd = ['dpkg-query', '-W', "--showformat='${Status}\n'", package, '|grep "install ok installed"']
@@ -1689,23 +1707,38 @@ def ubuntu_install_pkg_if_not_installed(package):
         subprocess.call(cmd)
 
 
-def fedora_is_pkg_installed(package):
+def get_dnf_list(filter: str) -> str:
+    """Returns dnf package list if present, None otherwise"""
+
+    cmd = ['dnf', 'list', "installed", "|", "grep", filter]
+
+    result = subprocess.run(cmd, capture_output=True, text=True).stdout.strip('\'').strip('\n')
+
+    return result
+
+
+def fedora_is_pkg_installed(package: str) -> bool:
     """Fedora - checks if package is installed"""
 
     ext_pkg = '%s.%s' % (package, platform.machine())
-    cmd = ['dnf', 'list', "installed", "|", "grep", ext_pkg]
 
-    result = subprocess.run(cmd, capture_output=True, text=True).stdout.strip('\'').strip('\n')
+    result = get_dnf_list(ext_pkg)
 
     if ext_pkg in result:
         print("Package %s Found" % ext_pkg)
         return True
     else:
-        print("Package %s Not Found" % ext_pkg)
-        return False
+        ext_pkg = '%s.noarch' % package
+        result = get_dnf_list(ext_pkg)
+        if ext_pkg in result:
+            print("Package %s Found" % ext_pkg)
+            return True
+        else:
+            print("Package %s Not Found" % ext_pkg)
+            return False
 
 
-def fedora_install_pkg_if_not_installed(package):
+def fedora_install_pkg_if_not_installed(package: str):
     """Fedora - Installs package if not already installed"""
     if not fedora_is_pkg_installed(package):
         print("\n* Installing runtime package dependency: %s" % package)
@@ -1714,7 +1747,7 @@ def fedora_install_pkg_if_not_installed(package):
         subprocess.call(cmd)
 
 
-def is_linux_host_kvm_capable():
+def is_linux_host_kvm_capable() -> bool:
     """Determine if CPU supports HW Hypervisor support"""
     cmd = 'cat /proc/cpuinfo |egrep "vmx|svm"'
     ps = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -1724,13 +1757,13 @@ def is_linux_host_kvm_capable():
     return False
 
 
-def get_mac_brew_path():
+def get_mac_brew_path() -> str:
     """ Read which brew """
     result = subprocess.run(['which', 'brew'], stdout=subprocess.PIPE)
     return result.stdout.decode('utf-8').rstrip()
 
 
-def get_mac_openssl_prefix():
+def get_mac_openssl_prefix() -> str:
     """ Read brew openssl prefix variable """
     if platform.machine() == 'arm64':
         return subprocess.check_output(
@@ -1788,25 +1821,18 @@ def install_minimum_runtime_deps():
         os_release_name = get_freedesktop_os_release_name()
 
         if os_release_name == 'ubuntu':
-            cmd = ["sudo", "apt", "update", "-y"]
+            cmd = ['sudo', 'apt', 'update', '-y']
             subprocess.check_output(cmd)
-            ubuntu_install_pkg_if_not_installed("curl")
-            ubuntu_install_pkg_if_not_installed("libcurl4-openssl-dev")
-            ubuntu_install_pkg_if_not_installed("libssl-dev")
-            ubuntu_install_pkg_if_not_installed("python3-dotenv")
-            ubuntu_install_pkg_if_not_installed("python3-pycurl")
-            ubuntu_install_pkg_if_not_installed("python3-pip")
+            packages = 'curl libcurl4-openssl-dev libssl-dev python3-dotenv python3-pycurl python3-pip'.split(' ')
+            for package in packages:
+                ubuntu_install_pkg_if_not_installed(package)
 
         elif os_release_name == 'fedora linux':
-            cmd = ["sudo", "dnf", "update", "-y"]
+            cmd = ['sudo', 'dnf', '-y', 'update']
             subprocess.check_output(cmd)
-            fedora_install_pkg_if_not_installed("curl")
-            fedora_install_pkg_if_not_installed("libcurl-devel")
-            fedora_install_pkg_if_not_installed("openssl-devel")
-            fedora_install_pkg_if_not_installed("gtk3-devel")
-            fedora_install_pkg_if_not_installed("python3-dotenv")
-            fedora_install_pkg_if_not_installed("python3-pycurl")
-            fedora_install_pkg_if_not_installed("python3-pip")
+            packages = 'dnf-plugins-core curl libcurl-devel openssl-devel gtk3-devel python3-dotenv python3-pycurl python3-pip'.split(' ')
+            for package in packages:
+                fedora_install_pkg_if_not_installed(package)
 
     elif host_type == "darwin":
         brew_path = get_mac_brew_path()
@@ -2098,6 +2124,7 @@ def get_version_files(cwd):
         json.dump(res, o, sort_keys=True, indent=2)
 
 
+    print_banner('Fetching Engine revisions')
     engine_revs = {}
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []

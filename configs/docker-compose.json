@@ -1,0 +1,69 @@
+{
+    "id": "docker-compose",
+    "load": true,
+    "supported_archs": ["x86_64"],
+    "supported_host_types": ["ubuntu","fedora linux"],
+    "type": "generic",
+    "env": {
+        "DOCKER_COMPOSE_VER": "1.25.0"
+    },
+    "runtime": {
+        "pre-requisites": {
+            "x86_64": {
+                "ubuntu": {
+                    "conditionals": [
+                        {
+                            "path": "/etc/apt/trusted.gpg.d/docker.gpg",
+                            "cmds": [
+                                "echo 'Installing /etc/apt/trusted.gpg.d/docker.gpg'",
+                                "sudo sh -l -c 'curl -sSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/docker.gpg >/dev/null 2>&1'"
+                            ]
+                        },
+                        {
+                            "path": "/usr/local/bin/docker-compose",
+                            "cmds": [
+                                "sudo curl --retry 5 -L \"https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VER}/docker-compose-$(uname -s)-$(uname -m)\" -o /usr/local/bin/docker-compose",
+                                "sudo chmod +x /usr/local/bin/docker-compose"
+                            ]
+                        },
+                        {
+                            "path": "/usr/bin/docker-compose",
+                            "cmds": [
+                                "sudo ln -sfn /usr/local/bin/docker-compose /usr/bin/docker-compose"
+                            ]
+                        }
+                    ],
+                    "cmds": [
+                        "sudo apt-get update",
+                        "echo \"deb [arch=amd64, signed-by=/etc/apt/trusted.gpg.d/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list",
+                        "sudo apt-get install -y apt-transport-https ca-certificates software-properties-common",
+                        "sudo apt-get update",
+                        "sudo apt-get upgrade -y",
+                        "sudo apt-get install -y ubuntu-desktop gcc git vim curl docker-ce docker-ce-cli containerd.io pv pbzip2 python3-pip jq bridge-utils",
+                        "sudo apt-get autoremove -y",
+                        "sudo apt-get autoclean",
+                        "sudo apt-get clean",
+                        "sudo usermod -aG docker ${USER}"
+                    ]
+                },
+                "fedora linux": {
+                    "cmds": [
+                        "sudo dnf -y config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo",
+                        "sudo dnf -y update",
+                        "sudo dnf -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin",
+                        "sudo dnf -y install ca-certificates gcc git vim pv pbzip2 python3-pip jq bridge-utils",
+                        "sudo systemctl disable --now docker.service docker.socket",
+                        "sudo dnf -y autoremove",
+                        "sudo usermod -aG docker ${USER}",
+                        "sudo dnf -y update",
+                        "sudo dnf install -y fuse-overlayfs iptables docker-ce-rootless-extras",
+                        "dockerd-rootless-setuptool.sh install",
+                        "systemctl --user start docker",
+                        "systemctl --user enable docker",
+                        "docker run hello-world"
+                    ]
+                }
+            }
+        }
+    }
+}

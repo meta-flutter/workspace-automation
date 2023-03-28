@@ -4,7 +4,7 @@
     "supported_archs": ["x86_64","arm64"],
     "supported_host_types": ["darwin","fedora linux","ubuntu"],
     "flutter_runtime": "debug",
-    "type": "target",
+    "type": "remote",
     "env": {
         "DEVICE_HOSTNAME": "raspberrypi0-2w-64.local",
         "PING_CMD": "ping -c 1 -w 400 ${DEVICE_HOSTNAME}",
