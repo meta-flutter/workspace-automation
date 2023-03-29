@@ -8,7 +8,7 @@
     "env": {
       "FLUTTER_AUTO_SRC_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen",
       "FLUTTER_AUTO_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen/build",
-      "FLUTTER_AUTO_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Debug -DBUILD_PLUGIN_GSTREAMER_EGL=ON",
+      "FLUTTER_AUTO_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Debug",
       "COMP_SURF_PBR_SRC_DIR": "${FLUTTER_WORKSPACE}/app/comp_surf_pbr",
       "COMP_SURF_PBR_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/comp_surf_pbr/build",
       "COMP_SURF_PBR_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Debug",
@@ -32,14 +32,19 @@
           "ubuntu": {
             "cmds": [
               "sudo snap install cmake --classic",
-              "sudo apt-get update",
-              "sudo apt-get upgrade -y",
-              "sudo apt-get install -y curl wget libwayland-dev wayland-protocols libxkbcommon-dev mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev vulkan-tools libunwind-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-base gstreamer1.0-gl libavformat-dev clang libc++-dev libc++abi-dev",
-              "sudo apt-get autoremove -y",
-              "sudo apt-get autoclean",
-              "sudo apt-get clean",
-              "cmake --version",
-              "clang++ --version"
+              "sudo add-apt-repository -y ppa:kisak/kisak-mesa",
+              "sudo apt update -y",
+              "sudo apt purge -y clang libunwind-dev clang-14 lldb-14 lld-14 clangd-14 clang-tidy-14 clang-format-14 clang-tools-14 llvm-14-dev lld-14 lldb-14 llvm-14-tools libomp-14-dev libc++-14-dev libc++abi-14-dev libclang-common-14-dev libclang-14-dev libclang-cpp14-dev libunwind-14-dev",
+              "sudo apt install lsb-release wget software-properties-common gnupg",
+              "wget https://apt.llvm.org/llvm.sh",
+              "chmod +x ./llvm.sh",
+              "sed -i 's|add-apt-repository \"${REPO_NAME}\"|add-apt-repository -y \"${REPO_NAME}\"|g' ./llvm.sh",
+              "sudo ./llvm.sh 14",
+              "rm ./llvm.sh",
+              "sudo apt-get install -y clang-14 lldb-14 lld-14 clangd-14 clang-tidy-14 clang-format-14 clang-tools-14 llvm-14-dev lld-14 lldb-14 llvm-14-tools libomp-14-dev libc++-14-dev libc++abi-14-dev libclang-common-14-dev libclang-14-dev libclang-cpp14-dev libunwind-14-dev",
+              "sudo apt-get -y install libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libxkbcommon-dev vulkan-tools ninja-build",
+              "sudo apt -y autoremove",
+              "sudo apt -y clean"
             ]
           },
           "fedora linux": {
