@@ -77,6 +77,9 @@ def main():
     parser.add_argument('--stdin-file', default='', type=str, help='Use for passing stdin for debugging')
     args = parser.parse_args()
 
+    # check python version
+    check_python_version()
+
     # reset sudo timestamp
     subprocess.check_call(['sudo', '-k'], stdout=subprocess.DEVNULL)
 
@@ -973,6 +976,7 @@ def get_freedesktop_os_release():
             line = line.strip()
             k, v = line.rstrip().split("=")
             d[k] = v.strip('"')
+            print(d)
         return d
 
 
@@ -2182,6 +2186,11 @@ def create_vscode_launch_file(repos, device_ids):
         make_sure_path_exists(vscode_folder)
         with open(launch_file, 'w+') as f:
             json.dump(launch, f, indent=4)
+
+
+def check_python_version():
+    if sys.version_info[1] < 7:
+        sys.exit('Python >= 3.7 required.  This machine is running 3.%s' % sys.version_info[1])
 
 
 if __name__ == "__main__":
