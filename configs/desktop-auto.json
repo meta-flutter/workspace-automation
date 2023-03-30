@@ -41,10 +41,10 @@
               "sed -i 's|add-apt-repository \"${REPO_NAME}\"|add-apt-repository -y \"${REPO_NAME}\"|g' ./llvm.sh",
               "sudo ./llvm.sh 14",
               "rm ./llvm.sh",
-              "sudo apt-get install -y clang-14 lldb-14 lld-14 clangd-14 clang-tidy-14 clang-format-14 clang-tools-14 llvm-14-dev lld-14 lldb-14 llvm-14-tools libomp-14-dev libc++-14-dev libc++abi-14-dev libclang-common-14-dev libclang-14-dev libclang-cpp14-dev libunwind-14-dev",
-              "sudo apt-get -y install libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libxkbcommon-dev vulkan-tools ninja-build",
-              "sudo apt -y autoremove",
-              "sudo apt -y clean"
+              "sudo apt install -y clang-14 lldb-14 lld-14 clangd-14 clang-tidy-14 clang-format-14 clang-tools-14 llvm-14-dev lld-14 lldb-14 llvm-14-tools libomp-14-dev libc++-14-dev libc++abi-14-dev libclang-common-14-dev libclang-14-dev libclang-cpp14-dev libunwind-14-dev",
+              "sudo apt install -y libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libxkbcommon-dev vulkan-tools ninja-build",
+              "sudo apt autoremove -y",
+              "sudo apt clean -y"
             ]
           },
           "fedora linux": {
