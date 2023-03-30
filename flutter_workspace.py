@@ -3,12 +3,14 @@
 #
 # Script that creates a Flutter Workspace
 #
-# Creates flutter workspace:
+# A Flutter Workspace includes:
 #
-#   .config
+#   .config/flutter
 #   .config/flutter_workspace
 #   .config/flutter_workspace/pub_cache
-#   .config/flutter_workspace/<platform-id>
+#   .config/flutter_workspace/flutter-engine
+#   .config/flutter_workspace/<platform id>
+#   .vscode
 #   app
 #   flutter
 #   setup_env.sh
