@@ -12,10 +12,12 @@
     },
     "runtime": {
         "config": {
-            "window_type": "BG",
-            "width": 1920,
-            "height": 1080,
-            "fullscreen": true
+            "view": {
+                "window_type": "BG",
+                "width": 1920,
+                "height": 1080,
+                "fullscreen": true
+            }
         },
         "qemu": {
             "cmd": "qemu-system-${FORMAL_MACHINE_ARCH}",

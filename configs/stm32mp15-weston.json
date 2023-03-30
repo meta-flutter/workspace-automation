@@ -8,13 +8,21 @@
     "env": {
         "DEVICE_HOSTNAME": "stm32mp15-disco.local",
         "PING_CMD": "ping -c 1 -w 400 ${DEVICE_HOSTNAME}",
-        "FLUTTER_AUTO_EXE": "flutter-auto --j=/tmp/${appName} --b=/tmp/${appName}",
+        "FLUTTER_AUTO_EXE": "flutter-auto --j=/tmp/${appName}/default_config.json --b=/tmp/${appName}",
         "CREATE_BUNDLE_FOLDER": "ssh -o BatchMode=yes weston@${DEVICE_HOSTNAME} mkdir -p /tmp/${appName}/data",
         "DELETE_USER_PWD": "ssh -t -oBatchMode=yes root@${DEVICE_HOSTNAME} passwd -d weston",
+        "COPY_PLATFORM_ID_TO_DEVICE": "scp -r ${PLATFORM_ID_DIR}/* weston@${DEVICE_HOSTNAME}:/tmp/${appName}/",
         "COPY_ASSETS_TO_DEVICE": "scp -r ${localPath}/* weston@${DEVICE_HOSTNAME}:/tmp/${appName}/data/flutter_assets",
         "DELETE_APP_FOLDER": "ssh -o BatchMode=yes weston@${DEVICE_HOSTNAME} rm -rf /tmp/${appName}"
     },
-    "runtime": {},
+    "runtime": {
+        "config": {
+            "view": {
+              "cursor_theme": "DMZ-White",
+              "fullscreen": true
+            }
+        }
+    },
     "overwrite-existing": true,
     "custom-device": {
         "id": "stm32mp15-weston",
@@ -25,7 +33,7 @@
         "ping": "bash -c \"${PING_CMD}\"",
         "pingSuccessRegex": "[<=]\\d+ms",
         "postBuild": "bash -c \"${DELETE_USER_PWD}\"",
-        "install": "bash -c \"${CREATE_BUNDLE_FOLDER} && ${COPY_ASSETS_TO_DEVICE}\"",
+        "install": "bash -c \"${CREATE_BUNDLE_FOLDER} && ${COPY_PLATFORM_ID_TO_DEVICE} && ${COPY_ASSETS_TO_DEVICE}\"",
         "uninstall": "bash -c \"${DELETE_APP_FOLDER}\"",
         "runDebug": "bash -c \"ssh -t -t -o BatchMode=yes weston@${DEVICE_HOSTNAME} ${FLUTTER_AUTO_EXE}\"",
         "forwardPort": "bash -c \"ssh -t -t -o BatchMode=yes -o ExitOnForwardFailure=yes -L 127.0.0.1:${hostPort}:127.0.0.1:${devicePort} weston@${DEVICE_HOSTNAME} echo 'Port forwarding success'; read\"",

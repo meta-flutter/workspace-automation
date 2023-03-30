@@ -23,10 +23,12 @@
     },
     "runtime": {
       "config": {
-        "width": 1920,
-        "height": 1080,
-        "cursor_theme": "DMZ-White",
-        "fullscreen": false
+        "view": {
+          "width": 1920,
+          "height": 1080,
+          "cursor_theme": "DMZ-White",
+          "fullscreen": false
+        }
       },
       "pre-requisites": {
         "x86_64": {

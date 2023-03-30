@@ -1507,32 +1507,10 @@ def get_platform_working_dir(platform_id):
 def create_platform_config_file(obj, cwd):
     if obj is None:
         return
-    else:
-        config_width = obj.get('width')
-        if config_width is None:
-            config_width = DEFAULT_WIDTH
-
-        config_height = obj.get('height')
-        if config_height is None:
-            config_height = DEFAULT_HEIGHT
-
-        config_fullscreen = obj.get('fullscreen')
-        if config_fullscreen is None:
-            config_fullscreen = DEFAULT_FULLSCREEN
-
-        config_window_type = obj.get('window_type')
-        if config_window_type is None:
-            config_window_type = DEFAULT_WINDOW_TYPE
-
-        config_cursor_theme = obj.get('cursor_theme')
-        if config_cursor_theme is None:
-            config_cursor_theme = DEFAULT_CURSOR_THEME
-
+    
     default_config_filepath = cwd.joinpath('default_config.json')
-    with open(default_config_filepath, 'w+') as default_config_file:
-        config = {"view": {"window_type": config_window_type, "width": config_width, "height": config_height,
-                           "fullscreen": config_fullscreen, "cursor_theme": config_cursor_theme}}
-        json.dump(config, default_config_file, indent=2)
+    with open(default_config_filepath, 'w+') as f:
+        json.dump(obj, f, indent=2)
 
 
 def is_host_type_supported(host_types):
