@@ -6,7 +6,7 @@
     "flutter_runtime": "debug",
     "type": "host",
     "env": {
-      "BUILD_PREFIX": "CC=/usr/lib/llvm-14/bin/clang CXX=/usr/lib/llvm-14/bin/clang++",
+      "BUILD_PREFIX": "CC=/usr/bin/clang CXX=/usr/bin/clang++",
       "FLUTTER_AUTO_SRC_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen",
       "FLUTTER_AUTO_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen/build",
       "FLUTTER_AUTO_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Debug",
