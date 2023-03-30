@@ -6,6 +6,8 @@
     "flutter_runtime": "debug",
     "type": "qemu",
     "env": {
+        "RELEASE_NAME": "octopus",
+        "RELEASE_VERSION": "latest",
         "FLUTTER_DEBUG_PORT": "1234",
         "FLUTTER_OBSERVATORY_HOST": "0.0.0.0",
         "CONTAINER_SSH_PORT": "2222"
@@ -20,11 +22,24 @@
             }
         },
         "artifacts": {
-            "x86_64": {
-                "http": ""
-            },
-            "arm64": {
-                "http": ""
+            "url": "https://download.automotivelinux.org/AGL/release/${RELEASE_NAME}/${RELEASE_VERSION}",
+            "artifacts": {
+                "x86_64": [
+                    {
+                        "endpoint": "/qemux86-64/deploy/images/qemux86-64/agl-demo-platform-crosssdk-qemux86-64.ext4.xz"
+                    },
+                    {
+                        "endpoint": "/qemux86-64/deploy/images/qemux86-64/zImage-qemuarm.bin"
+                    }
+                ],
+                "arm64": [
+                    {
+                        "endpoint": "/qemuarm64/deploy/images/qemuarm64/agl-demo-platform-crosssdk-qemuarm64.ext4.xz"
+                    },
+                    {
+                        "endpoint": "/qemuarm64/deploy/images/qemuarm64/Image-qemuarm64.bin"
+                    }
+                ]
             }
         },
         "qemu": {

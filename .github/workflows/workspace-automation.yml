@@ -31,11 +31,15 @@ jobs:
           FLUTTER_WORKSPACE=`pwd`/workspace
           mkdir -p $FLUTTER_WORKSPACE && pushd $FLUTTER_WORKSPACE
           sudo ../flutter_workspace.py --config=`pwd`/../configs
+          pwd
 
       - name: Source Environment
         shell: bash
         working-directory: workspace
         run: |
-          cat ./workspace/setup_env.sh
-          source ./workspace/setup_env.sh
+          pwd
+          SETUP_ENV = $(find -iname setup_env.sh)
+          cat $SETUP_ENV
+          source cat $SETUP_ENV
           flutter doctor -v
+          dart --version

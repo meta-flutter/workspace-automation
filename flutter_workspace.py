@@ -389,14 +389,20 @@ def validate_platform_config(platform_):
                 return False
 
         elif platform_['type'] == 'qemu':
-            if 'flutter_runtime' not in platform_:
-                print_banner("Missing 'flutter_runtime' key in platform config")
-                return False
             if 'runtime' not in platform_:
                 print_banner("Missing 'runtime' key in platform config")
                 return False
             if 'custom-device' not in platform_:
                 print_banner("Missing 'custom-device' key in platform config")
+                return False
+            if 'config' not in platform_['runtime']:
+                print_banner("Missing 'config' key in platform config")
+                return False
+            if 'artifacts' not in platform_['runtime']:
+                print_banner("Missing 'artifacts' key in platform config")
+                return False
+            if 'qemu' not in platform_['runtime']:
+                print_banner("Missing 'qemu' key in platform config")
                 return False
 
         elif platform_['type'] == 'docker':
@@ -1238,7 +1244,20 @@ def get_sha1sum(file):
     return sha1_hash.hexdigest()
 
 
-def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1):
+def get_sha256sum(file):
+    """Return sha256sum of specified file"""
+    import hashlib
+
+    sha256_hash = hashlib.sha256()
+    with open(file, "rb") as f:
+        # Read and update hash in chunks of 4K
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+
+    return sha256_hash.hexdigest()
+
+
+def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1, sha256):
     download_filepath = cwd.joinpath(file)
 
     if os.path.exists(download_filepath):
@@ -1252,6 +1271,13 @@ def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1):
         elif sha1:
             # don't download if sha1 is good
             if sha1 == get_sha1sum(download_filepath):
+                print("** Using %s" % download_filepath)
+                return
+            else:
+                os.remove(download_filepath)
+        elif sha256:
+            # don't download if sha256 is good
+            if sha256 == get_sha256sum(download_filepath):
                 print("** Using %s" % download_filepath)
                 return
             else:
@@ -1270,6 +1296,9 @@ def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1):
                 print_banner("Invalid md5!! %s" % file)
         elif sha1:
             if sha1 != get_sha1sum(download_filepath):
+                print_banner("Invalid sha1!! %s" % file)
+        elif sha256:
+            if sha256 != get_sha256sum(download_filepath):
                 print_banner("Invalid sha1!! %s" % file)
 
 
@@ -1337,12 +1366,13 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
                 endpoint = artifact['endpoint']
                 md5 = artifact.get('md5')
                 sha1 = artifact.get('sha1')
+                sha256 = artifact.get('sha256')
 
                 base_url = url + endpoint
                 base_url = os.path.expandvars(base_url)
                 filename = get_filename_from_url(base_url)
 
-                download_https_file(cwd, base_url, filename, cookie_file, netrc, md5, sha1)
+                download_https_file(cwd, base_url, filename, cookie_file, netrc, md5, sha1, sha256)
 
 
 def handle_commands_obj(list, cwd):
@@ -1404,6 +1434,29 @@ def handle_docker_obj(obj, host_machine_arch, cwd):
     docker_compose_stop(obj.get('docker-compose-yml-dir'))
     handle_commands(obj.get('post_cmds'), cwd)
     handle_conditionals(obj.get('conditionals'), cwd)
+
+
+def handle_qemu(obj):
+    host_machine_arch = get_host_machine_arch()
+
+    if host_machine_arch not in obj:
+        sys.exit("Configuration not specified for this host machine architecture")
+    if 'cmd' not in obj:
+        sys.exit("Command not specified")
+    if 'extra' not in obj:
+        host_type = get_host_type()
+        if 'linux' == host_type:
+            host_type = get_freedesktop_os_release_id()
+        if host_type not in obj['extra']:
+            sys.exit("Extra parameters not specified for this host type")
+
+    options = obj[host_machine_arch]
+    extra = obj['extra'].get(host_type)
+    print("QEMU")
+    print("\tcommand: ", obj['cmd'])
+    print("\toptions: ", options)
+    print("\textra: ", extra)
+    print("Append to script here....")
 
 
 def handle_github_obj(obj, cwd, token):
@@ -1551,15 +1604,17 @@ def setup_platform(platform_, git_token, cookie_file):
 
     handle_dotenv(platform_.get('dotenv'))
     handle_env(platform_.get('env'))
-    handle_pre_requisites(runtime.get('pre-requisites'), cwd)
+    create_platform_config_file(runtime.get('config'), cwd)
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
     handle_artifacts_obj(runtime.get('artifacts'), host_machine_arch, cwd, git_token, cookie_file)
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    handle_pre_requisites(runtime.get('pre-requisites'), cwd)
+    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
     handle_docker_obj(runtime.get('docker'), host_machine_arch, cwd)
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
-    create_platform_config_file(runtime.get('config'), cwd)
-    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
     handle_conditionals(runtime.get('conditionals'), cwd)
+    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    handle_qemu(runtime.get('qemu'), cwd)
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
     handle_commands_obj(runtime.get('post_cmds'), cwd)
 
