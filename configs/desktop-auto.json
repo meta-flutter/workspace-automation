@@ -6,6 +6,7 @@
     "flutter_runtime": "debug",
     "type": "host",
     "env": {
+      "BUILD_PREFIX": "CC=/usr/lib/llvm-14/bin/clang CXX=/usr/lib/llvm-14/bin/clang++",
       "FLUTTER_AUTO_SRC_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen",
       "FLUTTER_AUTO_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen/build",
       "FLUTTER_AUTO_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Debug",
@@ -66,14 +67,14 @@
         {
           "cwd": "${FLUTTER_AUTO_BUILD_DIR}",
           "cmds": [
-            "cmake ${FLUTTER_AUTO_SRC_DIR}  ${FLUTTER_AUTO_CMAKE_ARGS}",
+            "${BUILD_PREFIX} cmake ${FLUTTER_AUTO_SRC_DIR}  ${FLUTTER_AUTO_CMAKE_ARGS}",
             "make -j"
           ]
         },
         {
           "cwd": "${COMP_SURF_PBR_BUILD_DIR}",
           "cmds": [
-            "cmake ${COMP_SURF_PBR_SRC_DIR}  ${COMP_SURF_PBR_CMAKE_ARGS}",
+            "${BUILD_PREFIX} cmake ${COMP_SURF_PBR_SRC_DIR}  ${COMP_SURF_PBR_CMAKE_ARGS}",
             "make -j"
           ]
         }
