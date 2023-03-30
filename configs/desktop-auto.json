@@ -48,8 +48,8 @@
               "sudo apt clean -y",
               "cmake --version",
               "clang++ --version",
-              "apt-file search filename cmake",
-              "apt-file search filename clang++"
+              "apt-file search cmake",
+              "apt-file search clang++"
             ]
           },
           "fedora": {

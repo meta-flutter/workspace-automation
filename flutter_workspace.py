@@ -976,7 +976,7 @@ def get_freedesktop_os_release():
             line = line.strip()
             k, v = line.rstrip().split("=")
             d[k] = v.strip('"')
-            print(d)
+        print(d)
         return d
 
 
