@@ -2,7 +2,7 @@
     "id": "stm32mp15-weston",
     "load": true,
     "supported_archs": ["x86_64","arm64"],
-    "supported_host_types": ["darwin","fedora linux","ubuntu"],
+    "supported_host_types": ["darwin","fedora","ubuntu"],
     "flutter_runtime": "debug",
     "type": "remote",
     "env": {

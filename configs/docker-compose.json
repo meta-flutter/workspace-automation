@@ -2,7 +2,7 @@
     "id": "docker-compose",
     "load": false,
     "supported_archs": ["x86_64"],
-    "supported_host_types": ["ubuntu","fedora linux"],
+    "supported_host_types": ["ubuntu","fedora"],
     "type": "generic",
     "env": {
         "DOCKER_COMPOSE_VER": "1.25.0"
@@ -46,7 +46,7 @@
                         "sudo usermod -aG docker ${USER}"
                     ]
                 },
-                "fedora linux": {
+                "fedora": {
                     "cmds": [
                         "sudo dnf -y config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo",
                         "sudo dnf -y update",

@@ -981,8 +981,13 @@ def get_freedesktop_os_release():
 
 
 def get_freedesktop_os_release_name():
-    """Returns OS Release Name"""
+    """Returns OS Release NAME value"""
     return get_freedesktop_os_release().get('NAME').lower().rstrip()
+
+
+def get_freedesktop_os_release_id():
+    """Returns OS Release ID value"""
+    return get_freedesktop_os_release().get('ID').rstrip()
 
 
 def get_host_type():
@@ -1179,10 +1184,10 @@ def handle_pre_requisites(obj, cwd):
 
         if host_type == "linux":
 
-            os_release_name = get_freedesktop_os_release_name()
+            os_release_id = get_freedesktop_os_release_id()
 
-            if os_release_name in host_specific_pre_requisites:
-                distro = host_specific_pre_requisites[os_release_name]
+            if os_release_id in host_specific_pre_requisites:
+                distro = host_specific_pre_requisites[os_release_id]
 
                 handle_conditionals(distro.get('conditionals'), cwd)
 
@@ -1535,7 +1540,7 @@ def is_host_type_supported(host_types):
     host_type = get_host_type()
 
     if host_type == 'linux':
-        host_type = get_freedesktop_os_release_name()
+        host_type = get_freedesktop_os_release_id()
         
     if host_type not in host_types:
         return False
@@ -1823,16 +1828,16 @@ def install_minimum_runtime_deps():
 
     if host_type == "linux":
 
-        os_release_name = get_freedesktop_os_release_name()
+        os_release_id = get_freedesktop_os_release_id()
 
-        if os_release_name == 'ubuntu':
+        if os_release_id == 'ubuntu':
             cmd = ['sudo', 'apt', 'update', '-y']
             subprocess.check_output(cmd)
             packages = 'curl libcurl4-openssl-dev libssl-dev python3-dotenv python3-pycurl python3-pip'.split(' ')
             for package in packages:
                 ubuntu_install_pkg_if_not_installed(package)
 
-        elif os_release_name == 'fedora linux':
+        elif os_release_id == 'fedora':
             cmd = ['sudo', 'dnf', '-y', 'update']
             subprocess.check_output(cmd)
             packages = 'dnf-plugins-core curl libcurl-devel openssl-devel gtk3-devel python3-dotenv python3-pycurl python3-pip'.split(' ')
@@ -2029,13 +2034,13 @@ def setup_env_script(workspace, args, platform_):
 
                     if host_type == "linux":
 
-                        os_release_name = get_freedesktop_os_release_name()
+                        os_release_id = get_freedesktop_os_release_id()
                         
-                        if os_release_name == 'ubuntu':
+                        if os_release_id == 'ubuntu':
                             print_banner('QEMU_EXTRA: %s' % runtime.get('qemu_extra_ubuntu'))
                             qemu_extra = runtime.get('qemu_extra_ubuntu')
 
-                        elif os_release_name == 'fedora linux':
+                        elif os_release_id == 'fedora':
                             print_banner('QEMU_EXTRA: %s' % runtime.get('qemu_extra_fedora'))
                             qemu_extra = runtime.get('qemu_extra_fedora')
 
