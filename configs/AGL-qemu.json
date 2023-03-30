@@ -19,6 +19,14 @@
                 "fullscreen": true
             }
         },
+        "artifacts": {
+            "x86_64": {
+                "http": ""
+            },
+            "arm64": {
+                "http": ""
+            }
+        },
         "qemu": {
             "cmd": "qemu-system-${FORMAL_MACHINE_ARCH}",
             "x86_64": {
@@ -34,16 +42,6 @@
                 "darwin": "-smp cpus=8,sockets=1,cores=8,threads=1",
                 "ubuntu": "-bios OVMF.fd",
                 "fedora": "-bios /usr/share/edk2/ovmf/OVMF_CODE.fd"
-            }
-        },
-        "artifacts": {
-            "github": {
-              "owner": "meta-flutter",
-              "repo": "meta-flutter",
-              "workflow": "kirkstone-agl-${MACHINE_ARCH}.yml",
-              "artifact_names": [
-                "agl-image-flutter-runtime${FLUTTER_RUNTIME}-qemu${MACHINE_ARCH_HYPHEN}-linux.zip"
-              ]
             }
         }
     },

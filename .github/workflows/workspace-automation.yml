@@ -30,14 +30,12 @@ jobs:
         run: |
           FLUTTER_WORKSPACE=`pwd`/workspace
           mkdir -p $FLUTTER_WORKSPACE && pushd $FLUTTER_WORKSPACE
-          ls -la ..
           sudo ../flutter_workspace.py --config=`pwd`/../configs
-          popd
-          sudo chown -R $USER:$USER $FLUTTER_WORKSPACE
-          ls -la $FLUTTER_WORKSPACE/app
+
       - name: Source Environment
         shell: bash
         working-directory: workspace
         run: |
-          cat ./setup_env.sh
-          source ./setup_env.sh
+          cat ./workspace/setup_env.sh
+          source ./workspace/setup_env.sh
+          flutter doctor -v
