@@ -77,14 +77,14 @@
           },
           "fedora": {
             "env": {
-              "CC": "/usr/bin/clang",
-              "CXX": "/usr/bin/clang++"
+              "CC": "/usr/lib64/ccache/clang",
+              "CXX": "/usr/lib64/ccache/clang++"
             }
           },
           "cwd": "${FLUTTER_AUTO_BUILD_DIR}",
           "cmds": [
             "cmake ${FLUTTER_AUTO_SRC_DIR}  ${FLUTTER_AUTO_CMAKE_ARGS}",
-            "make -j"
+            "make flutter-auto -j"
           ]
         },
         {
@@ -103,7 +103,7 @@
           "cwd": "${COMP_SURF_PBR_BUILD_DIR}",
           "cmds": [
             "cmake ${COMP_SURF_PBR_SRC_DIR}  ${COMP_SURF_PBR_CMAKE_ARGS}",
-            "make -j"
+            "make comp_surf_pbr -j"
           ]
         }
       ]

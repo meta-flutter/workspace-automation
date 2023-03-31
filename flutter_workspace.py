@@ -1137,6 +1137,7 @@ def get_flutter_engine_runtime(clean_workspace):
 
 
     cwd = get_platform_working_dir('flutter-engine')
+
     cwd_engine = os.path.join(cwd, engine_version)
 
     archive_file = os.path.join(cwd_engine, filename)
@@ -1444,10 +1445,13 @@ def handle_commands_obj(list, cwd):
         if host_type == 'linux':
             host_type == get_freedesktop_os_release_id()
         
+        local_env = os.environ.copy()
+
+        # sandbox variables to commands
         if host_type in obj:
             cmds = obj[host_type]
             if 'env' in cmds:
-                handle_env(cmds)
+                handle_env(cmds, local_env)
                 
         if 'cwd' in obj:
             cwd = os.path.expandvars(obj.get('cwd'))
@@ -1457,8 +1461,9 @@ def handle_commands_obj(list, cwd):
         for cmd in cmds:
             expanded_cmd = os.path.expandvars(cmd)
             cmd_arr = shlex.split(expanded_cmd)
-            print(cmd_arr)
-            subprocess.check_call(cmd_arr, cwd=cwd)
+            print('cmd: %s' % cmd_arr)
+            print('env: %s' % local_env)
+            subprocess.check_call(cmd_arr, cwd=cwd, env=local_env)
 
 
 def handle_commands(cmds, cwd):
@@ -1680,12 +1685,15 @@ def handle_dotenv(dotenv_files):
         load_dotenv(dotenv_path=dotenv_path)
         print("Loaded: %s" % dotenv_file)
 
-def handle_env(env_variables):
+def handle_env(env_variables, local_env):
     if not env_variables:
         return
 
     for k, v in env_variables.items():
-        os.environ[k] = os.path.expandvars(v)
+        if local_env:
+            local_env[k] = os.path.expandvars(v)
+        else:
+            os.environ[k] = os.path.expandvars(v)
 
 
 def get_platform_working_dir(platform_id):
@@ -1743,7 +1751,7 @@ def setup_platform(platform_, git_token, cookie_file):
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
 
     handle_dotenv(platform_.get('dotenv'))
-    handle_env(platform_.get('env'))
+    handle_env(platform_.get('env'), None)
     create_platform_config_file(runtime.get('config'), cwd)
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
     handle_artifacts_obj(runtime.get('artifacts'), host_machine_arch, cwd, git_token, cookie_file)
@@ -2113,7 +2121,7 @@ def get_linux_release_file():
     filename = 'releases_linux.json'
     url = 'https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json'
 
-    download_https_file(cwd, url, filename, None, None, None, None)
+    download_https_file(cwd, url, filename, None, None, None, None, None)
 
     return os.path.join(cwd, filename)
 
