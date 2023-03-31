@@ -1456,7 +1456,6 @@ def handle_commands_obj(list, cwd):
         cmds = obj.get('cmds')
         for cmd in cmds:
             expanded_cmd = os.path.expandvars(cmd)
-            print(expanded_cmd)
             cmd_arr = shlex.split(expanded_cmd)
             print(cmd_arr)
             subprocess.check_call(cmd_arr, cwd=cwd)
@@ -1506,13 +1505,9 @@ echo \"********************************************\"
 echo \"* Type 'run-%s' to start"
 echo \"********************************************\"
 run-%s() {
-    if [ -z ${QEMU_IMAGE+x} ];
-    then
-        export QEMU_IMAGE=%s
-    fi
     if [[ $( (echo >/dev/tcp/localhost/%s) &>/dev/null; echo $?) -eq 0 ]];
     then
-        echo '%s is already running'
+        echo 'port %s is already in use'
     else
         %s
     fi
@@ -1546,12 +1541,15 @@ def handle_qemu_obj(qemu: dict, cwd: str, platform_id: str, flutter_runtime: str
         sys.exit("Command not specified")
 
     if qemu.get('extra'):
+        extra = ''
         host_type = get_host_type()
         if 'linux' == host_type:
             host_type = get_freedesktop_os_release_id()
+            if is_linux_host_kvm_capable():
+                extra = '-enable-kvm '
         if host_type not in qemu['extra']:
             sys.exit("Extra parameters not specified for this host type")
-        extra = qemu['extra'][host_type]
+        extra = extra + qemu['extra'][host_type]
         os.environ['QEMU_EXTRA'] = os.path.expandvars(extra)
 
     if host_machine_arch == 'arm64':
@@ -1577,15 +1575,13 @@ def handle_qemu_obj(qemu: dict, cwd: str, platform_id: str, flutter_runtime: str
     args = qemu[host_machine_arch]['args']
     args = os.path.expandvars(args)
 
-    # we want this in the script
-    args = args.replace('@QEMU_IMAGE@', '${QEMU_IMAGE}')
-
     flutter_workspace = os.environ['FLUTTER_WORKSPACE']
 
     terminal_cmd = ''
     host_type = get_host_type()
     if host_type == "linux":
         terminal_cmd = format('gnome-terminal -- bash -c \"%s %s\"' % (cmd, args))
+        #terminal_cmd = cmd + " " + args
     elif host_type == "darwin":
         apple_script_filename = 'qemu_run.scpt'
         terminal_cmd = format('osascript ${FLUTTER_WORKSPACE}/%s' % apple_script_filename)
@@ -1598,9 +1594,8 @@ def handle_qemu_obj(qemu: dict, cwd: str, platform_id: str, flutter_runtime: str
         f.write(env_qemu % (
             platform_id,
             platform_id,
-            os.environ['QEMU_IMAGE'],
             os.environ['CONTAINER_SSH_PORT'],
-            platform_id,
+            os.environ['CONTAINER_SSH_PORT'],
             terminal_cmd))
 
 

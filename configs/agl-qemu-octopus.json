@@ -1,5 +1,5 @@
 {
-    "id": "qemu-octopus",
+    "id": "agl-qemu-octopus",
     "load": true,
     "supported_archs": ["x86_64", "arm64"],
     "supported_host_types": ["darwin", "ubuntu", "fedora" ],
@@ -34,8 +34,7 @@
                 "artifacts": {
                     "x86_64": [
                         {
-                            "endpoint": "/qemux86-64/deploy/images/qemux86-64/agl-ivi-demo-platform-flutter-qemux86-64.wic.vmdk.xz",
-                            "sha256": "39f5528f0120d3caa38df428ed8e8ac2f12ff8652d1c8f9392bd4eb9413a9d38"
+                            "endpoint": "/qemux86-64/deploy/images/qemux86-64/agl-ivi-demo-platform-flutter-qemux86-64.wic.vmdk.xz"
                         }
                     ],
                     "arm64": [
@@ -52,8 +51,8 @@
         "qemu": {
             "cmd": "qemu-system-${FORMAL_MACHINE_ARCH}",
             "x86_64": {
-                "image": "agl-ivi-demo-platform-flutter-qemux86-64.wic.vmdk.xz",
-                "args": "-m 2048 ${QEMU_EXTRA} -hda @QEMU_IMAGE@ -cpu kvm64 -cpu qemu64,+ssse3,+sse4.1,+sse4.2,+popcnt -vga virtio -device virtio-rng-pci -serial mon:stdio -serial null -device intel-hda -device hda-duplex -device virtio-net-pci,netdev=net0,mac=${RANDOM_MAC} -netdev user,id=net0,hostfwd=tcp::${CONTAINER_SSH_PORT}-:22,hostfwd=tcp::${FLUTTER_DEBUG_PORT}-:${FLUTTER_DEBUG_PORT}"
+                "image": "agl-ivi-demo-platform-flutter-qemux86-64.wic.vmdk",
+                "args": "-m 2048 ${QEMU_EXTRA} -hda ${QEMU_IMAGE} -cpu kvm64 -cpu qemu64,+ssse3,+sse4.1,+sse4.2,+popcnt -vga virtio -device virtio-rng-pci -serial mon:stdio -serial null -device intel-hda -device hda-duplex -device virtio-net-pci,netdev=net0,mac=${RANDOM_MAC} -netdev user,id=net0,hostfwd=tcp::${CONTAINER_SSH_PORT}-:22,hostfwd=tcp::${FLUTTER_DEBUG_PORT}-:${FLUTTER_DEBUG_PORT}"
             },
             "arm64": {
                 "kernel": "Image-qemuarm64.bin",
@@ -65,11 +64,20 @@
                 "ubuntu": "-bios OVMF.fd",
                 "fedora": "-bios /usr/share/edk2/ovmf/OVMF_CODE.fd"
             }
-        }
+        },
+        "post_cmds": [
+            {
+                "cwd": "${PLATFORM_ID_DIR}",
+                "cmds": [
+                    "bash -c \"rm ${QEMU_IMAGE}|true\"",
+                    "unxz --keep ${QEMU_IMAGE}.xz"
+                ]
+            }
+        ]
     },
     "overwrite-existing": true,
     "custom-device": {
-        "id": "qemu-${RELEASE_NAME}",
+        "id": "agl-qemu-${RELEASE_NAME}",
         "label": "AGL QEMU Image",
         "sdkNameAndVersion": "qemu-${RELEASE_NAME} ${RELEASE_VERSION}",
         "platform": "linux-x64",
