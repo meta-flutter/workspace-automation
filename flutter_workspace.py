@@ -1227,31 +1227,11 @@ def handle_pre_requisites(obj, cwd):
         host_type = get_host_type()
 
         if host_type == "linux":
+            host_type = get_freedesktop_os_release_id()
 
-            os_release_id = get_freedesktop_os_release_id()
-
-            if os_release_id in host_specific_pre_requisites:
-                distro = host_specific_pre_requisites[os_release_id]
-
-                handle_conditionals(distro.get('conditionals'), cwd)
-
-                handle_commands(distro.get('cmds'), cwd)
-
-        if host_type == "darwin":
-            distro = host_specific_pre_requisites['darwin']
-
-            if 'cmds' in distro:
-                for cmd in distro['cmds']:
-                    cmd_arr = []
-                    for token in cmd:
-                        cmd_arr.append(os.path.expandvars(token))
-                    subprocess.call(cmd_arr)
-
-            if 'conditionals' in distro:
-                for condition in distro['conditionals']:
-                    if not os.path.exists(condition['path']):
-                        for cmd in condition['cmds']:
-                            subprocess.call(cmd)
+        distro = host_specific_pre_requisites[host_type]
+        handle_conditionals(distro.get('conditionals'), cwd)
+        handle_commands(distro.get('cmds'), cwd)
 
 
 def get_md5sum(file):
@@ -1462,7 +1442,6 @@ def handle_commands_obj(list, cwd):
             expanded_cmd = os.path.expandvars(cmd)
             cmd_arr = shlex.split(expanded_cmd)
             print('cmd: %s' % cmd_arr)
-            print('env: %s' % local_env)
             subprocess.check_call(cmd_arr, cwd=cwd, env=local_env)
 
 
@@ -1570,7 +1549,8 @@ def handle_qemu_obj(qemu: dict, cwd: str, platform_id: str, flutter_runtime: str
 
     if 'kernel' in qemu[host_machine_arch]:
         kernel = qemu[host_machine_arch]['kernel']
-        os.environ['QEMU_KERNEL'] = os.path.expandvars(kernel)
+        kernel = os.path.expandvars(kernel)
+        os.environ['QEMU_KERNEL'] = os.path.join(cwd,kernel)
 
     image = qemu[host_machine_arch]['image']
     image = os.path.expandvars(image)
@@ -1588,7 +1568,7 @@ def handle_qemu_obj(qemu: dict, cwd: str, platform_id: str, flutter_runtime: str
         terminal_cmd = format('gnome-terminal -- bash -c \"%s %s\"' % (cmd, args))
         #terminal_cmd = cmd + " " + args
     elif host_type == "darwin":
-        apple_script_filename = 'qemu_run.scpt'
+        apple_script_filename = 'run-' + platform_id + '.scpt'
         terminal_cmd = format('osascript ${FLUTTER_WORKSPACE}/%s' % apple_script_filename)
         apple_script_file = os.path.join(flutter_workspace, apple_script_filename)
         with open(apple_script_file, 'w+') as f:

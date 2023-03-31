@@ -28,6 +28,16 @@
                 "height": 1080
             }
         },
+        "pre-requisites": {
+            "arm64": {
+                "darwin": {
+                    "cmds": [
+                        "bash -c \"arch -arm64 brew install xz\"",
+                        "bash -c \"arch -arm64 brew install qemu\""
+                    ]
+                }
+            }
+        },
         "artifacts": {
             "http": {
                 "url": "https://download.automotivelinux.org/AGL/snapshots/${RELEASE_NAME}/${RELEASE_VERSION}",
@@ -56,8 +66,8 @@
             },
             "arm64": {
                 "kernel": "Image-qemuarm64.bin",
-                "image": "agl-demo-platform-crosssdk-qemuarm64.ext4.xz",
-                "args": "-accel hvf -cpu host -M virt ${QEMU_EXTRA} -m 4096 -device virtio-gpu-pci -nographic -display cocoa,show-cursor=on -object rng-random,filename=/dev/urandom,id=rng0 -device virtio-rng-pci,rng=rng0 -device qemu-xhci -device usb-tablet -device usb-mouse -device usb-kbd -device virtio-net-pci,netdev=vnet -netdev user,id=vnet,hostfwd=tcp::${CONTAINER_SSH_PORT}-:22,hostfwd=tcp::${FLUTTER_DEBUG_PORT}-:${FLUTTER_DEBUG_PORT} -kernel ${KERNEL} -drive file=${QEMU_IMAGE},format=raw,if=virtio -append root=/dev/vda"
+                "image": "agl-demo-platform-crosssdk-qemuarm64.ext4",
+                "args": "-accel hvf -cpu host -M virt ${QEMU_EXTRA} -m 4096 -device virtio-gpu-pci -nographic -display cocoa,show-cursor=on -object rng-random,filename=/dev/urandom,id=rng0 -device virtio-rng-pci,rng=rng0 -device qemu-xhci -device usb-tablet -device usb-mouse -device usb-kbd -device virtio-net-pci,netdev=vnet -netdev user,id=vnet,hostfwd=tcp::${CONTAINER_SSH_PORT}-:22,hostfwd=tcp::${FLUTTER_DEBUG_PORT}-:${FLUTTER_DEBUG_PORT} -kernel ${QEMU_KERNEL} -drive file=${QEMU_IMAGE},format=raw,if=virtio -append root=/dev/vda"
             },
             "extra": {
                 "darwin": "-smp cpus=8,sockets=1,cores=8,threads=1",
@@ -78,7 +88,7 @@
     "overwrite-existing": true,
     "custom-device": {
         "id": "agl-qemu-${RELEASE_NAME}",
-        "label": "AGL QEMU Image",
+        "label": "AGL ${RELEASE_NAME}-${RELEASE_VERSION} QEMU Image",
         "sdkNameAndVersion": "qemu-${RELEASE_NAME} ${RELEASE_VERSION}",
         "platform": "linux-x64",
         "enabled": true,
