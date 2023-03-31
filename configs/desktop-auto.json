@@ -6,7 +6,6 @@
     "flutter_runtime": "debug",
     "type": "host",
     "env": {
-      "BUILD_PREFIX": "CC=/usr/bin/clang CXX=/usr/bin/clang++",
       "FLUTTER_AUTO_SRC_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen",
       "FLUTTER_AUTO_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen/build",
       "FLUTTER_AUTO_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Debug",
@@ -16,7 +15,7 @@
       "FLUTTER_AUTO_EXE": "LD_LIBRARY_PATH=${COMP_SURF_PBR_BUILD_DIR} ${FLUTTER_AUTO_BUILD_DIR}/shell/flutter-auto --j=${PLATFORM_ID_DIR_RELATIVE}/default_config.json --b=${PLATFORM_ID_DIR_RELATIVE}",
       "PING_CMD": "loginctl show-session $(awk '/tty/ {print $1}' <(loginctl)) -p Type",
       "CREATE_BUNDLE_FOLDER": "mkdir -p ${PLATFORM_ID_DIR_RELATIVE}/data",
-      "COPY_PLATFORM_ID_TO_BUNDLE_FOLDER": "cp -r ${PLATFORM_ID_DIR}/* ${PLATFORM_ID_DIR_RELATIVE}/",
+      "COPY_PLATFORM_ID_TO_BUNDLE_FOLDER": "cp -r ${PLATFORM_ID_DIR}/default_config.json ${PLATFORM_ID_DIR_RELATIVE}/",
       "COPY_BUNDLE_FOLDER_TO_PLATOFRM_ID": "cp -r ${BUNDLE_FOLDER}/* ${PLATFORM_ID_DIR_RELATIVE}/",
       "CREATE_ASSET_SYMLINK": "ln -rsf build/flutter_assets ${PLATFORM_ID_DIR_RELATIVE}/data/flutter_assets",
       "STAGE_BUNDLE_FOLDER": "${CREATE_BUNDLE_FOLDER} && ${COPY_PLATFORM_ID_TO_BUNDLE_FOLDER} && ${COPY_BUNDLE_FOLDER_TO_PLATOFRM_ID} && ${CREATE_ASSET_SYMLINK}"
@@ -70,16 +69,40 @@
       },
       "post_cmds": [
         {
+          "ubuntu": {
+            "env": {
+              "CC": "/usr/bin/clang",
+              "CXX": "/usr/bin/clang++"
+            }
+          },
+          "fedora": {
+            "env": {
+              "CC": "/usr/bin/clang",
+              "CXX": "/usr/bin/clang++"
+            }
+          },
           "cwd": "${FLUTTER_AUTO_BUILD_DIR}",
           "cmds": [
-            "${BUILD_PREFIX} cmake ${FLUTTER_AUTO_SRC_DIR}  ${FLUTTER_AUTO_CMAKE_ARGS}",
+            "cmake ${FLUTTER_AUTO_SRC_DIR}  ${FLUTTER_AUTO_CMAKE_ARGS}",
             "make -j"
           ]
         },
         {
+          "ubuntu": {
+            "env": {
+              "CC": "/usr/bin/clang",
+              "CXX": "/usr/bin/clang++"
+            }
+          },
+          "fedora": {
+            "env": {
+              "CC": "/usr/lib64/ccache/clang",
+              "CXX": "/usr/lib64/ccache/clang++"
+            }
+          },
           "cwd": "${COMP_SURF_PBR_BUILD_DIR}",
           "cmds": [
-            "${BUILD_PREFIX} cmake ${COMP_SURF_PBR_SRC_DIR}  ${COMP_SURF_PBR_CMAKE_ARGS}",
+            "cmake ${COMP_SURF_PBR_SRC_DIR}  ${COMP_SURF_PBR_CMAKE_ARGS}",
             "make -j"
           ]
         }

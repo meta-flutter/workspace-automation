@@ -261,10 +261,8 @@ def main():
     setup_platforms(platforms, globals.get('github_token'), globals.get('cookie_file'))
 
     #
-    # Create script to setup environment
+    # Display the custom devices list
     #
-    # setup_env_script(workspace, args, platforms)
-
     if flutter_version == "master":
         cmd = ['flutter', 'custom-devices', 'list']
         subprocess.check_call(cmd)
@@ -581,6 +579,13 @@ def get_workspace_repos(base_folder, config):
     #
     platform_ids = get_platform_ids(config.get('platforms'))
     create_vscode_launch_file(repos, platform_ids)
+
+
+def get_platform_ids(platforms: dict) -> list:
+    res = []
+    for platform_ in platforms:
+        res.append(platform_['id'])
+    return res
 
 
 def get_flutter_settings_folder():
@@ -975,7 +980,7 @@ def get_process_stdout(cmd):
     return ret
 
 
-def get_freedesktop_os_release():
+def get_freedesktop_os_release() -> dict:
     """ Read /etc/os-release into dictionary """
 
     with open("/etc/os-release") as f:
@@ -984,21 +989,20 @@ def get_freedesktop_os_release():
             line = line.strip()
             k, v = line.rstrip().split("=")
             d[k] = v.strip('"')
-        print(d)
         return d
 
 
-def get_freedesktop_os_release_name():
+def get_freedesktop_os_release_name() -> str:
     """Returns OS Release NAME value"""
     return get_freedesktop_os_release().get('NAME').lower().rstrip()
 
 
-def get_freedesktop_os_release_id():
+def get_freedesktop_os_release_id() -> str:
     """Returns OS Release ID value"""
     return get_freedesktop_os_release().get('ID').rstrip()
 
 
-def get_host_type():
+def get_host_type() -> str:
     """Returns host system"""
     return system().lower().rstrip()
 
@@ -1112,7 +1116,7 @@ def get_flutter_engine_runtime(clean_workspace):
         print_banner("Skipping Engine artifact download")
     else:
         print_banner("Downloading Engine artifact")
-        download_https_file(cwd, base_url, filename, None, None, None, None)
+        download_https_file(cwd, base_url, filename, None, None, None, None, None)
 
     bundle_folder = os.path.join(cwd, 'bundle')
     os.environ['BUNDLE_FOLDER'] = bundle_folder
@@ -1372,6 +1376,9 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
                 base_url = os.path.expandvars(base_url)
                 filename = get_filename_from_url(base_url)
 
+                print(base_url)
+                print(filename)
+
                 download_https_file(cwd, base_url, filename, cookie_file, netrc, md5, sha1, sha256)
 
 
@@ -1380,10 +1387,18 @@ def handle_commands_obj(list, cwd):
         return
 
     for obj in list:
-        print(obj)
         if 'cmds' not in obj:
-            return
-
+            continue
+        
+        host_type = get_host_type()
+        if host_type == 'linux':
+            host_type == get_freedesktop_os_release_id()
+        
+        if host_type in obj:
+            cmds = obj[host_type]
+            if 'env' in cmds:
+                handle_env(cmds)
+                
         if 'cwd' in obj:
             cwd = os.path.expandvars(obj.get('cwd'))
             make_sure_path_exists(cwd)
@@ -1436,27 +1451,107 @@ def handle_docker_obj(obj, host_machine_arch, cwd):
     handle_conditionals(obj.get('conditionals'), cwd)
 
 
-def handle_qemu(obj):
+env_qemu = '''
+echo \"********************************************\"
+echo \"* Type 'run-%s' to start"
+echo \"********************************************\"
+run-%s() {
+    if [ -z ${QEMU_IMAGE+x} ];
+    then
+        export QEMU_IMAGE=%s
+    fi
+    if [[ $( (echo >/dev/tcp/localhost/%s) &>/dev/null; echo $?) -eq 0 ]];
+    then
+        echo '%s is already running'
+    else
+        %s
+    fi
+}
+'''
+
+
+env_qemu_applescript = '''
+#!/usr/bin/osascript
+
+tell application "Finder"
+        set flutter_workspace to system attribute "FLUTTER_WORKSPACE"
+    set p_path to POSIX path of flutter_workspace
+    tell application "Terminal"
+        activate
+        set a to do script "cd " & quoted form of p_path & " && %s %s"
+    end tell
+end tell
+'''
+
+
+def handle_qemu(qemu: dict, cwd: str, platform_id: str, flutter_runtime: str):
+    if qemu is None:
+       return
+
     host_machine_arch = get_host_machine_arch()
 
-    if host_machine_arch not in obj:
+    if not qemu.get(host_machine_arch):
         sys.exit("Configuration not specified for this host machine architecture")
-    if 'cmd' not in obj:
+    if not qemu.get('cmd'):
         sys.exit("Command not specified")
-    if 'extra' not in obj:
+
+    if qemu.get('extra'):
         host_type = get_host_type()
         if 'linux' == host_type:
             host_type = get_freedesktop_os_release_id()
-        if host_type not in obj['extra']:
+        if host_type not in qemu['extra']:
             sys.exit("Extra parameters not specified for this host type")
+        extra = qemu['extra'][host_type]
+        os.environ['QEMU_EXTRA'] = os.path.expandvars(extra)
 
-    options = obj[host_machine_arch]
-    extra = obj['extra'].get(host_type)
-    print("QEMU")
-    print("\tcommand: ", obj['cmd'])
-    print("\toptions: ", options)
-    print("\textra: ", extra)
-    print("Append to script here....")
+    if host_machine_arch == 'arm64':
+        os.environ['FORMAL_MACHINE_ARCH'] = 'aarch64'
+    elif host_machine_arch == 'x86_64':
+        os.environ['FORMAL_MACHINE_ARCH'] = 'x86_64'
+
+    os.environ['RANDOM_MAC'] = get_random_mac()
+    os.environ['FLUTTER_RUNTIME'] = flutter_runtime
+
+    cmd = qemu['cmd']
+    cmd = os.path.expandvars(cmd)
+
+    if 'kernel' in qemu[host_machine_arch]:
+        kernel = qemu[host_machine_arch]['kernel']
+        os.environ['QEMU_KERNEL'] = os.path.expandvars(kernel)
+
+    image = qemu[host_machine_arch]['image']
+    image = os.path.expandvars(image)
+
+    os.environ['QEMU_IMAGE'] = os.path.join(cwd,image)
+
+    args = qemu[host_machine_arch]['args']
+    args = os.path.expandvars(args)
+
+    # we want this in the script
+    args = args.replace('@QEMU_IMAGE@', '${QEMU_IMAGE}')
+
+    flutter_workspace = os.environ['FLUTTER_WORKSPACE']
+
+    terminal_cmd = ''
+    host_type = get_host_type()
+    if host_type == "linux":
+        terminal_cmd = format('gnome-terminal -- bash -c \"%s %s\"' % (cmd, args))
+    elif host_type == "darwin":
+        apple_script_filename = 'qemu_run.scpt'
+        terminal_cmd = format('osascript ${FLUTTER_WORKSPACE}/%s' % apple_script_filename)
+        apple_script_file = os.path.join(flutter_workspace, apple_script_filename)
+        with open(apple_script_file, 'w+') as f:
+            f.write(format(env_qemu_applescript % (cmd, args)))
+
+    env_script = os.path.join(flutter_workspace, 'setup_env.sh')
+    with open(env_script, 'a') as f:
+        f.write(env_qemu % (
+            platform_id,
+            platform_id,
+            os.environ['QEMU_IMAGE'],
+            os.environ['CONTAINER_SSH_PORT'],
+            platform_id,
+            terminal_cmd))
 
 
 def handle_github_obj(obj, cwd, token):
@@ -1614,7 +1709,7 @@ def setup_platform(platform_, git_token, cookie_file):
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
     handle_conditionals(runtime.get('conditionals'), cwd)
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
-    handle_qemu(runtime.get('qemu'), cwd)
+    handle_qemu(runtime.get('qemu'), cwd, platform_['id'], platform_['flutter_runtime'])
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
     handle_commands_obj(runtime.get('post_cmds'), cwd)
 
@@ -1896,15 +1991,14 @@ def is_repo(path):
     return os.path.exists(os.path.join(path, ".git"))
 
 
-def random_mac():
+def get_random_mac() -> str:
     import random
-    return [0x00, 0x16, 0x3e,
-            random.randint(0x00, 0x7f),
-            random.randint(0x00, 0xff),
-            random.randint(0x00, 0xff)]
 
+    mac =[0x00, 0x16, 0x3e,
+          random.randint(0x00, 0x7f),
+          random.randint(0x00, 0xff),
+          random.randint(0x00, 0xff)]
 
-def mac_pretty_print(mac):
     return ':'.join(map(lambda x: "%02x" % x, mac))
 
 
@@ -1945,173 +2039,6 @@ def write_env_scipt_header(workspace):
 
     with open(environment_script, 'w+') as script:
         script.write(env_prefix)
-
-
-env_qemu = '''
-echo \"********************************************\"
-echo \"* Type 'qemu_run' to start the emulator    *\"
-echo \"********************************************\"
-qemu_run() {
-    if [ -z ${QEMU_IMAGE+x} ];
-    then
-        export QEMU_IMAGE=${FLUTTER_WORKSPACE}/%s
-    fi
-    if pgrep -x \"%s\" > /dev/null
-    then
-        echo '%s running - do nothing'
-    else
-        %s
-    fi
-}
-'''
-env_qemu_applescript = '''
-#!/usr/bin/osascript
-
-tell application "Finder"
-        set flutter_workspace to system attribute "FLUTTER_WORKSPACE"
-    set p_path to POSIX path of flutter_workspace
-    tell application "Terminal"
-        activate
-        set a to do script "cd " & quoted form of p_path & " && %s %s"
-    end tell
-end tell
-'''
-
-
-def setup_env_script(workspace, args, platform_):
-    """Creates bash script to set up environment variables"""
-
-    del args
-    environment_script = os.path.join(workspace, 'setup_env.sh')
-
-    with open(environment_script, 'w+') as script:
-        script.write(env_prefix)
-        for item in platform_:
-            if 'type' in item:
-
-                if "qemu" == item['type']:
-
-                    runtime = item['runtime']
-
-                    arch = get_host_machine_arch()
-                    arch_hyphen = arch.replace('_', '-')
-
-                    # qemu command
-                    cmd = runtime.get('cmd')
-                    if '${FORMAL_MACHINE_ARCH}' in cmd:
-                        if arch == 'arm64':
-                            cmd = cmd.replace('${FORMAL_MACHINE_ARCH}', 'aarch64')
-                        elif arch == 'x86_64':
-                            cmd = cmd.replace('${FORMAL_MACHINE_ARCH}', 'x86_64')
-
-                    args = runtime.get('args')
-                    kernel = runtime.get('kernel')
-                    qemu_image = runtime.get('qemu_image')
-
-                    if arch == 'x86_64':
-
-                        # args
-                        if args is None:
-                            args = runtime.get('args_x86_64')
-
-                        if '${KERNEL}' in args:
-                            if kernel is None:
-                                kernel = runtime.get('kernel_x86_64')
-                                if kernel is None:
-                                    print_banner('Missing kernel_x86_64 key value in config')
-                                    exit(1)
-                            args = args.replace('${KERNEL}', kernel)
-
-                        # qemu image
-                        if qemu_image is None:
-                            qemu_image = runtime.get('qemu_image_x86_64')
-
-
-                    elif arch == 'arm64':
-
-                        # args
-                        if args is None:
-                            args = runtime.get('args_arm64')
-
-                        if '${KERNEL}' in args:
-                            if kernel is None:
-                                kernel = runtime.get('kernel_arm64')
-                                if kernel is None:
-                                    print_banner('Missing kernel_arm64 key value in config')
-                                    exit(1)
-                            args = args.replace('${KERNEL}', kernel)
-
-                        # qemu image
-                        if qemu_image is None:
-                            qemu_image = runtime.get('qemu_image_arm64')
-
-                        if '${QEMU_IMAGE}' in args:
-                            args = args.replace('${QEMU_IMAGE}', qemu_image)
-
-                    if '${MACHINE_ARCH_HYPHEN}' in qemu_image:
-                        qemu_image = qemu_image.replace('${MACHINE_ARCH_HYPHEN}', arch_hyphen)
-
-                    if '${FLUTTER_RUNTIME}' in qemu_image:
-                        qemu_image = qemu_image.replace('${FLUTTER_RUNTIME}', item.get('flutter_runtime'))
-
-                    if '${FLUTTER_RUNTIME}' in args:
-                        args = args.replace('${FLUTTER_RUNTIME}', item.get('flutter_runtime'))
-
-                    if '${RANDOM_MAC}' in args:
-                        args = args.replace('${RANDOM_MAC}', mac_pretty_print(random_mac()))
-
-                    #
-                    # extras
-                    #
-                    qemu_extra = ''
-
-                    host_type = get_host_type()
-
-                    if host_type == "linux":
-
-                        os_release_id = get_freedesktop_os_release_id()
-                        
-                        if os_release_id == 'ubuntu':
-                            print_banner('QEMU_EXTRA: %s' % runtime.get('qemu_extra_ubuntu'))
-                            qemu_extra = runtime.get('qemu_extra_ubuntu')
-
-                        elif os_release_id == 'fedora':
-                            print_banner('QEMU_EXTRA: %s' % runtime.get('qemu_extra_fedora'))
-                            qemu_extra = runtime.get('qemu_extra_fedora')
-
-                        if is_linux_host_kvm_capable():
-                            args = format('-enable-kvm %s' % args)
-
-                    elif host_type == "darwin":
-
-                        print_banner('QEMU_EXTRA: %s' % runtime.get('qemu_extra_darwin'))
-                        qemu_extra = runtime.get('qemu_extra_darwin')
-
-                    if '${QEMU_EXTRA}' in args:
-                        args = args.replace('${QEMU_EXTRA}', qemu_extra)
-
-                    #
-                    # writes scripts
-                    #
-                    terminal_cmd = ''
-                    if host_type == "linux":
-                        terminal_cmd = format('gnome-terminal -- bash -c \"%s %s\"' % (cmd, args))
-                    elif host_type == "darwin":
-                        apple_script_filename = 'qemu_run.scpt'
-                        terminal_cmd = format('osascript ${FLUTTER_WORKSPACE}/%s' % apple_script_filename)
-                        apple_script_file = os.path.join(workspace, apple_script_filename)
-                        with open(apple_script_file, 'w+') as f:
-                            f.write(format(env_qemu_applescript % (cmd, args)))
-
-                    script.write(env_qemu % (qemu_image, cmd, cmd, terminal_cmd))
-
-
-def get_platform_ids(platforms):
-    """returns list of platform ids"""
-    res = []
-    for platform_ in platforms:
-        res.append(platform_.get('id'))
-    return res
 
 
 def get_engine_commit(version, hash):
@@ -2208,7 +2135,7 @@ def get_launch_obj(repo, device_id):
         return {}
 
 
-def create_vscode_launch_file(repos, device_ids):
+def create_vscode_launch_file(repos: dict, device_ids: list):
     """Creates a default vscode launch.json"""
 
     workspace = os.getenv("FLUTTER_WORKSPACE")

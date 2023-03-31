@@ -11,7 +11,7 @@
         "FLUTTER_AUTO_EXE": "flutter-auto --j=/tmp/${appName}/default_config.json --b=/tmp/${appName}",
         "CREATE_BUNDLE_FOLDER": "ssh -o BatchMode=yes weston@${DEVICE_HOSTNAME} mkdir -p /tmp/${appName}/data",
         "DELETE_USER_PWD": "ssh -t -oBatchMode=yes root@${DEVICE_HOSTNAME} passwd -d weston",
-        "COPY_PLATFORM_ID_TO_DEVICE": "scp -r ${PLATFORM_ID_DIR}/* weston@${DEVICE_HOSTNAME}:/tmp/${appName}/",
+        "COPY_PLATFORM_ID_TO_DEVICE": "scp -r ${PLATFORM_ID_DIR}/default_config.json weston@${DEVICE_HOSTNAME}:/tmp/${appName}/",
         "COPY_ASSETS_TO_DEVICE": "scp -r ${localPath}/* weston@${DEVICE_HOSTNAME}:/tmp/${appName}/data/flutter_assets",
         "DELETE_APP_FOLDER": "ssh -o BatchMode=yes weston@${DEVICE_HOSTNAME} rm -rf /tmp/${appName}"
       },
