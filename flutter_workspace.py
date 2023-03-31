@@ -120,6 +120,16 @@ def main():
     signal.signal(signal.SIGINT, handle_ctrl_c)
 
     #
+    # Create Workspace
+    #
+    is_exist = os.path.exists(workspace)
+    if not is_exist:
+        os.makedirs(workspace)
+
+    if os.path.exists(workspace):
+        os.environ['FLUTTER_WORKSPACE'] = workspace
+
+    #
     # Fetch Engine Artifacts
     #
     if args.fetch_engine:
@@ -134,16 +144,6 @@ def main():
         print_banner("Generating Version files")
         get_version_files(args.version_files)
         return
-
-    #
-    # Create Workspace
-    #
-    is_exist = os.path.exists(workspace)
-    if not is_exist:
-        os.makedirs(workspace)
-
-    if os.path.exists(workspace):
-        os.environ['FLUTTER_WORKSPACE'] = workspace
 
     #
     # Workspace Configuration
@@ -1081,6 +1081,9 @@ def get_host_machine_arch():
 
 def get_google_flutter_engine_url():
     workspace = os.environ.get('FLUTTER_WORKSPACE')
+    if workspace == None:
+        sys.exit("FLUTTER_WORKSPACE not set")
+
     flutter_sdk_path = os.path.join(workspace, 'flutter')
     arch = get_host_machine_arch()
 
@@ -1091,32 +1094,62 @@ def get_google_flutter_engine_url():
     elif arch == 'arm64':
         url = 'https://storage.googleapis.com/flutter_infra_release/flutter/%s/linux-arm64/artifacts.zip' % \
                 engine_version
-    return url
+    return url, engine_version
+
+
+def compare_sha256(archive_path: str, sha256_file: str) -> bool:
+    if not os.path.exists(archive_path):
+        return False
+    
+    if not os.path.exists(sha256_file):
+        return False
+    
+    archive_sha256_val = get_sha256sum(archive_path)
+
+    sha256_file_val = ''
+    with open(sha256_file, 'r') as f:
+        sha256_file_val = f.read().replace('\n', '')
+        
+    if archive_sha256_val == sha256_file_val:
+        return True
+
+    return False
+
+
+def write_sha256_file(cwd: str, filename: str):
+
+    file = os.path.join(cwd, filename)
+    sha256_val = get_sha256sum(file)
+    sha256_file = os.path.join(cwd, filename + '.sha256')
+   
+    with open(sha256_file, 'w+') as f:
+        f.write(sha256_val)
 
 
 def get_flutter_engine_runtime(clean_workspace):
     """Downloads Flutter Engine Runtime"""
 
-    base_url = get_google_flutter_engine_url()
+    base_url, engine_version = get_google_flutter_engine_url()
 
     head, tail = os.path.split(base_url)
     head = head
     filename = tail + '.zip'
 
+
     cwd = get_platform_working_dir('flutter-engine')
+    cwd_engine = os.path.join(cwd, engine_version)
 
-    archive_path = os.path.join(cwd, filename)
+    archive_file = os.path.join(cwd_engine, filename)
+    sha256_file = os.path.join(cwd_engine, filename + '.sha256')
 
-    if clean_workspace:
-        if os.path.exists(archive_path):
-            cmd = ["rm", archive_path]
-            subprocess.check_output(cmd)
-
-    if os.path.exists(archive_path):
-        print_banner("Skipping Engine artifact download")
-    else:
+    if not compare_sha256(archive_file, sha256_file):
         print_banner("Downloading Engine artifact")
-        download_https_file(cwd, base_url, filename, None, None, None, None, None)
+        make_sure_path_exists(cwd_engine)
+        download_https_file(cwd_engine, base_url, filename, None, None, None, None, None)
+        write_sha256_file(cwd_engine, archive_file)
+    else:
+        print_banner("Skipping Engine artifact download")
+
 
     bundle_folder = os.path.join(cwd, 'bundle')
     os.environ['BUNDLE_FOLDER'] = bundle_folder
@@ -1155,9 +1188,7 @@ def get_flutter_engine_runtime(clean_workspace):
 
     subprocess.check_call(["cp", icudtl_source, "%s/" % data_folder])
 
-    archive = os.path.join(cwd, filename)
-
-    with zipfile.ZipFile(archive, "r") as zip_ref:
+    with zipfile.ZipFile(archive_file, "r") as zip_ref:
         zip_ref.extractall(lib_folder)
 
     if host_type == 'linux':
@@ -1226,6 +1257,9 @@ def get_md5sum(file):
     """Return md5sum of specified file"""
     import hashlib
 
+    if not os.path.exists(file):
+        return ''
+
     md5_hash = hashlib.md5()
     with open(file, "rb") as f:
         # Read and update hash in chunks of 4K
@@ -1238,6 +1272,9 @@ def get_md5sum(file):
 def get_sha1sum(file):
     """Return sha1sum of specified file"""
     import hashlib
+
+    if not os.path.exists(file):
+        return ''
 
     sha1_hash = hashlib.sha1()
     with open(file, "rb") as f:
@@ -1252,6 +1289,9 @@ def get_sha256sum(file):
     """Return sha256sum of specified file"""
     import hashlib
 
+    if not os.path.exists(file):
+        return ''
+
     sha256_hash = hashlib.sha256()
     with open(file, "rb") as f:
         # Read and update hash in chunks of 4K
@@ -1262,7 +1302,12 @@ def get_sha256sum(file):
 
 
 def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1, sha256):
-    download_filepath = cwd.joinpath(file)
+    download_filepath = os.path.join(cwd, file)
+
+    sha256_file = os.path.join(cwd, file + '.sha256')
+    if compare_sha256(download_filepath, sha256_file):
+        print("%s exists, skipping download" % download_filepath)
+        return
 
     if os.path.exists(download_filepath):
         if md5:
@@ -1296,14 +1341,19 @@ def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1, sha256):
 
     if os.path.exists(download_filepath):
         if md5:
-            if md5 != get_md5sum(download_filepath):
-                print_banner("Invalid md5!! %s" % file)
+            expected_md5 = get_md5sum(download_filepath)
+            if md5 != expected_md5:
+                sys.exit('Download artifact %s md5: %s does not match expected: %s' % download_filepath, md5, expected_md5)
         elif sha1:
-            if sha1 != get_sha1sum(download_filepath):
-                print_banner("Invalid sha1!! %s" % file)
+            expected_sha1 = get_sha1sum(download_filepath)
+            if sha1 != expected_sha1:
+                sys.exit('Download artifact %s sha1: %s does not match expected: %s' % download_filepath, md5, expected_md5)
         elif sha256:
-            if sha256 != get_sha256sum(download_filepath):
-                print_banner("Invalid sha1!! %s" % file)
+            expected_sha256 = get_sha256sum(download_filepath)
+            if sha256 != expected_sha256:
+                sys.exit('Download artifact %s sha256: %s does not match expected: %s' % download_filepath, sha256, expected_sha256)
+
+    write_sha256_file(cwd, file)
 
 
 def get_filename_from_url(url):
@@ -1484,7 +1534,7 @@ end tell
 '''
 
 
-def handle_qemu(qemu: dict, cwd: str, platform_id: str, flutter_runtime: str):
+def handle_qemu_obj(qemu: dict, cwd: str, platform_id: str, flutter_runtime: str):
     if qemu is None:
        return
 
@@ -1709,7 +1759,7 @@ def setup_platform(platform_, git_token, cookie_file):
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
     handle_conditionals(runtime.get('conditionals'), cwd)
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
-    handle_qemu(runtime.get('qemu'), cwd, platform_['id'], platform_['flutter_runtime'])
+    handle_qemu_obj(runtime.get('qemu'), cwd, platform_['id'], platform_['flutter_runtime'])
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
     handle_commands_obj(runtime.get('post_cmds'), cwd)
 
