@@ -1597,8 +1597,6 @@ def handle_github_obj(obj, cwd, token):
         artifact_names = obj['artifact_names']
         post_process = obj.get('post_process')
 
-        token = get_github_token(token)
-
         workflow_runs = get_github_workflow_runs(token, owner, repo, workflow)
         run_id = None
         for run in workflow_runs:
@@ -1764,16 +1762,6 @@ def setup_platforms(platforms, git_token, cookie_file):
 def base64_to_string(b):
     import base64
     return base64.b64decode(b).decode('utf-8')
-
-
-def get_github_token(github_token):
-    if not github_token:
-        part_a = "Z2hwX0Q5MzRESjJ5SF"
-        part_b = "BMRFM1V0xyUTlpQmFr"
-        part_c = "VFJyZGRnNzBxU1FCeQ"
-        github_token = base64_to_string("%s%s%s==" % (part_a, part_b, part_c))
-
-    return github_token
 
 
 def get_github_json(token, url):
