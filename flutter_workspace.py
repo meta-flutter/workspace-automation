@@ -1387,20 +1387,23 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
             if 'url' in obj:
                 url = obj['url']
 
-            for artifact in host_specific_artifacts:
-                endpoint = artifact['endpoint']
-                md5 = artifact.get('md5')
-                sha1 = artifact.get('sha1')
-                sha256 = artifact.get('sha256')
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = []
+                for artifact in host_specific_artifacts:
+                    base_url = url + artifact['endpoint']
+                    base_url = os.path.expandvars(base_url)
+                    filename = get_filename_from_url(base_url)
 
-                base_url = url + endpoint
-                base_url = os.path.expandvars(base_url)
-                filename = get_filename_from_url(base_url)
+                    print(base_url)
+                    print(filename)
 
-                print(base_url)
-                print(filename)
+                    futures.append(executor.submit(download_https_file, cwd, base_url, filename, cookie_file, netrc, artifact.get('md5'), artifact.get('sha1'), artifact.get('sha256')))
+                    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
 
-                download_https_file(cwd, base_url, filename, cookie_file, netrc, md5, sha1, sha256)
+                for future in concurrent.futures.as_completed(futures):
+                    res = future.result()
+                    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
 
 
 def handle_commands_obj(list, cwd):
@@ -1634,7 +1637,8 @@ def handle_artifacts_obj(obj, host_machine_arch, cwd, git_token, cookie_file):
     if not obj:
         return
 
-    cookie_file = obj.get('cookie_file')
+    if not cookie_file:
+        cookie_file = obj.get('cookie_file')
 
     netrc = handle_netrc_obj(obj.get('netrc'))
     handle_http_obj(obj.get('http'), host_machine_arch, cwd, cookie_file, netrc)
