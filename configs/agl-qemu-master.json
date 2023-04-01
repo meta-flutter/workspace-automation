@@ -1,8 +1,15 @@
 {
     "id": "agl-qemu-master",
     "load": true,
-    "supported_archs": ["x86_64", "arm64"],
-    "supported_host_types": ["darwin", "ubuntu", "fedora" ],
+    "supported_archs": [
+        "x86_64",
+        "arm64"
+    ],
+    "supported_host_types": [
+        "darwin",
+        "ubuntu",
+        "fedora"
+    ],
     "flutter_runtime": "debug",
     "type": "qemu",
     "env": {
@@ -22,11 +29,13 @@
     },
     "runtime": {
         "config": {
-            "view": {
-                "window_type": "BG",
-                "width": 1920,
-                "height": 1080
-            }
+            "view": [
+                {
+                    "window_type": "BG",
+                    "width": 1920,
+                    "height": 1080
+                }
+            ]
         },
         "pre-requisites": {
             "arm64": {

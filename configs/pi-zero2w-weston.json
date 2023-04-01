@@ -1,8 +1,15 @@
 {
     "id": "pi-zero2w-weston",
     "load": true,
-    "supported_archs": ["x86_64","arm64"],
-    "supported_host_types": ["darwin","fedora","ubuntu"],
+    "supported_archs": [
+        "x86_64",
+        "arm64"
+    ],
+    "supported_host_types": [
+        "darwin",
+        "fedora",
+        "ubuntu"
+    ],
     "flutter_runtime": "debug",
     "type": "remote",
     "env": {
@@ -14,13 +21,15 @@
         "COPY_PLATFORM_ID_TO_DEVICE": "scp -r ${PLATFORM_ID_DIR}/default_config.json weston@${DEVICE_HOSTNAME}:/tmp/${appName}/",
         "COPY_ASSETS_TO_DEVICE": "scp -r ${localPath}/* weston@${DEVICE_HOSTNAME}:/tmp/${appName}/data/flutter_assets",
         "DELETE_APP_FOLDER": "ssh -o BatchMode=yes weston@${DEVICE_HOSTNAME} rm -rf /tmp/${appName}"
-      },
+    },
     "runtime": {
         "config": {
-            "view": {
-              "cursor_theme": "DMZ-White",
-              "fullscreen": true
-            }
+            "view": [
+                {
+                    "cursor_theme": "DMZ-White",
+                    "fullscreen": true
+                }
+            ]
         }
     },
     "overwrite-existing": true,
