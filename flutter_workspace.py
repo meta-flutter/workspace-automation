@@ -21,7 +21,7 @@
 #
 # "source ./setup_env.sh" or ". ./setup_env.sh"
 #
-# if emulator image is present type `qemu_run` to run the QEMU image
+# if QEMU image is loaded type `run-<platform id>` to run QEMU image
 #
 
 
@@ -326,14 +326,14 @@ def get_workspace_config(path):
                 head, tail = os.path.split(filename)
                 head = head
 
-                if tail == 'repos.json':
+                if tail == '_repos.json':
                     try:
                         data['repos'] = json.load(f)
                     except json.decoder.JSONDecodeError:
                         print("Invalid JSON in %s" % f)
                         exit(1)
 
-                elif tail == 'globals.json':
+                elif tail == '_globals.json':
                     try:
                         data['globals'] = json.load(f)
                     except json.decoder.JSONDecodeError:

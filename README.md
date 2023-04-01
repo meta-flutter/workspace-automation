@@ -6,46 +6,61 @@ We developed a Python script, `flutter_workspace.py` to automate embedded flutte
 This script reads a configuration folder of JSON files, or a single JSON configuration file and sets up a Flutter Workspace.
 
 
-### setup_flutter_workspace.py
+### flutter_workspace.py
 
 flutter_workspace.py does the following tasks automatically for you
 
-* Establishes a work space of a known state
-* Installs Flutter SDK
-* Downloads Flutter runtime=debug engine
-* Clones specified repositories into app folder to selected revision
-* Creates setup_env.sh
-* Installs defined platforms, which can include:
-    * Binary artifacts - http, docker, qemu, etc
-    * Installs custom-device per platform
-* Creates .vscode debug launcher file when pubspec_path is specified  
-* Runs on Linux and Mac
+* Establishes a workspace of known state
+* Sync repos into app folder
+* .vscode debug launcher file
+* Flutter SDK
+* Flutter runtime=debug engine
+* Loads platform types
+  * QEMU, Docker, Remote, Host, Generic
+  * Each type uses a specific configuration
+* Create setup_env.sh
+* 
+* Tested on Linux and Mac
+  * Ubuntu 20 (x86_64)
+  * Ubuntu 22 (x86_64)
+  * Fedora 37 (x86_64)
+  * Mac M1/M2 (arm64)
 
 
 ### Flutter Workspace
 
-A Flutter workspace contains the following components
+A Flutter workspace contains
 
 * Flutter SDK
-* Development Repositories
+  * flutter
+* Development Repositories (app)
+  * app
 * Host Runtime images
+  * .config/flutter_workspace/<platform-id>
 * flutter-auto binary
+  * app/ivi-homescreen/build
 * QEMU image
-* Versioned x86_64 libflutter_engine.so and icudtl.dat (debug)
+  * .config/flutter_workspace/<platform>/<qemu files>)
+* Versioned x86_64 libflutter_engine.so and icudtl.dat
+  * ./config/flutter_workspace/flutter-engine
 * Custom-device configurations
+  * ./config/flutter_workspace/<platform-id>
 * Public Cache
+  * .config/flutter_workspace/pub_cache
 
 
 ### JSON Configuration 
 
 flutter_workspace_config.json contains the following components
 
-* General: flutter-version, github_token, and Platforms Object
-* General: id, type, arch, flutter_runtime
-* Runtime: key/values related to installing binary runtime
-* Custom-device: key/values directly installed as custom-device
-* Repos Object: Array of GIT repos to clone: uri, branch, rev
-* Minimal configuration: {"flutter-version":"stable","platforms":[],"repos":[]}
+* globals
+  * cookie_file
+  * netrc
+  * github_api
+  * <any key>
+* repos
+  * git
+* platform definition
 
 
 ### Installation
@@ -73,7 +88,7 @@ git clone https://github.com/meta-flutter/workspace_automation.git
 * Wait until QEMU image reaches login prompt
 * Run `ssh –p 2222 root@localhost who` to add remote host to ~/.ssh/known_hosts
 * Navigate to your favorite app
-* `flutter run -d AGL-qemu`
+* `flutter run -run-qemu-master`
 
 
 ### Create hello_world flutter example 
@@ -99,6 +114,6 @@ git clone https://github.com/meta-flutter/workspace_automation.git
 #### Debugging with VS Code
 
 `flutter_workspace.py` creates a `.vscode/launch.json` file if one is not present.
-It uses the repo configuration key `pubspec_path`.  If this key is present in the repo
-entry, then it will add entry to `.vscode/launch.json`.
+It uses the repo json key `pubspec_path`.  If this key is present in the repo
+json, then it will add entry to `.vscode/launch.json`.
 
