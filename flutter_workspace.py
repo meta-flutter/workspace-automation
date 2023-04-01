@@ -66,6 +66,9 @@ def main():
     parser.add_argument('--fetch-engine', default=False, action='store_true', help='Fetch Engine artifacts')
     parser.add_argument('--version-files', default='', type=str, help='Create JSON files correlating Flutter SDK to Engine and Dart commits')
     parser.add_argument('--plex', default='', type=str, help='Platform Load Excludes')
+    parser.add_argument('--fastboot', default='', type=str, help='Update the selected platform using fastboot')
+    parser.add_argument('--mask-rom', default='', type=str, help='Update the selected platform using Mask ROM')
+
     parser.add_argument('--stdin-file', default='', type=str, help='Use for passing stdin for debugging')
     args = parser.parse_args()
 
@@ -177,6 +180,22 @@ def main():
         clear_folder(flutter_sdk_folder)
 
         clear_folder(vscode_folder)
+
+    #
+    # Fast Boot
+    #
+    if args.fastboot:
+        print_banner("Fastboot Flash")
+        flash_fastboot(args.fastboot, platforms)
+        return
+
+    #
+    # Mask ROM
+    #
+    if args.mask_rom:
+        print_banner("Mask ROM Flash")
+        flash_mask_rom(args.mask_rom, platforms)
+        return
 
     #
     # App folder setup
@@ -1374,36 +1393,38 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
     if not obj:
         return
 
-    if 'artifacts' in obj:
-        artifacts = obj['artifacts']
+    if 'artifacts' not in obj:
+        return
 
-        if 'cookie_file' in obj:
-            cookie_file = obj['cookie_file']
+    artifacts = obj['artifacts']
 
-        if host_machine_arch in artifacts:
-            host_specific_artifacts = artifacts[host_machine_arch]
+    if 'cookie_file' in obj:
+        cookie_file = obj['cookie_file']
 
-            url = None
-            if 'url' in obj:
-                url = obj['url']
+    if host_machine_arch in artifacts:
+        host_specific_artifacts = artifacts[host_machine_arch]
 
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                futures = []
-                for artifact in host_specific_artifacts:
-                    base_url = url + artifact['endpoint']
-                    base_url = os.path.expandvars(base_url)
-                    filename = get_filename_from_url(base_url)
+        url = None
+        if 'url' in obj:
+            url = obj['url']
 
-                    print(base_url)
-                    print(filename)
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = []
+            for artifact in host_specific_artifacts:
+                base_url = url + artifact['endpoint']
+                base_url = os.path.expandvars(base_url)
+                filename = get_filename_from_url(base_url)
 
-                    futures.append(executor.submit(download_https_file, cwd, base_url, filename, cookie_file, netrc, artifact.get('md5'), artifact.get('sha1'), artifact.get('sha256')))
-                    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+                print(base_url)
+                print(filename)
 
-                for future in concurrent.futures.as_completed(futures):
-                    res = future.result()
-                    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+                futures.append(executor.submit(download_https_file, cwd, base_url, filename, cookie_file, netrc, artifact.get('md5'), artifact.get('sha1'), artifact.get('sha256')))
+                subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+
+            for future in concurrent.futures.as_completed(futures):
+                res = future.result()
+                subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
 
 
 def handle_commands_obj(list, cwd):
@@ -2176,6 +2197,97 @@ def create_vscode_launch_file(repos: dict, device_ids: list):
         make_sure_path_exists(vscode_folder)
         with open(launch_file, 'w+') as f:
             json.dump(launch, f, indent=4)
+
+
+def update_image_by_fastboot(cwd: str, artifacts: dict):
+    print_banner('updating image by fastboot from %s' % cwd)
+
+    host_machine_arch = get_host_machine_arch()
+
+    if host_machine_arch in artifacts:
+        subprocess.check_call(["adb", "version"])
+        subprocess.check_call(["fastboot", "--version"])
+
+        # TODO - handle more than one device
+
+        cmd = ["sudo", "adb", "reboot", "bootloader"]
+        print(cmd)
+        subprocess.check_call(cmd, cwd=cwd)
+
+        cmd = ["sudo", "fastboot", "devices"]
+        print(cmd)
+        subprocess.check_call(cmd, cwd=cwd)
+
+        # TODO - Wait for device to enumerate without timeout
+
+        for artifact in artifacts[host_machine_arch]:
+            if 'endpoint' not in artifact:
+                continue
+
+            if 'partition' not in artifact:
+                continue
+
+            partition = artifact['partition']
+
+            endpoint_raw = os.path.join(cwd, artifact['endpoint'])
+            endpoint = os.path.expandvars(endpoint_raw)
+
+            if os.path.exists(endpoint):
+                cmd = ["sudo", "fastboot", "flash", partition, endpoint]
+                print(cmd)
+                subprocess.check_call(cmd, cwd=cwd)
+
+        cmd = ["sudo", "fastboot", "reboot"]
+        print(cmd)
+        subprocess.check_call(cmd, cwd=cwd)
+
+
+def flash_fastboot(enabled_platforms: str, platforms: dict):
+    if not enabled_platforms:
+        return
+
+    enabled_platforms = enabled_platforms.split(" ")
+
+    for platform_ in platforms:
+        if platform_['id'] not in enabled_platforms:
+            continue
+
+        id = platform_['id']
+
+        if 'env' in platform_:
+            handle_env(platform_['env'], None)
+
+        if 'runtime' not in platform_:
+            continue
+
+        runtime = platform_['runtime']
+        if 'artifacts' not in runtime:
+            continue
+
+        artifacts = runtime['artifacts']
+        if 'http' not in artifacts:
+            continue
+
+        http = artifacts['http']
+        if 'artifacts' not in http:
+            continue
+
+        working_dir = get_platform_working_dir(id)
+
+        artifacts = http['artifacts']
+
+        update_image_by_fastboot(working_dir, artifacts)
+
+
+def flash_mask_rom(enabled: str, platforms: dict):
+    if not enabled:
+        return
+
+    if enabled:
+        enabled = enabled.split(" ")
+
+    for enabled_platform in enabled:
+        print("Mask ROM Flash [%s]" % enabled_platform)
 
 
 def check_python_version():
