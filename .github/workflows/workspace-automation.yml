@@ -30,7 +30,7 @@ jobs:
         run: |
           FLUTTER_WORKSPACE=`pwd`/workspace
           mkdir -p $FLUTTER_WORKSPACE && pushd $FLUTTER_WORKSPACE
-          sudo ../flutter_workspace.py --config=`pwd`/../configs
+          sudo ../flutter_workspace.py --config=`pwd`/../configs --plex="agl-qemu-master agl-qemu-octopus"
           pwd
 
       - name: Source Environment

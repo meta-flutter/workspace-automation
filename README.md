@@ -70,6 +70,37 @@ git clone https://github.com/meta-flutter/workspace_automation.git
 ./flutter_workspace.py
 ```
 
+### Options
+
+#### --clean
+
+Wipes workspace before creating
+
+#### --config=<file or folder>
+
+Pass configuration JSON file, or folder path.
+
+
+#### --flutter-version=x.x.x
+
+Override config/_globals.json key "flutter_version"
+
+#### --fetch-engine
+
+Fetch libflutter_engine.so and update bundle cache
+
+#### --version-files=<folder>
+
+Pass folder for storing dart and engine json files.
+
+#### --plex="..."
+
+Platform Load Exceptions.  Pass platform-id values.  Space is delimiter
+
+#### --stdin-file
+
+Use for debugging
+
 
 ### Run flutter app with desktop-auto 
 

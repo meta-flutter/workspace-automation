@@ -76,6 +76,7 @@ def main():
                              ' flutter-version')
     parser.add_argument('--fetch-engine', default=False, action='store_true', help='Fetch Engine artifacts')
     parser.add_argument('--version-files', default='', type=str, help='Create JSON files correlating Flutter SDK to Engine and Dart commits')
+    parser.add_argument('--plex', default='', type=str, help='Platform Load Excludes')
     parser.add_argument('--stdin-file', default='', type=str, help='Use for passing stdin for debugging')
     args = parser.parse_args()
 
@@ -258,7 +259,7 @@ def main():
     #
     # Setup Platform(s)
     #
-    setup_platforms(platforms, globals.get('github_token'), globals.get('cookie_file'))
+    setup_platforms(platforms, globals.get('github_token'), globals.get('cookie_file'), args.plex)
 
     #
     # Display the custom devices list
@@ -1706,8 +1707,13 @@ def is_host_type_supported(host_types):
     return True
 
 
-def setup_platform(platform_, git_token, cookie_file):
+def setup_platform(platform_, git_token, cookie_file, plex):
     """ Sets up platform """
+
+    if platform_['id'] in plex:
+        print_banner("PLEX - %s" % platform_['id'])
+        return
+
     # if platform_['type'] == 'docker':
     runtime = platform_['runtime']
 
@@ -1747,11 +1753,14 @@ def setup_platform(platform_, git_token, cookie_file):
     handle_custom_devices(platform_)
 
 
-def setup_platforms(platforms, git_token, cookie_file):
+def setup_platforms(platforms, git_token, cookie_file, plex):
     """ Sets up each occuring platform defined """
 
+    if plex:
+        plex = plex.split(" ")
+
     for platform_ in platforms:
-        setup_platform(platform_, git_token, cookie_file)
+        setup_platform(platform_, git_token, cookie_file, plex)
 
         # reset sudo timeout
         subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
