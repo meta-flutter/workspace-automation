@@ -69,6 +69,8 @@ def main():
                         action='store_true', help='Fetch Engine artifacts')
     parser.add_argument('--version-files', default='', type=str,
                         help='Create JSON files correlating Flutter SDK to Engine and Dart commits')
+    parser.add_argument('--find-working-commit', default=False, action='store_true',
+                        help='Use to finding GIT commit where flutter analyze returns true')
     parser.add_argument('--plex', default='', type=str,
                         help='Platform Load Excludes')
     parser.add_argument('--fastboot', default='', type=str,
@@ -79,6 +81,13 @@ def main():
     parser.add_argument('--stdin-file', default='', type=str,
                         help='Use for passing stdin for debugging')
     args = parser.parse_args()
+
+    #
+    # Find GIT Commit where flutter analyze returns true
+    #
+    if args.find_working_commit:
+        flutter_analyze_git_commits()
+        return
 
     # check python version
     check_python_version()
@@ -2361,6 +2370,31 @@ def flash_mask_rom(enabled: str, platforms: dict):
 
     for enabled_platform in enabled:
         print("Mask ROM Flash [%s]" % enabled_platform)
+
+
+def flutter_analyze_git_commits():
+    if not os.path.exists('.git'):
+        print('Directory does not contain .git')
+        return
+
+    if "FLUTTER_WORKSPACE" not in os.environ:
+        print('The workspace environment is not set')
+        return
+
+    stdout = get_process_stdout('git rev-list HEAD')
+    commits = stdout.split('\n')
+    for commit in commits:
+        cmd = ['git', 'checkout', '--force', commit]
+        subprocess.call(cmd)
+        cmd = ['flutter', 'analyze', '.']
+        try:
+            subprocess.check_output(cmd, stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError:
+            print("*** Commit %s does not work." % commit)
+            continue
+
+        print('*** Found working commit: %s' % commit)
+        break
 
 
 def check_python_version():
