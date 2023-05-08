@@ -62,6 +62,10 @@ def main():
     parser.add_argument('--flutter-version', default='', type=str,
                         help='Select flutter version.  Overrides config file key:'
                              ' flutter-version')
+    parser.add_argument('--github-token', default='', type=str,
+                        help='Set github-token.  Overrides _globals.json key/value')
+    parser.add_argument('--cookie-file', default='', type=str,
+                        help='Set cookie-file to use.  Overrides _globals.json key/value')
     parser.add_argument('--fetch-engine', default=False,
                         action='store_true', help='Fetch Engine artifacts')
     parser.add_argument('--version-files', default='', type=str,
@@ -74,6 +78,7 @@ def main():
                         help='Update the selected platform using fastboot')
     parser.add_argument('--mask-rom', default='', type=str,
                         help='Update the selected platform using Mask ROM')
+    parser.add_argument('--flash-id', default='', type=str, help='id used for flashing')
 
     parser.add_argument('--stdin-file', default='', type=str,
                         help='Use for passing stdin for debugging')
@@ -202,15 +207,14 @@ def main():
     #
     if args.fastboot:
         print_banner("Fastboot Flash")
-        flash_fastboot(args.fastboot, platforms)
+        flash_fastboot(args.fastboot, args.flash_id, platforms)
         return
 
     #
     # Mask ROM
     #
     if args.mask_rom:
-        print_banner("Mask ROM Flash")
-        flash_mask_rom(args.mask_rom, platforms)
+        flash_mask_rom(args.mask_rom, args.flash_id, platforms)
         return
 
     #
@@ -284,8 +288,15 @@ def main():
     #
     # Setup Platform(s)
     #
-    setup_platforms(platforms, globals_.get('github_token'),
-                    globals_.get('cookie_file'), args.plex)
+    github_token = globals_.get('github_token')
+    if args.github_token:
+        github_token = args.github_token
+
+    cookie_file = globals_.get('cookie_file')
+    if args.cookie_file:
+        cookie_file = args.cookie_file
+
+    setup_platforms(platforms, github_token, cookie_file, args.plex)
 
     #
     # Display the custom devices list
@@ -1271,9 +1282,12 @@ def handle_pre_requisites(obj, cwd):
         if host_type == "linux":
             host_type = get_freedesktop_os_release_id()
 
-        distro = host_specific_pre_requisites[host_type]
-        handle_conditionals(distro.get('conditionals'), cwd)
-        handle_commands(distro.get('cmds'), cwd)
+        if host_specific_pre_requisites.get(host_type):
+            distro = host_specific_pre_requisites[host_type]
+            handle_conditionals(distro.get('conditionals'), cwd)
+            handle_commands(distro.get('cmds'), cwd)
+        else:
+            print('handle_pre_requisites: Not supported')
 
 
 def get_md5sum(file):
@@ -1468,11 +1482,11 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
                     ['sudo', '-v'], stdout=subprocess.DEVNULL)
 
 
-def handle_commands_obj(list_, cwd):
-    if not list_:
+def handle_commands_obj(cmd_list, cwd):
+    if not cmd_list:
         return
 
-    for obj in list_:
+    for obj in cmd_list:
         if 'cmds' not in obj:
             continue
 
@@ -1480,24 +1494,32 @@ def handle_commands_obj(list_, cwd):
         if host_type == 'linux':
             host_type = get_freedesktop_os_release_id()
 
-        local_env = os.environ.copy()
-
         # sandbox variables to commands
         if host_type in obj:
             cmds = obj[host_type]
             if 'env' in cmds:
-                handle_env(cmds.get('env'), local_env)
+                handle_env(cmds.get('env'), None)
+
+        local_env = os.environ.copy()
+
+        if 'env' in obj:
+            handle_env(obj.get('env'), local_env)
 
         if 'cwd' in obj:
             cwd = os.path.expandvars(obj.get('cwd'))
+            print('cwd: ', cwd)
             make_sure_path_exists(cwd)
+
+        shell_ = False
+        if 'shell' in obj:
+            shell_ = obj.get('shell')
 
         cmds = obj.get('cmds')
         for cmd in cmds:
             expanded_cmd = os.path.expandvars(cmd)
             cmd_arr = shlex.split(expanded_cmd)
             print('cmd: %s' % cmd_arr)
-            subprocess.check_call(cmd_arr, cwd=cwd, env=local_env)
+            subprocess.check_call(cmd_arr, cwd=cwd, env=local_env, shell=shell_)
 
 
 def handle_commands(cmds, cwd):
@@ -1611,7 +1633,11 @@ def handle_qemu_obj(qemu: dict, cwd: os.path, platform_id: str, flutter_runtime:
     image = qemu[host_machine_arch]['image']
     image = os.path.expandvars(image)
 
-    os.environ['QEMU_IMAGE'] = os.path.join(cwd, image)
+    artifacts_dir = os.environ['ARTIFACTS_DIR']
+    if not artifacts_dir:
+        os.environ['QEMU_IMAGE'] = os.path.join(cwd, image)
+    else:
+        os.environ['QEMU_IMAGE'] = os.path.join(artifacts_dir, image)
 
     args = qemu[host_machine_arch]['args']
     args = os.path.expandvars(args)
@@ -1704,6 +1730,11 @@ def handle_artifacts_obj(obj, host_machine_arch, cwd, git_token, cookie_file):
     if not obj:
         return
 
+    artifacts = os.path.join(cwd, 'artifacts')
+    make_sure_path_exists(artifacts)
+    os.environ['ARTIFACTS_DIR'] = artifacts
+    cwd = artifacts
+
     if not cookie_file:
         cookie_file = obj.get('cookie_file')
 
@@ -1732,10 +1763,11 @@ def handle_env(env_variables, local_env):
 
     for k, v in env_variables.items():
         if local_env:
-            print(v)
             local_env[k] = os.path.expandvars(v)
+            # print("local: %s = %s" % (k, local_env[k]))
         else:
             os.environ[k] = os.path.expandvars(v)
+            # print("global: %s = %s" % (k, os.environ[k]))
 
 
 def get_platform_working_dir(platform_id):
@@ -2261,95 +2293,101 @@ def create_vscode_launch_file(repos: dict, device_ids: list):
             json.dump(launch, f, indent=4)
 
 
-def update_image_by_fastboot(cwd: os.path, artifacts: dict):
+def update_image_by_fastboot(_id: str, cwd: os.path, artifacts: dict):
     print_banner('updating image by fastboot from %s' % cwd)
 
-    host_machine_arch = get_host_machine_arch()
+    subprocess.check_call(["adb", "version"])
+    subprocess.check_call(["fastboot", "--version"])
 
-    if host_machine_arch in artifacts:
-        subprocess.check_call(["adb", "version"])
-        subprocess.check_call(["fastboot", "--version"])
+    cmd = ["sudo", "adb", "reboot", "bootloader"]
+    print(cmd)
+    # TODO subprocess.call(cmd, cwd=cwd)
 
-        # TODO - handle more than one device
+    cmd = ["sudo", "fastboot", "devices"]
+    print(cmd)
+    # TODO subprocess.call(cmd, cwd=cwd)
 
-        cmd = ["sudo", "adb", "reboot", "bootloader"]
-        print(cmd)
-        subprocess.check_call(cmd, cwd=cwd)
+    # TODO - Wait for device to enumerate without timeout
 
-        cmd = ["sudo", "fastboot", "devices"]
-        print(cmd)
-        subprocess.check_call(cmd, cwd=cwd)
+    for artifact in artifacts['x86_64']:
+        if 'endpoint' not in artifact:
+            continue
 
-        # TODO - Wait for device to enumerate without timeout
+        if 'partition' not in artifact:
+            continue
 
-        for artifact in artifacts[host_machine_arch]:
-            if 'endpoint' not in artifact:
-                continue
+        partition = artifact['partition']
 
-            if 'partition' not in artifact:
-                continue
+        endpoint_raw = os.path.join(cwd, artifact['endpoint'])
+        endpoint = os.path.expandvars(endpoint_raw)
 
-            partition = artifact['partition']
+        print(endpoint)
 
-            endpoint_raw = os.path.join(cwd, artifact['endpoint'])
-            endpoint = os.path.expandvars(endpoint_raw)
+        if os.path.exists(endpoint):
+            cmd = ["sudo", "fastboot", "flash", partition, endpoint]
+            print(cmd)
+            subprocess.check_call(cmd, cwd=cwd)
 
-            if os.path.exists(endpoint):
-                cmd = ["sudo", "fastboot", "flash", partition, endpoint]
-                print(cmd)
-                subprocess.check_call(cmd, cwd=cwd)
-
-        cmd = ["sudo", "fastboot", "reboot"]
-        print(cmd)
-        subprocess.check_call(cmd, cwd=cwd)
+    cmd = ["sudo", "fastboot", "reboot"]
+    print(cmd)
+    subprocess.check_call(cmd, cwd=cwd)
 
 
-def flash_fastboot(enabled_platforms: str, platforms: dict):
-    if not enabled_platforms:
+def validate_fastboot_req(id: str, platform_: dict):
+    id_ = platform_['id']
+
+    if 'runtime' not in platform_:
+        print('Missing runtime token in platform')
         return
 
-    enabled_platforms = enabled_platforms.split(" ")
+    runtime = platform_['runtime']
+    if 'artifacts' not in runtime:
+        print('Missing artifact token in runtime')
+        return
+
+    artifacts = runtime['artifacts']
+
+    if 'http' not in artifacts:
+        print('Missing http token in artifacts')
+        return
+
+    http = artifacts['http']
+    if 'artifacts' not in http:
+        print('Missing artifact token in http')
+        return
+
+    if 'env' in platform_:
+        handle_env(platform_['env'], None)
+
+    working_dir = get_platform_working_dir(id_)
+    update_image_by_fastboot(id, working_dir, artifacts)
+
+
+def flash_fastboot(platform_id: str, id: str, platforms: dict):
+    if not platform_id:
+        print('platform_id is None')
+        return
 
     for platform_ in platforms:
-        if platform_['id'] not in enabled_platforms:
-            continue
-
-        id_ = platform_['id']
-
-        if 'env' in platform_:
-            handle_env(platform_['env'], None)
-
-        if 'runtime' not in platform_:
-            continue
-
-        runtime = platform_['runtime']
-        if 'artifacts' not in runtime:
-            continue
-
-        artifacts = runtime['artifacts']
-        if 'http' not in artifacts:
-            continue
-
-        http = artifacts['http']
-        if 'artifacts' not in http:
-            continue
-
-        working_dir = get_platform_working_dir(id_)
-
-        artifacts = http['artifacts']
-
-        update_image_by_fastboot(working_dir, artifacts)
+        if platform_id == platform_.get('id'):
+            print("Fastboot Flash [%s]" % platform_id)
+            validate_fastboot_req(id, platform_)
+            break
 
 
-def flash_mask_rom(enabled: str, _platforms: dict):
-    if not enabled:
+def flash_mask_rom(platform_id: str, id: str, platforms: dict):
+    print_banner("Mask ROM Flash")
+
+    if not platform_id:
+        print('platform_id is None')
         return
 
-    if enabled:
-        enabled = enabled.split(" ")
-
-    for enabled_platform in enabled:
-        print("Mask ROM Flash [%s]" % enabled_platform)
+    for platform_ in platforms:
+        if platform_id == platform_.get('id'):
+            print("Mask ROM Flash [%s]" % platform_id)
+            working_dir = get_platform_working_dir(platform_id)
+            handle_commands_obj(platform_.get('flash_mask_rom'), working_dir)
+            break
 
 
 def flutter_analyze_git_commits():
