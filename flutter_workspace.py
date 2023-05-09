@@ -1486,6 +1486,8 @@ def handle_commands_obj(cmd_list, cwd):
     if not cmd_list:
         return
 
+    local_env = os.environ.copy()
+
     for obj in cmd_list:
         if 'cmds' not in obj:
             continue
@@ -1499,8 +1501,6 @@ def handle_commands_obj(cmd_list, cwd):
             cmds = obj[host_type]
             if 'env' in cmds:
                 handle_env(cmds.get('env'), None)
-
-        local_env = os.environ.copy()
 
         if 'env' in obj:
             handle_env(obj.get('env'), local_env)
@@ -2375,8 +2375,8 @@ def flash_fastboot(platform_id: str, id: str, platforms: dict):
             break
 
 
-def flash_mask_rom(platform_id: str, id: str, platforms: dict):
-    print_banner("Mask ROM Flash")
+def flash_mask_rom(platform_id: str, _id: str, platforms: dict):
+    print_banner("Flash with Mask ROM")
 
     if not platform_id:
         print('platform_id is None')
@@ -2385,8 +2385,15 @@ def flash_mask_rom(platform_id: str, id: str, platforms: dict):
     for platform_ in platforms:
         if platform_id == platform_.get('id'):
             print("Mask ROM Flash [%s]" % platform_id)
+
+            if 'env' in platform_:
+                handle_env(platform_.get('env'), None)
+
             working_dir = get_platform_working_dir(platform_id)
-            handle_commands_obj(platform_.get('flash_mask_rom'), working_dir)
+            runtime = platform_.get('runtime')
+            flash_cmds = runtime.get('flash_mask_rom')
+
+            handle_commands_obj(flash_cmds, working_dir)
             break
 
 
