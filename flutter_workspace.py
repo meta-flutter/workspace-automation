@@ -1486,8 +1486,6 @@ def handle_commands_obj(cmd_list, cwd):
     if not cmd_list:
         return
 
-    local_env = os.environ.copy()
-
     for obj in cmd_list:
         if 'cmds' not in obj:
             continue
@@ -1495,6 +1493,8 @@ def handle_commands_obj(cmd_list, cwd):
         host_type = get_host_type()
         if host_type == 'linux':
             host_type = get_freedesktop_os_release_id()
+
+        local_env = os.environ.copy()
 
         # sandbox variables to commands
         if host_type in obj:
@@ -2386,10 +2386,11 @@ def flash_mask_rom(platform_id: str, _id: str, platforms: dict):
         if platform_id == platform_.get('id'):
             print("Mask ROM Flash [%s]" % platform_id)
 
+            working_dir = get_platform_working_dir(platform_id)
+
             if 'env' in platform_:
                 handle_env(platform_.get('env'), None)
 
-            working_dir = get_platform_working_dir(platform_id)
             runtime = platform_.get('runtime')
             flash_cmds = runtime.get('flash_mask_rom')
 
