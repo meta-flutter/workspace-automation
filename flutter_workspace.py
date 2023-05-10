@@ -34,6 +34,7 @@ import shlex
 import signal
 import subprocess
 import sys
+import time
 import zipfile
 from platform import system
 from sys import stderr as stream
@@ -2293,38 +2294,65 @@ def create_vscode_launch_file(repos: dict, device_ids: list):
             json.dump(launch, f, indent=4)
 
 
-def update_image_by_fastboot(_id: str, cwd: os.path, artifacts: dict):
+def update_image_by_fastboot(flash_id: str, cwd: os.path, artifacts: dict):
+    """Updates device using fastboot.  Requires matching device id or returns"""
     print_banner('updating image by fastboot from %s' % cwd)
 
-    subprocess.check_call(["adb", "version"])
-    subprocess.check_call(["fastboot", "--version"])
+    subprocess.check_call(['adb', 'version'])
+    subprocess.check_call(['fastboot', '--version'])
 
-    cmd = ["sudo", "adb", "reboot", "bootloader"]
-    print(cmd)
-    # TODO subprocess.call(cmd, cwd=cwd)
+    adb_device_list = get_process_stdout('sudo adb devices')
+    adb_device_not_found = False
+    if flash_id not in adb_device_list:
+        adb_device_not_found = True
+        print('[%s] not in adb state' % flash_id)
 
-    cmd = ["sudo", "fastboot", "devices"]
-    print(cmd)
-    # TODO subprocess.call(cmd, cwd=cwd)
+    fastboot_device_list = get_process_stdout('sudo fastboot devices')
+    fastboot_device_not_found = False
+    if flash_id not in fastboot_device_list:
+        fastboot_device_not_found = True
+        print('[%s] not in fastboot state' % flash_id)
 
-    # TODO - Wait for device to enumerate without timeout
+    if adb_device_not_found and fastboot_device_not_found:
+        print_banner('Device [%s] Not Found' % flash_id)
+        return
 
-    for artifact in artifacts['x86_64']:
-        if 'endpoint' not in artifact:
+    for i in range(5):
+        try:
+            fastboot_device_list = get_process_stdout("sudo fastboot devices")
+            fastboot_device_list = fastboot_device_list.split('\n')
+            if fastboot_device_list == ['']:
+                print('no fastboot devices, reboot as bootloader')
+                cmd = ["sudo", "adb", "reboot", "bootloader"]
+                print(cmd)
+                subprocess.check_call(cmd)
+                time.sleep(1)
+            else:
+                print('found fastboot device!! ')
+                break
+
+        except Exception as e:
+            print(f"Attempt {i+1} failed: {e}")
+            time.sleep(1)
+    else:
+        print("Operation failed after 5 attempts.")
+
+    artifact_list = artifacts.get('x86_64')
+    for artifact in artifact_list:
+        partition = artifact.get('partition')
+        endpoint = artifact.get('endpoint')
+
+        if partition is None:
+            continue
+        if endpoint is None:
             continue
 
-        if 'partition' not in artifact:
-            continue
+        endpoint = os.path.expandvars(endpoint)
+        filename = get_filename_from_url(endpoint)
+        filepath = os.path.join(cwd, filename)
 
-        partition = artifact['partition']
-
-        endpoint_raw = os.path.join(cwd, artifact['endpoint'])
-        endpoint = os.path.expandvars(endpoint_raw)
-
-        print(endpoint)
-
-        if os.path.exists(endpoint):
-            cmd = ["sudo", "fastboot", "flash", partition, endpoint]
+        if os.path.exists(filepath):
+            cmd = ["sudo", "fastboot", "flash", partition, filepath]
             print(cmd)
             subprocess.check_call(cmd, cwd=cwd)
 
@@ -2333,8 +2361,7 @@ def update_image_by_fastboot(_id: str, cwd: os.path, artifacts: dict):
     subprocess.check_call(cmd, cwd=cwd)
 
 
-def validate_fastboot_req(id: str, platform_: dict):
-    id_ = platform_['id']
+def validate_fastboot_req(flash_id: str, platform_: dict):
 
     if 'runtime' not in platform_:
         print('Missing runtime token in platform')
@@ -2350,8 +2377,8 @@ def validate_fastboot_req(id: str, platform_: dict):
     if 'http' not in artifacts:
         print('Missing http token in artifacts')
         return
-
     http = artifacts['http']
+
     if 'artifacts' not in http:
         print('Missing artifact token in http')
         return
@@ -2359,19 +2386,21 @@ def validate_fastboot_req(id: str, platform_: dict):
     if 'env' in platform_:
         handle_env(platform_['env'], None)
 
-    working_dir = get_platform_working_dir(id_)
-    update_image_by_fastboot(id, working_dir, artifacts)
+    platform_id = platform_['id']
+    working_dir = get_platform_working_dir(platform_id)
+    artifacts_dir = os.path.join(working_dir, 'artifacts')
+    update_image_by_fastboot(flash_id, artifacts_dir, http.get('artifacts'))
 
 
-def flash_fastboot(platform_id: str, id: str, platforms: dict):
+def flash_fastboot(platform_id: str, flash_id: str, platforms: dict):
     if not platform_id:
-        print('platform_id is None')
+        print('Missing platform_id')
         return
 
     for platform_ in platforms:
-        if platform_id == platform_.get('id'):
-            print("Fastboot Flash [%s]" % platform_id)
-            validate_fastboot_req(id, platform_)
+        current_platform_id = platform_.get('id')
+        if platform_id == current_platform_id:
+            validate_fastboot_req(flash_id, platform_)
             break
 
 
