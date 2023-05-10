@@ -1465,9 +1465,9 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
             futures = []
             for artifact in host_specific_artifacts:
                 local_url = artifact.get('url')
-                if local_url:
-                    url = local_url
-                base_url = url + artifact['endpoint']
+                if local_url is None:
+                    local_url = url
+                base_url = local_url + artifact['endpoint']
                 base_url = os.path.expandvars(base_url)
                 filename = get_filename_from_url(base_url)
 
