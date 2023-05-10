@@ -79,7 +79,7 @@ def main():
                         help='Update the selected platform using fastboot')
     parser.add_argument('--mask-rom', default='', type=str,
                         help='Update the selected platform using Mask ROM')
-    parser.add_argument('--flash-id', default='', type=str, help='id used for flashing')
+    parser.add_argument('--device-id', default='', type=str, help='device id for flashing')
 
     parser.add_argument('--stdin-file', default='', type=str,
                         help='Use for passing stdin for debugging')
@@ -208,14 +208,14 @@ def main():
     #
     if args.fastboot:
         print_banner("Fastboot Flash")
-        flash_fastboot(args.fastboot, args.flash_id, platforms)
+        flash_fastboot(args.fastboot, args.device_id, platforms)
         return
 
     #
     # Mask ROM
     #
     if args.mask_rom:
-        flash_mask_rom(args.mask_rom, args.flash_id, platforms)
+        flash_mask_rom(args.mask_rom, args.device_id, platforms)
         return
 
     #
@@ -2294,7 +2294,7 @@ def create_vscode_launch_file(repos: dict, device_ids: list):
             json.dump(launch, f, indent=4)
 
 
-def update_image_by_fastboot(flash_id: str, cwd: os.path, artifacts: dict):
+def update_image_by_fastboot(device_id: str, cwd: os.path, artifacts: dict):
     """Updates device using fastboot.  Requires matching device id or returns"""
     print_banner('updating image by fastboot from %s' % cwd)
 
@@ -2303,18 +2303,18 @@ def update_image_by_fastboot(flash_id: str, cwd: os.path, artifacts: dict):
 
     adb_device_list = get_process_stdout('sudo adb devices')
     adb_device_not_found = False
-    if flash_id not in adb_device_list:
+    if device_id not in adb_device_list:
         adb_device_not_found = True
-        print('[%s] not in adb state' % flash_id)
+        print('[%s] not in adb state' % device_id)
 
     fastboot_device_list = get_process_stdout('sudo fastboot devices')
     fastboot_device_not_found = False
-    if flash_id not in fastboot_device_list:
+    if device_id not in fastboot_device_list:
         fastboot_device_not_found = True
-        print('[%s] not in fastboot state' % flash_id)
+        print('[%s] not in fastboot state' % device_id)
 
     if adb_device_not_found and fastboot_device_not_found:
-        print_banner('Device [%s] Not Found' % flash_id)
+        print_banner('Device [%s] Not Found' % device_id)
         return
 
     for i in range(5):
@@ -2361,7 +2361,7 @@ def update_image_by_fastboot(flash_id: str, cwd: os.path, artifacts: dict):
     subprocess.check_call(cmd, cwd=cwd)
 
 
-def validate_fastboot_req(flash_id: str, platform_: dict):
+def validate_fastboot_req(device_id: str, platform_: dict):
 
     if 'runtime' not in platform_:
         print('Missing runtime token in platform')
@@ -2389,10 +2389,10 @@ def validate_fastboot_req(flash_id: str, platform_: dict):
     platform_id = platform_['id']
     working_dir = get_platform_working_dir(platform_id)
     artifacts_dir = os.path.join(working_dir, 'artifacts')
-    update_image_by_fastboot(flash_id, artifacts_dir, http.get('artifacts'))
+    update_image_by_fastboot(device_id, artifacts_dir, http.get('artifacts'))
 
 
-def flash_fastboot(platform_id: str, flash_id: str, platforms: dict):
+def flash_fastboot(platform_id: str, device_id: str, platforms: dict):
     if not platform_id:
         print('Missing platform_id')
         return
@@ -2400,7 +2400,7 @@ def flash_fastboot(platform_id: str, flash_id: str, platforms: dict):
     for platform_ in platforms:
         current_platform_id = platform_.get('id')
         if platform_id == current_platform_id:
-            validate_fastboot_req(flash_id, platform_)
+            validate_fastboot_req(device_id, platform_)
             break
 
 
