@@ -1464,6 +1464,9 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = []
             for artifact in host_specific_artifacts:
+                local_url = artifact.get('url')
+                if local_url:
+                    url = local_url
                 base_url = url + artifact['endpoint']
                 base_url = os.path.expandvars(base_url)
                 filename = get_filename_from_url(base_url)
