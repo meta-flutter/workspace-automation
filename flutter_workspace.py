@@ -2099,16 +2099,16 @@ def install_minimum_runtime_deps():
         if os_release_id == 'ubuntu':
             cmd = ['sudo', 'apt', 'update', '-y']
             subprocess.check_output(cmd)
-            packages = 'curl libcurl4-openssl-dev libssl-dev python3-dotenv python3-pycurl python3-pip'.split(
-                ' ')
+            packages = 'git git-lfs curl libcurl4-openssl-dev libssl-dev libgtk-3-dev ' \
+                       'python3-dotenv python3-pycurl python3-pip'.split(' ')
             for package in packages:
                 ubuntu_install_pkg_if_not_installed(package)
 
         elif os_release_id == 'fedora':
             cmd = ['sudo', 'dnf', '-y', 'update']
             subprocess.check_output(cmd)
-            packages = 'dnf-plugins-core curl libcurl-devel openssl-devel gtk3-devel python3-dotenv python3-pycurl ' \
-                       'python3-pip'.split(' ')
+            packages = 'dnf-plugins-core git git-lfs curl libcurl-devel openssl-devel ' \
+                       'gtk3-devel python3-dotenv python3-pycurl python3-pip'.split(' ')
             for package in packages:
                 fedora_install_pkg_if_not_installed(package)
 
