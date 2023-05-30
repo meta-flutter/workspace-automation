@@ -51,7 +51,8 @@
             "sudo ./llvm.sh 14",
             "rm ./llvm.sh",
             "sudo apt install -y clang-14 lldb-14 lld-14 clangd-14 clang-tidy-14 clang-format-14 clang-tools-14 llvm-14-dev lld-14 lldb-14 llvm-14-tools libomp-14-dev libc++-14-dev libc++abi-14-dev libclang-common-14-dev libclang-14-dev libclang-cpp14-dev libunwind-14-dev",
-            "sudo apt install -y libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libxkbcommon-dev vulkan-tools ninja-build",
+            "sudo apt install -y libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libxkbcommon-dev ninja-build",
+            "sudo apt install -y build-essential libvulkan-dev vulkan-tools vulkan-validationlayers vulkan-utils libtool",
             "sudo apt autoremove -y",
             "sudo apt clean -y",
             "cmake --version",
@@ -64,7 +65,7 @@
           "cmds": [
             "sudo dnf -y update",
             "sudo dnf -y upgrade",
-            "sudo dnf -y install wayland-devel wayland-protocols-devel libxkbcommon-devel cmake ninja-build mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libglapi mesa-libxatracker mesa-vulkan-drivers vulkan-tools libunwind-devel clang clang-analyzer clang-devel clang-libs clang-resource-filesystem llvm-devel clang-tools-extra lld lld-libs lldb libcxx libcxx-devel libcxx-static libcxxabi libcxxabi-devel libcxxabi-static gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel gstreamer1-plugins-bad-free-extras gstreamer1-plugins-base-tools gstreamer1-plugins-good gstreamer1-plugins-good-extras gstreamer1-plugins-ugly-free",
+            "sudo dnf -y install wayland-devel wayland-protocols-devel libxkbcommon-devel cmake ninja-build mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libglapi mesa-libxatracker mesa-vulkan-drivers vulkan-tools libunwind-devel clang clang-analyzer clang-devel clang-libs clang-resource-filesystem llvm-devel clang-tools-extra lld lld-libs lldb libcxx libcxx-devel libcxx-static libcxxabi libcxxabi-devel libcxxabi-static gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel gstreamer1-plugins-bad-free-extras gstreamer1-plugins-base-tools gstreamer1-plugins-good gstreamer1-plugins-good-extras gstreamer1-plugins-ugly-free libtool",
             "sudo dnf -y autoremove",
             "cmake --version",
             "clang++ --version",
