@@ -1964,10 +1964,12 @@ def get_github_artifact(token: str, url: str, filename: str) -> str:
 def ubuntu_is_pkg_installed(package: str) -> bool:
     """Ubuntu - checks if package is installed"""
 
-    cmd = ['dpkg-query', '-W',
-           '--showformat=\"${Status}\n\"', package, '|grep \"install ok installed\"']
+    cmd = "dpkg-query -W --showformat='${Status}' %s" % package
+    ps = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    result = ps.communicate()[0]
 
-    result = get_process_stdout(cmd).strip('\'').rstrip()
+    if isinstance(result, bytes):
+        result = result.decode()
 
     if 'install ok installed' in result:
         print("Package %s Found" % package)
