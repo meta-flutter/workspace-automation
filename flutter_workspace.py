@@ -2210,6 +2210,10 @@ def get_linux_release_file():
     filename = 'releases_linux.json'
     url = 'https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json'
 
+    sha256_file = os.path.join(cwd, 'releases_linux.json.sha256')
+    if os.path.exists(sha256_file):
+        os.remove(sha256_file)
+
     download_https_file(cwd, url, filename, None, None, None, None, None)
 
     return os.path.join(cwd, filename)
