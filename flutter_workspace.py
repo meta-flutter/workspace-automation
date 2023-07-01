@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-
+#
+# SPDX-FileCopyrightText: (C) 2020-2023 meta-flutter contributors
+#
+# SPDX-License-Identifier: Apache-2.0
+#
 #
 # Script that creates a Flutter Workspace
 #
@@ -1145,6 +1149,8 @@ def get_google_flutter_engine_url():
     arch = get_host_machine_arch()
 
     engine_version = get_flutter_engine_version(flutter_sdk_path)
+    os.environ['FLUTTER_ENGINE_VERSION'] = engine_version
+
     url = ''
     if arch == 'x86_64':
         url = 'https://storage.googleapis.com/flutter_infra_release/flutter/%s/linux-x64/linux-x64-embedder' % \
@@ -1197,17 +1203,20 @@ def get_flutter_engine_runtime(clean_workspace):
     archive_file = os.path.join(cwd_engine, filename)
     sha256_file = os.path.join(cwd_engine, filename + '.sha256')
 
+    bundle_folder = os.path.join(cwd, 'bundle')
+    os.environ['BUNDLE_FOLDER'] = bundle_folder
+
     if not compare_sha256(archive_file, sha256_file):
         print_banner("Downloading Engine artifact")
         make_sure_path_exists(cwd_engine)
-        download_https_file(cwd_engine, base_url, filename,
-                            None, None, None, None, None)
+        if not download_https_file(cwd_engine, base_url, filename,
+                            None, None, None, None, None):
+            print_banner("Engine artifact not available")
+            return
+
         write_sha256_file(cwd_engine, archive_file)
     else:
         print_banner("Skipping Engine artifact download")
-
-    bundle_folder = os.path.join(cwd, 'bundle')
-    os.environ['BUNDLE_FOLDER'] = bundle_folder
 
     if clean_workspace:
         if os.path.exists(bundle_folder):
@@ -1345,28 +1354,28 @@ def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1, sha256):
     sha256_file = os.path.join(cwd, file + '.sha256')
     if compare_sha256(download_filepath, sha256_file):
         print("%s exists, skipping download" % download_filepath)
-        return
+        return True
 
     if os.path.exists(download_filepath):
         if md5:
             # don't download if md5 is good
             if md5 == get_md5sum(download_filepath):
                 print("** Using %s" % download_filepath)
-                return
+                return True
             else:
                 os.remove(download_filepath)
         elif sha1:
             # don't download if sha1 is good
             if sha1 == get_sha1sum(download_filepath):
                 print("** Using %s" % download_filepath)
-                return
+                return True
             else:
                 os.remove(download_filepath)
         elif sha256:
             # don't download if sha256 is good
             if sha256 == get_sha256sum(download_filepath):
                 print("** Using %s" % download_filepath)
-                return
+                return True
             else:
                 os.remove(download_filepath)
 
@@ -1376,7 +1385,7 @@ def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1, sha256):
     if not res:
         os.remove(download_filepath)
         print_banner("Failed to download %s" % file)
-        return
+        return False
 
     if os.path.exists(download_filepath):
         if md5:
@@ -1396,6 +1405,7 @@ def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1, sha256):
                          (download_filepath, sha256, expected_sha256))
 
     write_sha256_file(cwd, file)
+    return True
 
 
 def get_filename_from_url(url):
@@ -1794,6 +1804,31 @@ def create_platform_config_file(obj, cwd):
         json.dump(obj, f, indent=2)
 
 
+def create_gclient_config_file(obj, cwd):
+    if obj is None:
+        return
+
+    if 'path' not in obj:
+        print_banner('Missing path key in gclient_config')
+        return
+
+    gclient_path = obj['path']
+    gclient_path = os.path.expandvars(gclient_path)
+    make_sure_path_exists(gclient_path)
+
+    del obj['path']
+    gclient_config = json.dumps(obj)
+    gclient_config = 'solutions = [' + gclient_config
+    gclient_config = os.path.expandvars(gclient_config)
+    gclient_config = gclient_config.replace('true', 'True')
+    gclient_config = gclient_config.replace('false', 'False')
+    gclient_config = gclient_config + ']'
+
+    gclient_config_file = os.path.join(gclient_path, '.gclient')
+    with open(gclient_config_file, 'w+') as f:
+        f.write(gclient_config)
+
+
 def is_host_type_supported(host_types):
     """Return true if host type is contained in host_types variable, false otherwise"""
     host_type = get_host_type()
@@ -1838,6 +1873,7 @@ def setup_platform(platform_, git_token, cookie_file, plex):
     handle_dotenv(platform_.get('dotenv'))
     handle_env(platform_.get('env'), None)
     create_platform_config_file(runtime.get('config'), cwd)
+    create_gclient_config_file(runtime.get('gclient_config'), cwd)
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
     handle_artifacts_obj(runtime.get('artifacts'),
                          host_machine_arch, cwd, git_token, cookie_file)

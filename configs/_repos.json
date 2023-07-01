@@ -53,5 +53,9 @@
         "uri": "https://github.com/bernardpumped/ped.git",
         "branch": "agl",
         "pubspec_path": "ped"
+    },
+    {
+        "uri": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
+        "branch": "main"
     }
 ]
