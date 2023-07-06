@@ -43,7 +43,7 @@
             "arm64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt install pkg-config freetype2-dev git"
+                        "sudo apt install pkg-config libfreetype-dev git"
                     ]
                 },
                 "fedora": {
@@ -55,7 +55,7 @@
             "x86_64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt install pkg-config freetype2-dev git"
+                        "sudo apt install pkg-config libfreetype-dev git"
                     ]
                 },
                 "fedora": {
