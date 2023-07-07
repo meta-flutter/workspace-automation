@@ -1508,13 +1508,13 @@ def handle_commands_obj(cmd_list, cwd):
         if host_type == 'linux':
             host_type = get_freedesktop_os_release_id()
 
-        local_env = os.environ.copy()
-
         # sandbox variables to commands
         if host_type in obj:
             cmds = obj[host_type]
             if 'env' in cmds:
                 handle_env(cmds.get('env'), None)
+
+        local_env = os.environ.copy()
 
         if 'env' in obj:
             handle_env(obj.get('env'), local_env)
@@ -1571,8 +1571,18 @@ def handle_docker_obj(obj, _host_machine_arch, cwd):
     if not obj:
         return
 
+    from pathlib import Path
+
+    flutter_workspace = os.environ['FLUTTER_WORKSPACE']
+
     # handle_docker_registry(obj.get('registry'))
-    docker_compose_stop(obj.get('docker-compose-yml-dir'))
+
+    docker_compose_yml_dir = obj.get('docker-compose-yml-dir')
+    if docker_compose_yml_dir:
+        docker_compose_yml_abs = os.path.join(flutter_workspace, docker_compose_yml_dir)
+        if Path(docker_compose_yml_abs).exists:
+            docker_compose_stop(docker_compose_yml_abs)
+
     handle_commands(obj.get('post_cmds'), cwd)
     handle_conditionals(obj.get('conditionals'), cwd)
 
@@ -1765,10 +1775,13 @@ def handle_dotenv(dotenv_files):
     from dotenv import load_dotenv
     from pathlib import Path
 
+    flutter_workspace = os.environ['FLUTTER_WORKSPACE']
+
     for dotenv_file in dotenv_files:
-        dotenv_path = Path(dotenv_file)
-        load_dotenv(dotenv_path=dotenv_path)
-        print("Loaded: %s" % dotenv_file)
+        dotenv_path = Path(os.path.join(flutter_workspace, dotenv_file))
+        if dotenv_path.exists:
+            load_dotenv(dotenv_path=dotenv_path, verbose=True, override=True)
+            print("Loaded: %s" % dotenv_path)
 
 
 def handle_env(env_variables, local_env):
@@ -1778,10 +1791,10 @@ def handle_env(env_variables, local_env):
     for k, v in env_variables.items():
         if local_env:
             local_env[k] = os.path.expandvars(v)
-            # print("local: %s = %s" % (k, local_env[k]))
+            print("local: %s = %s" % (k, local_env[k]))
         else:
             os.environ[k] = os.path.expandvars(v)
-            # print("global: %s = %s" % (k, os.environ[k]))
+            #print("global: %s = %s" % (k, os.environ[k]))
 
 
 def get_platform_working_dir(platform_id):
