@@ -1,6 +1,6 @@
 {
     "id": "stm32mp15-weston",
-    "load": true,
+    "load": false,
     "supported_archs": [
         "x86_64",
         "arm64"
