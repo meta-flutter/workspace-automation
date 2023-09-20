@@ -16,7 +16,7 @@
         "ENGINE_ROOT": "${PLATFORM_ID_DIR}/engine",
         "ENGINE_SRC_DIR_RELATIVE": "src",
         "ENGINE_SRC_DIR": "${ENGINE_ROOT}/${ENGINE_SRC_DIR_RELATIVE}",
-        "ENGINE_BUILD_FLAGS": "--runtime-mode=debug --embedder-for-target --enable-fontconfig --disable-desktop-embeddings --no-build-embedder-examples --enable-vulkan --enable-impeller-vulkan --lto --no-goma",
+        "ENGINE_BUILD_FLAGS": "--runtime-mode=debug --embedder-for-target --enable-fontconfig --no-build-embedder-examples --enable-impeller-3d --enable-impeller-opengles --no-lto --no-goma",
         "ENGINE_BUILD_DIR": "${ENGINE_SRC_DIR}/out/host_debug",
         "GN_ARGS_FILE": "${ENGINE_BUILD_DIR}/args.gn",
         "GN_ARGS_APPEND": ""

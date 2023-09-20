@@ -1,6 +1,6 @@
 {
     "id": "pi-zero2w-weston",
-    "load": true,
+    "load": false,
     "supported_archs": [
         "x86_64",
         "arm64"
