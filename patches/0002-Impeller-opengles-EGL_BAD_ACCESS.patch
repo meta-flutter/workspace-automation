@@ -1,0 +1,39 @@
+From 9fe4ef9e8562325677998b982e6904c1fe206511 Mon Sep 17 00:00:00 2001
+From: Joel Winarske <joel.winarske@gmail.com>
+Date: Wed, 27 Sep 2023 11:26:02 -0700
+Subject: [PATCH 2/2] Impeller opengles EGL_BAD_ACCESS
+
+-On Linux setting the EGL context from one thread,
+ then setting from another thread will trigger a
+ EGL_BAD_ACCESS error. The resolution is to clear
+ the context after use on the thread that set it.
+-remote call to SetReactionsAllowedOnCurrentThread(),
+ as it defaults to false.
+
+Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
+---
+ shell/platform/embedder/embedder_surface_gl_impeller.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/shell/platform/embedder/embedder_surface_gl_impeller.cc b/shell/platform/embedder/embedder_surface_gl_impeller.cc
+index 20a2a5184e..340725d2b9 100644
+--- a/shell/platform/embedder/embedder_surface_gl_impeller.cc
++++ b/shell/platform/embedder/embedder_surface_gl_impeller.cc
+@@ -86,13 +86,13 @@ EmbedderSurfaceGLImpeller::EmbedderSurfaceGLImpeller(
+     return;
+   }
+ 
+-  worker_->SetReactionsAllowedOnCurrentThread(true);
+   auto worker_id = impeller_context_->AddReactorWorker(worker_);
+   if (!worker_id.has_value()) {
+     FML_LOG(ERROR) << "Could not add reactor worker.";
+     return;
+   }
+ 
++  gl_dispatch_table_.gl_clear_current_callback();
+   FML_LOG(ERROR) << "Using the Impeller rendering backend (OpenGL).";
+   valid_ = true;
+ }
+-- 
+2.41.0
+

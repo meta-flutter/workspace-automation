@@ -16,8 +16,8 @@
         "ENGINE_ROOT": "${PLATFORM_ID_DIR}/engine",
         "ENGINE_SRC_DIR_RELATIVE": "src",
         "ENGINE_SRC_DIR": "${ENGINE_ROOT}/${ENGINE_SRC_DIR_RELATIVE}",
-        "ENGINE_BUILD_FLAGS": "--runtime-mode=debug --embedder-for-target --enable-fontconfig --no-build-embedder-examples --enable-impeller-3d --enable-impeller-opengles --no-lto --no-goma",
-        "ENGINE_BUILD_DIR": "${ENGINE_SRC_DIR}/out/host_debug",
+        "ENGINE_BUILD_FLAGS": "--unoptimized --runtime-mode=debug --embedder-for-target --enable-fontconfig --disable-desktop-embeddings --no-build-embedder-examples --enable-impeller-3d --enable-impeller-opengles --enable-impeller-vulkan --no-lto --no-goma",
+        "ENGINE_BUILD_DIR": "${ENGINE_SRC_DIR}/out/host_debug_unopt",
         "GN_ARGS_FILE": "${ENGINE_BUILD_DIR}/args.gn",
         "GN_ARGS_APPEND": ""
     },
@@ -72,7 +72,18 @@
                 },
                 "cwd": "${ENGINE_ROOT}",
                 "cmds": [
-                    "gclient sync -D --revision ${FLUTTER_ENGINE_VERSION} -v"
+                    "gclient sync -D -R --revision ${FLUTTER_ENGINE_VERSION} -v"
+                ]
+            },
+            {
+                "env": {
+                    "PATH": "${DEPOT_TOOLS}:$PATH"
+                },
+                "cwd": "${ENGINE_SRC_DIR}/flutter",
+                "cmds": [
+                    "git reset --hard 453411bcf3961fef3e6caa57a04e7fc3e9faa037",
+                    "git apply ${FLUTTER_WORKSPACE}/patches/0001-IsCreationThreadCurrent-workaround.patch",
+                    "git apply ${FLUTTER_WORKSPACE}/patches/0002-Impeller-opengles-EGL_BAD_ACCESS.patch"
                 ]
             },
             {
@@ -93,7 +104,7 @@
                     "mkdir -p ${PLATFORM_ID_DIR}/bundle/data/",
                     "mkdir -p ${PLATFORM_ID_DIR}/bundle/lib/",
                     "cp ${ENGINE_BUILD_DIR}/icudtl.dat ${PLATFORM_ID_DIR}/bundle/data/",
-                    "cp ${ENGINE_BUILD_DIR}/libflutter_engine.so ${PLATFORM_ID_DIR}/bundle/lib/"
+                    "cp ${ENGINE_BUILD_DIR}/lib.unstripped/libflutter_engine.so ${PLATFORM_ID_DIR}/bundle/lib/"
                 ]
             }
         ]

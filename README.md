@@ -148,3 +148,36 @@ Use for debugging
 It uses the repo json key `pubspec_path`.  If this key is present in the repo
 json, then it will add entry to `.vscode/launch.json`.
 
+
+#### Impeller 3D
+
+## Build engine, embedder, and App
+
+    git clone https://github.com/meta-flutter/workspace-automation -b jw/impeller 
+
+edit `configs/_globals.json` and add your github dev token to github_token value
+
+start virtual python environment if desired
+
+    ./flutter_workspace.py
+    . ./setup_env.sh
+    cd app/gallery
+    flutter run --enable-impeller --local-engine=host_debug_unopt --local-engine-host=host_debug_unopt --local-engine-src-path=/mnt/raid10/workspace-automation/.config/flutter_workspace/flutter-engine/engine/src -d desktop-homescreen
+
+## CLion
+
+Open root of ivi-homescreen project
+
+* Edit homescreen target
+    * Set Program Arguments
+    
+    --b=/mnt/raid10/workspace-automation/app/gallery/.desktop-homescreen --w=1920 --h=720 --enable-impeller --verbose-logging --p=1
+
+    * Update Enivronment Settings to include
+    
+    SPDLOG_LEVEL=trace;MESA_DEBUG=1;EGL_LOG_LEVEL=info
+
+2. Click Debug
+
+
+To change pixel_ratio, change CLI argument `--p`.  e.g. `--p=0.5`

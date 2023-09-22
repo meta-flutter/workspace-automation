@@ -9,55 +9,14 @@
         "pubspec_path": "flutter-scene-example"
     },
     {
-        "uri": "https://github.com/meta-flutter/comp_surf_pbr.git",
-        "branch": "main"
-    },
-    {
-        "uri": "https://github.com/flutter/packages.git",
-        "branch": "main"
+        "uri": "https://github.com/flutter/gallery.git",
+        "branch": "main",
+        "pubspec_path": "gallery"
     },
     {
         "uri": "https://github.com/gskinnerTeam/flutter-wonderous-app.git",
         "branch": "main",
         "pubspec_path": "flutter-wonderous-app"
-    },
-    {
-        "uri": "https://github.com/flutter/pinball.git",
-        "branch": "main",
-        "pubspec_path": "pinball"
-    },
-    {
-        "uri": "https://github.com/bdero/flutter-scene-example.git",
-        "branch": "master",
-        "pubspec_path": "flutter-scene-example"
-    },
-    {
-        "uri": "https://github.com/flutter/gallery.git",
-        "branch": "master",
-        "rev": "9eb785cb997ff56c46e933c1c591f0a6f31454f6",
-        "pubspec_path": "gallery"
-    },
-    {
-        "uri": "https://github.com/mogol/flutter_secure_storage.git",
-        "branch": "develop",
-        "pubspec_path": "flutter_secure_storage/flutter_secure_storage/example"
-    },
-    {
-        "uri": "https://github.com/meta-flutter/flutter_animated_background.git",
-        "branch": "meta-flutter",
-        "rev": "46f35ad2a323ab006813a3c4748163536b0fc332",
-        "pubspec_path": "flutter_animated_background/example"
-    },
-    {
-        "uri": "https://github.com/felipeerias/flutter_homescreen.git",
-        "branch": "main",
-        "rev": "08bf271f7f1f14153a41005718a2090fa8e783f0",
-        "pubspec_path": "flutter_homescreen"
-    },
-    {
-        "uri": "https://github.com/bernardpumped/ped.git",
-        "branch": "agl",
-        "pubspec_path": "ped"
     },
     {
         "uri": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
