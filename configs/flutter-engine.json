@@ -81,9 +81,8 @@
                 },
                 "cwd": "${ENGINE_SRC_DIR}/flutter",
                 "cmds": [
-                    "git reset --hard 453411bcf3961fef3e6caa57a04e7fc3e9faa037",
-                    "git apply ${FLUTTER_WORKSPACE}/patches/0001-IsCreationThreadCurrent-workaround.patch",
-                    "git apply ${FLUTTER_WORKSPACE}/patches/0002-Impeller-opengles-EGL_BAD_ACCESS.patch"
+                    "git reset --hard",
+                    "git apply ${FLUTTER_WORKSPACE}/patches/0001-IsCreationThreadCurrent-workaround.patch"
                 ]
             },
             {

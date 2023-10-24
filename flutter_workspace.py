@@ -271,7 +271,7 @@ def main():
     # Trigger upgrade on Channel if version is all letters
     #
     if flutter_version.isalpha():
-        cmd = ["flutter", "upgrade", flutter_version]
+        cmd = ["flutter", "upgrade", "--force", flutter_version]
         print_banner("Upgrading `%s` Channel" % flutter_version)
         subprocess.check_call(cmd, cwd=flutter_sdk_path)
 
