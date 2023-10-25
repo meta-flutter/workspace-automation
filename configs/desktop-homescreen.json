@@ -13,8 +13,8 @@
   "env": {
     "HOMESCREEN_SRC_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen",
     "HOMESCREEN_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen/build",
-    "HOMESCREEN_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Debug -DENABLE_DLT=OFF",
-    "HOMESCREEN_EXE": "${HOMESCREEN_BUILD_DIR}/shell/homescreen --j=${PLATFORM_ID_DIR_RELATIVE}/default_config.json --b=${PLATFORM_ID_DIR_RELATIVE}",
+    "HOMESCREEN_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Debug -DENABLE_DLT=OFF -DBUILD_PLUGIN_GOOGLE_SIGN_IN=ON -DBUILD_PLUGIN_SECURE_STORAGE=ON",
+    "HOMESCREEN_EXE": "${HOMESCREEN_BUILD_DIR}/shell/homescreen --j=${PLATFORM_ID_DIR_RELATIVE}/default_config.json --b=${PLATFORM_ID_DIR_RELATIVE} --enable-impeller --verbose-logging",
     "PING_CMD": "loginctl show-session $(awk '/tty/ {print $1}' <(loginctl)) -p Type",
     "CREATE_BUNDLE_FOLDER": "mkdir -p ${PLATFORM_ID_DIR_RELATIVE}/data",
     "COPY_PLATFORM_ID_TO_BUNDLE_FOLDER": "cp -r ${PLATFORM_ID_DIR}/default_config.json ${PLATFORM_ID_DIR_RELATIVE}/",

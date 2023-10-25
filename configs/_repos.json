@@ -21,5 +21,25 @@
     {
         "uri": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
         "branch": "main"
+    },
+    {
+        "uri": "https://github.com/meta-flutter/flutter_animated_background.git",
+        "branch": "meta-flutter"
+    },
+    {
+        "uri": "https://github.com/meta-flutter/comp_surf_pbr.git",
+        "branch": "main"
+    },
+    {
+        "uri": "https://github.com/mogol/flutter_secure_storage.git",
+        "branch": "develop"
+    },
+    {
+        "uri": "https://github.com/flutter/packages.git",
+        "branch": "main"
+    },
+    {
+        "uri": "https://github.com/bernardpumped/ped.git",
+        "branch": "agl"
     }
 ]
