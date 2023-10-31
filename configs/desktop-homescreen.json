@@ -43,7 +43,7 @@
             "sudo apt install lsb-release wget software-properties-common gnupg apt-file",
             "sudo apt-file update",
             "sudo apt install -y libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libxkbcommon-dev ninja-build",
-            "sudo apt install -y build-essential libvulkan-dev vulkan-tools vulkan-validationlayers vulkan-utils libtool",
+            "sudo apt install -y build-essential libvulkan-dev vulkan-tools vulkan-validationlayers vulkan-utils libtool libsecret-1-dev libcurl4-openssl-dev",
             "sudo apt autoremove -y",
             "sudo apt clean -y",
             "cmake --version",
@@ -54,7 +54,7 @@
           "cmds": [
             "sudo dnf -y update",
             "sudo dnf -y upgrade",
-            "sudo dnf -y install wayland-devel wayland-protocols-devel libxkbcommon-devel cmake ninja-build mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libglapi mesa-libxatracker mesa-vulkan-drivers vulkan-tools libunwind-devel gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel gstreamer1-plugins-bad-free-extras gstreamer1-plugins-base-tools gstreamer1-plugins-good gstreamer1-plugins-good-extras gstreamer1-plugins-ugly-free libtool",
+            "sudo dnf -y install wayland-devel wayland-protocols-devel libxkbcommon-devel cmake ninja-build mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libglapi mesa-libxatracker mesa-vulkan-drivers vulkan-tools libunwind-devel gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel gstreamer1-plugins-bad-free-extras gstreamer1-plugins-base-tools gstreamer1-plugins-good gstreamer1-plugins-good-extras gstreamer1-plugins-ugly-free libtool libsecret-devel libcurl-devel",
             "sudo dnf -y autoremove",
             "cmake --version",
             "dnf provides cmake"
