@@ -87,7 +87,13 @@ def main():
 
     parser.add_argument('--stdin-file', default='', type=str,
                         help='Use for passing stdin for debugging')
+    parser.add_argument('--pubspec-path', default='', type=str, help='return pubspec.yaml info')
+
     args = parser.parse_args()
+
+    if len(args.pubspec_path):
+        parse_pubspec(args.pubspec_path)
+        return
 
     #
     # Find GIT Commit where flutter analyze returns true
@@ -2508,6 +2514,89 @@ def flutter_analyze_git_commits():
 
         print('*** Found working commit: %s' % commit)
         break
+
+
+def write_pubspec_obj_to_file(filepath: str, obj: object):
+    """ Writes YAML object to file """
+    import yaml
+
+    with open(filepath, 'w') as outfile:
+        yaml.dump(obj, outfile)
+
+
+def get_yaml_obj(filepath: str):
+    """ Returns python object of yaml file """
+    import yaml
+
+    if not os.path.exists(filepath):
+        sys.exit(f'Failed loading {filepath}')
+
+    data_loaded = None
+    with open(filepath, "r") as stream:
+        try:
+            data_loaded = yaml.full_load(stream)
+
+        except yaml.YAMLError as exc:
+            sys.exit(f'Failed loading {exc} - {filepath}')
+
+        return data_loaded
+
+
+def get_plugin_default_package(filepath: str):
+    pubspec = os.path.join(filepath, 'pubspec.yaml')
+    obj = get_yaml_obj(pubspec)
+    if type(obj) is dict and 'flutter' in obj:
+        if type(obj['flutter']) is dict and 'plugin' in obj['flutter']:
+            if type(obj['flutter']['plugin']) is dict and 'platforms' in obj['flutter']['plugin']:
+                if type(obj['flutter']['plugin']['platforms']) is dict and 'linux' in obj['flutter']['plugin']['platforms']:
+                    if 'default_package' in obj['flutter']['plugin']['platforms']['linux']:
+                        default_package = obj['flutter']['plugin']['platforms']['linux']['default_package']
+                        return default_package
+
+    return None
+
+
+def get_dart_plugin_class(filepath):
+    pubspec = os.path.join(filepath,'pubspec.yaml')
+    obj = get_yaml_obj(pubspec)
+    if type(obj) is dict and 'flutter' in obj:
+        if type(obj['flutter']) is dict and 'plugin' in obj['flutter']:
+            if type(obj['flutter']['plugin']) is dict and 'platforms' in obj['flutter']['plugin']:
+                if type(obj['flutter']['plugin']['platforms']) is dict and 'linux' in obj['flutter']['plugin']['platforms']:
+                    if 'dartPluginClass' in obj['flutter']['plugin']['platforms']['linux']:
+                        dart_plugin_class = obj['flutter']['plugin']['platforms']['linux']['dartPluginClass']
+                        return dart_plugin_class
+
+    return None
+
+
+def parse_pubspec_lockfile_yaml(folder: str, pub_cache: str):
+    lockfile = os.path.join(folder, 'pubspec.lock')
+    obj = get_yaml_obj(lockfile)
+    for package in obj['packages']:
+        source = obj['packages'][f'{package}']['source']
+        version = obj['packages'][f'{package}']['version']
+        package_folder = os.path.join(pub_cache, source, 'pub.dev', f'{package}-{version}')
+        if os.path.exists(package_folder):
+            pkg = get_plugin_default_package(package_folder)
+            if pkg:
+                source = obj['packages'][f'{pkg}']['source']
+                version = obj['packages'][f'{pkg}']['version']
+                pkg_folder = os.path.join(pub_cache, source, 'pub.dev', f'{pkg}-{version}')
+                if os.path.exists(pkg_folder):
+                    print(pkg_folder)
+                    dart_plugin_class = get_dart_plugin_class(pkg_folder)
+                    if dart_plugin_class:
+                        print(f'{dart_plugin_class}.registerWith()')
+
+
+def parse_pubspec(pubspec_path: str):
+    pub_cache = os.getenv("PUB_CACHE")
+    if len(pub_cache) == 0:
+        sys.exit("Enviromental variable PUB_CACHE is not set")
+    print(f'PUB_CACHE={pub_cache}')
+
+    parse_pubspec_lockfile_yaml(pubspec_path, pub_cache)
 
 
 def check_python_version():
