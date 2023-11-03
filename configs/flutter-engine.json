@@ -1,6 +1,6 @@
 {
     "id": "flutter-engine",
-    "load": true,
+    "load": false,
     "supported_archs": [
         "x86_64",
         "arm64"
@@ -73,13 +73,6 @@
                 "cwd": "${ENGINE_ROOT}",
                 "cmds": [
                     "gclient sync -D -R --revision ${FLUTTER_ENGINE_VERSION} -v"
-                ]
-            },
-            {
-                "cwd": "${ENGINE_SRC_DIR}/flutter",
-                "cmds": [
-                    "bash -c \"rm -rf shell/platform/embedder/embedder_surface_gl_impeller* |true\"",
-                    "git apply ${FLUTTER_WORKSPACE}/patches/0001-Add-support-to-embedder-for-Impeller-on-GL-via-Angle.patch-3.13.2"
                 ]
             },
             {
