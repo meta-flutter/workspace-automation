@@ -89,9 +89,11 @@ def main():
                         help='Use for passing stdin for debugging')
     parser.add_argument('--pubspec-path', default='', type=str, help='return pubspec.yaml info')
     parser.add_argument('--plugin-platform', default='linux', type=str, help='specify plugin platform type')
-
     args = parser.parse_args()
 
+    #
+    # pubspec parsing
+    #
     if len(args.pubspec_path):
         parse_pubspec(args.pubspec_path, args.plugin_platform)
         return
@@ -2591,7 +2593,7 @@ def parse_pubspec_lockfile_yaml(folder: str, pub_cache: str, platform_: str):
 
 def parse_pubspec(pubspec_path: str, plugin_platform: str):
     pub_cache = os.getenv("PUB_CACHE")
-    if len(pub_cache) == 0:
+    if pub_cache is None:
         sys.exit("Environmental variable PUB_CACHE is not set")
     print(f'PUB_CACHE={pub_cache}')
 
