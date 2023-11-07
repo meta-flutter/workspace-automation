@@ -1217,7 +1217,7 @@ def get_flutter_engine_runtime(clean_workspace):
         print_banner("Downloading Engine artifact")
         make_sure_path_exists(cwd_engine)
         if not download_https_file(cwd_engine, base_url, filename,
-                            None, None, None, None, None):
+                                   None, None, None, None, None):
             print_banner("Engine artifact not available")
             return
 
@@ -1801,7 +1801,7 @@ def handle_env(env_variables, local_env):
             print("local: %s = %s" % (k, local_env[k]))
         else:
             os.environ[k] = os.path.expandvars(v)
-            #print("global: %s = %s" % (k, os.environ[k]))
+            # print("global: %s = %s" % (k, os.environ[k]))
 
 
 def get_platform_working_dir(platform_id):
@@ -1824,7 +1824,7 @@ def create_platform_config_file(obj, cwd):
         json.dump(obj, f, indent=2)
 
 
-def create_gclient_config_file(obj, cwd):
+def create_gclient_config_file(obj):
     if obj is None:
         return
 
@@ -1893,7 +1893,7 @@ def setup_platform(platform_, git_token, cookie_file, plex):
     handle_dotenv(platform_.get('dotenv'))
     handle_env(platform_.get('env'), None)
     create_platform_config_file(runtime.get('config'), cwd)
-    create_gclient_config_file(runtime.get('gclient_config'), cwd)
+    create_gclient_config_file(runtime.get('gclient_config'))
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
     handle_artifacts_obj(runtime.get('artifacts'),
                          host_machine_arch, cwd, git_token, cookie_file)
@@ -2258,15 +2258,13 @@ def get_engine_commit(version, hash_):
     return version, get_body.decode('utf8').strip()
 
 
-def get_linux_release_file():
+def get_linux_release_file(cwd):
     """Returns dictionary of releases_linux.json"""
 
-    cwd = get_platform_working_dir('flutter-engine')
-
     filename = 'releases_linux.json'
-    url = 'https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json'
+    url = f'https://storage.googleapis.com/flutter_infra_release/releases/{filename}'
 
-    sha256_file = os.path.join(cwd, 'releases_linux.json.sha256')
+    sha256_file = os.path.join(cwd, f'{filename}.sha256')
     if os.path.exists(sha256_file):
         os.remove(sha256_file)
 
@@ -2284,7 +2282,7 @@ def get_version_files(cwd):
     else:
         make_sure_path_exists(cwd)
 
-    release_linux = get_linux_release_file()
+    release_linux = get_linux_release_file(cwd)
 
     res = {}
     with open(release_linux, 'r') as f:
@@ -2319,6 +2317,8 @@ def get_version_files(cwd):
     print_banner("Writing %s" % dest_file)
     with open(dest_file, 'w+') as o:
         json.dump(engine_revs, o, sort_keys=True, indent=2)
+
+    os.remove(os.path.join(cwd, 'releases_linux.json.sha256'))
 
     print_banner("Done")
 
@@ -2397,7 +2397,7 @@ def update_image_by_fastboot(device_id: str, cwd: os.path, artifacts: dict):
                 break
 
         except Exception as e:
-            print(f"Attempt {i+1} failed: {e}")
+            print(f"Attempt {i + 1} failed: {e}")
             time.sleep(1)
     else:
         print("Operation failed after 5 attempts.")
@@ -2427,7 +2427,6 @@ def update_image_by_fastboot(device_id: str, cwd: os.path, artifacts: dict):
 
 
 def validate_fastboot_req(device_id: str, platform_: dict):
-
     if 'runtime' not in platform_:
         print('Missing runtime token in platform')
         return
@@ -2532,10 +2531,9 @@ def get_yaml_obj(filepath: str):
     if not os.path.exists(filepath):
         sys.exit(f'Failed loading {filepath}')
 
-    data_loaded = None
-    with open(filepath, "r") as stream:
+    with open(filepath, "r") as stream_:
         try:
-            data_loaded = yaml.full_load(stream)
+            data_loaded = yaml.full_load(stream_)
 
         except yaml.YAMLError as exc:
             sys.exit(f'Failed loading {exc} - {filepath}')
@@ -2543,50 +2541,50 @@ def get_yaml_obj(filepath: str):
         return data_loaded
 
 
-def get_plugin_default_package(filepath: str, platform: str):
+def get_plugin_default_package(filepath: str, platform_: str):
     pubspec = os.path.join(filepath, 'pubspec.yaml')
     obj = get_yaml_obj(pubspec)
     if type(obj) is dict and 'flutter' in obj:
         if type(obj['flutter']) is dict and 'plugin' in obj['flutter']:
             if type(obj['flutter']['plugin']) is dict and 'platforms' in obj['flutter']['plugin']:
-                if type(obj['flutter']['plugin']['platforms']) is dict and platform in obj['flutter']['plugin']['platforms']:
-                    if 'default_package' in obj['flutter']['plugin']['platforms'][platform]:
-                        default_package = obj['flutter']['plugin']['platforms'][platform]['default_package']
+                if (type(obj['flutter']['plugin']['platforms']) is dict and
+                        platform_ in obj['flutter']['plugin']['platforms']):
+                    if 'default_package' in obj['flutter']['plugin']['platforms'][platform_]:
+                        default_package = obj['flutter']['plugin']['platforms'][platform_]['default_package']
                         return default_package
-
     return None
 
 
-def get_dart_plugin_class(filepath: str, platform: str):
-    pubspec = os.path.join(filepath,'pubspec.yaml')
+def get_dart_plugin_class(filepath: str, platform_: str):
+    pubspec = os.path.join(filepath, 'pubspec.yaml')
     obj = get_yaml_obj(pubspec)
     if type(obj) is dict and 'flutter' in obj:
         if type(obj['flutter']) is dict and 'plugin' in obj['flutter']:
             if type(obj['flutter']['plugin']) is dict and 'platforms' in obj['flutter']['plugin']:
-                if type(obj['flutter']['plugin']['platforms']) is dict and platform in obj['flutter']['plugin']['platforms']:
-                    if 'dartPluginClass' in obj['flutter']['plugin']['platforms'][platform]:
-                        dart_plugin_class = obj['flutter']['plugin']['platforms'][platform]['dartPluginClass']
+                if (type(obj['flutter']['plugin']['platforms']) is dict and
+                        platform_ in obj['flutter']['plugin']['platforms']):
+                    if 'dartPluginClass' in obj['flutter']['plugin']['platforms'][platform_]:
+                        dart_plugin_class = obj['flutter']['plugin']['platforms'][platform_]['dartPluginClass']
                         return dart_plugin_class
-
     return None
 
 
-def parse_pubspec_lockfile_yaml(folder: str, pub_cache: str, platform: str):
+def parse_pubspec_lockfile_yaml(folder: str, pub_cache: str, platform_: str):
     lockfile = os.path.join(folder, 'pubspec.lock')
     obj = get_yaml_obj(lockfile)
     for package in obj['packages']:
-        source = obj['packages'][f'{package}']['source']
-        version = obj['packages'][f'{package}']['version']
+        source = obj['packages'][package]['source']
+        version = obj['packages'][package]['version']
         package_folder = os.path.join(pub_cache, source, 'pub.dev', f'{package}-{version}')
         if os.path.exists(package_folder):
-            pkg = get_plugin_default_package(package_folder, platform)
+            pkg = get_plugin_default_package(package_folder, platform_)
             if pkg:
-                source = obj['packages'][f'{pkg}']['source']
-                version = obj['packages'][f'{pkg}']['version']
+                source = obj['packages'][pkg]['source']
+                version = obj['packages'][pkg]['version']
                 pkg_folder = os.path.join(pub_cache, source, 'pub.dev', f'{pkg}-{version}')
                 if os.path.exists(pkg_folder):
                     print(pkg_folder)
-                    dart_plugin_class = get_dart_plugin_class(pkg_folder, platform)
+                    dart_plugin_class = get_dart_plugin_class(pkg_folder, platform_)
                     if dart_plugin_class:
                         print(f'{dart_plugin_class}.registerWith()')
 
@@ -2594,7 +2592,7 @@ def parse_pubspec_lockfile_yaml(folder: str, pub_cache: str, platform: str):
 def parse_pubspec(pubspec_path: str, plugin_platform: str):
     pub_cache = os.getenv("PUB_CACHE")
     if len(pub_cache) == 0:
-        sys.exit("Enviromental variable PUB_CACHE is not set")
+        sys.exit("Environmental variable PUB_CACHE is not set")
     print(f'PUB_CACHE={pub_cache}')
 
     parse_pubspec_lockfile_yaml(pubspec_path, pub_cache, plugin_platform)
