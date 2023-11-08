@@ -8,17 +8,11 @@
 # Script to build custom Flutter AOT artifacts for Release and Profile runtime
 
 import os
+import signal
 import sys
 
-
-def print_banner(text):
-    print('*' * (len(text) + 6))
-    print("** %s **" % text)
-    print('*' * (len(text) + 6))
-
-
-def handle_ctrl_c(_signal, _frame):
-    sys.exit("Ctl+C - Closing")
+from fw_common import handle_ctrl_c
+from fw_common import print_banner
 
 
 def main():
@@ -29,6 +23,11 @@ def main():
 
     if args.app_path == '':
         sys.exit("Must specify value for --app-path")
+
+    #
+    # Control+C handler
+    #
+    signal.signal(signal.SIGINT, handle_ctrl_c)
 
     create_platform_aot(args.app_path)
 
@@ -113,7 +112,11 @@ def get_yaml_obj(filepath: str):
 
 
 def create_platform_aot(app_path: str):
+    """ Creates a platform AOT for Release and Profile """
     print_banner(f'Creating AOT Release and Profile in {app_path}')
+
+    """ enforce absolute path usage """
+    app_path = os.path.abspath(app_path)
 
     pub_cache = os.getenv("PUB_CACHE")
     if pub_cache is None:
@@ -177,14 +180,14 @@ def create_platform_aot(app_path: str):
             flutter_source_package = ''
             flutter_source_defines = ''
             dart_plugin_registrant_file = f'{app_path}/.dart_tool/flutter_build/dart_plugin_registrant.dart'
-            if os.path.isfile(dart_plugin_registrant_file):
-                filter_linux_plugin_registrant(dart_plugin_registrant_file)
+            if os.path.exists(dart_plugin_registrant_file):
+                # filter_linux_plugin_registrant(dart_plugin_registrant_file)
                 flutter_source_file = f'--source file://{dart_plugin_registrant_file}'
                 flutter_source_package = '--source package:flutter/src/dart_plugin_registrant.dart'
                 flutter_source_defines = f'-Dflutter.dart_plugin_registrant=file://{dart_plugin_registrant_file}'
 
             flutter_native_assets = ''
-            if os.path.isfile('.dart_tool/flutter_build/*/native_assets.yaml'):
+            if os.path.exists(f'{app_path}.dart_tool/flutter_build/*/native_assets.yaml'):
                 flutter_native_assets = f'--native-assets {app_path}/.dart_tool/flutter_build/*/native_assets.yaml'
 
             app_aot_extra = os.getenv("APP_AOT_EXTRA")
@@ -205,9 +208,9 @@ def create_platform_aot(app_path: str):
                 --aot \
                 --tfa \
                 --target-os linux \
-                --packages .dart_tool/package_config.json \
+                --packages {app_path}/.dart_tool/package_config.json \
                 {flutter_app_app_dill} \
-                --depfile .dart_tool/flutter_build/*/kernel_snapshot.d \
+                --depfile {app_path}/.dart_tool/flutter_build/*/kernel_snapshot.d \
                 {flutter_source_file} \
                 {flutter_source_package} \
                 {flutter_source_defines} \
