@@ -92,6 +92,9 @@ def run_command(cmd, cwd):
     (retval, output) = subprocess.getstatusoutput(f'cd {cwd} && {cmd}')
     if retval:
         sys.exit("failed %s (cmd was %s)%s" % (retval, cmd, ":\n%s" % output if output else ""))
+    
+    print(output.rstrip())
+    return output.rstrip()
 
 
 def get_yaml_obj(filepath: str):
@@ -118,6 +121,15 @@ def create_platform_aot(app_path: str):
     """ enforce absolute path usage """
     app_path = os.path.abspath(app_path)
 
+    gen_snapshot = os.getenv('GEN_SNAPSHOT')
+    if gen_snapshot is None:
+        sys.exit('Set GEN_SNAPSHOT to location of executable gen_snapshot')
+
+    cmd = f'{gen_snapshot} --version 2>&1 | cut -d\\" -f2'
+    gen_snapshot_variant = run_command(cmd, app_path)
+    if gen_snapshot_variant == 'linux_x64':
+        sys.exit(f'{gen_snapshot} intended for host build, skipping!')
+
     pub_cache = os.getenv("PUB_CACHE")
     if pub_cache is None:
         sys.exit("Environmental variable PUB_CACHE is not set")
@@ -142,7 +154,7 @@ def create_platform_aot(app_path: str):
 
     for runtime_mode in flutter_runtime_modes:
 
-        print(f'[{runtime_mode}] flutter build {flutter_build_args}: Starting')
+        print_banner(f'[{runtime_mode}] flutter build {flutter_build_args}: Starting')
 
         run_command('flutter clean', app_path)
 
@@ -152,17 +164,17 @@ def create_platform_aot(app_path: str):
             cmd = f'flutter build {flutter_build_args}'
         run_command(cmd, app_path)
 
-        print(f'[{runtime_mode}] flutter build {flutter_build_args}: Completed')
+        print_banner(f'[{runtime_mode}] flutter build {flutter_build_args}: Completed')
 
         if runtime_mode == 'release' or 'profile':
 
-            print(f'kernel_snapshot_{runtime_mode}: Starting')
+            print_banner(f'kernel_snapshot_{runtime_mode}: Starting')
 
             flutter_app_sdk_root = f'{flutter_sdk}/bin/cache/artifacts/engine/common/flutter_patched_sdk/'
-            flutter_app_vm_product = "false"
+            flutter_app_vm_product = 'false'
             if runtime_mode == 'release':
                 flutter_app_sdk_root = f'{flutter_sdk}/bin/cache/artifacts/engine/common/flutter_patched_sdk_product/'
-                flutter_app_vm_product = "true"
+                flutter_app_vm_product = 'true'
 
             flutter_app_profile_flags = ''
             flutter_app_vm_profile = 'false'
@@ -170,21 +182,28 @@ def create_platform_aot(app_path: str):
                 flutter_app_profile_flags = '--track-widget-creation'
                 flutter_app_vm_profile = 'true'
 
+            flutter_release_and_profile_flags = ''
+            if runtime_mode != 'debug':
+                flutter_release_and_profile_flags = '--aot --tfa --target-os linux'
+
             flutter_app_debug_flags = ''
-            flutter_app_app_dill = '--output-dill .dart_tool/flutter_build/*/app.dill'
+            flutter_app_debug_flags_extra = ''
+            flutter_app_app_dill = f'--output-dill {app_path}/.dart_tool/flutter_build/*/app.dill'
             if runtime_mode == 'debug':
                 flutter_app_debug_flags = '--enable-asserts'
-                flutter_app_app_dill = '.dart_tool/flutter_build/*/app.dill'
+                flutter_app_debug_flags += ' --track-widget-creation'
+                flutter_app_debug_flags += ' --no-link-platform'
+                flutter_app_debug_flags_extra = '--filesystem-scheme org-dartlang-root'
+                flutter_app_debug_flags_extra += ' --incremental'
+                flutter_app_debug_flags_extra += f' --initialize-from-dill {app_path}/.dart_tool/flutter_build/*/app.dill'
 
-            flutter_source_file = ''
-            flutter_source_package = ''
-            flutter_source_defines = ''
+            flutter_source_flags = ''
             dart_plugin_registrant_file = f'{app_path}/.dart_tool/flutter_build/dart_plugin_registrant.dart'
             if os.path.exists(dart_plugin_registrant_file):
-                # filter_linux_plugin_registrant(dart_plugin_registrant_file)
-                flutter_source_file = f'--source file://{dart_plugin_registrant_file}'
-                flutter_source_package = '--source package:flutter/src/dart_plugin_registrant.dart'
-                flutter_source_defines = f'-Dflutter.dart_plugin_registrant=file://{dart_plugin_registrant_file}'
+                #filter_linux_plugin_registrant(dart_plugin_registrant_file)
+                flutter_source_flags = f'--source file://{dart_plugin_registrant_file}'
+                flutter_source_flags += ' --source package:flutter/src/dart_plugin_registrant.dart'
+                flutter_source_flags += f' -Dflutter.dart_plugin_registrant=file://{dart_plugin_registrant_file}'
 
             flutter_native_assets = ''
             if os.path.exists(f'{app_path}.dart_tool/flutter_build/*/native_assets.yaml'):
@@ -196,7 +215,8 @@ def create_platform_aot(app_path: str):
 
             cmd = f'{flutter_sdk}/bin/cache/dart-sdk/bin/dart \
                 --disable-analytics \
-                --disable-dart-dev {flutter_sdk}/bin/cache/artifacts/engine/linux-x64/frontend_server.dart.snapshot \
+                --disable-dart-dev \
+                {flutter_sdk}/bin/cache/artifacts/engine/linux-x64/frontend_server.dart.snapshot \
                 --sdk-root {flutter_app_sdk_root} \
                 --target=flutter \
                 --no-print-incremental-dependencies \
@@ -205,46 +225,49 @@ def create_platform_aot(app_path: str):
                 {app_aot_extra} \
                 {flutter_app_debug_flags} \
                 {flutter_app_profile_flags} \
-                --aot \
-                --tfa \
-                --target-os linux \
+                {flutter_release_and_profile_flags} \
                 --packages {app_path}/.dart_tool/package_config.json \
                 {flutter_app_app_dill} \
                 --depfile {app_path}/.dart_tool/flutter_build/*/kernel_snapshot.d \
-                {flutter_source_file} \
-                {flutter_source_package} \
-                {flutter_source_defines} \
+                {flutter_source_flags} \
+                {flutter_app_debug_flags_extra} \
                 {flutter_native_assets} \
                 --verbosity=error \
                 package:{pubspec_appname}/main.dart'
 
             run_command(cmd, app_path)
 
-            print(f'kernel_snapshot_{runtime_mode}: Complete')
+            print_banner(f'kernel_snapshot_{runtime_mode}: Complete')
 
-            print(f'aot_elf_{runtime_mode}: Started')
-
-            gen_snapshot = os.getenv('GEN_SNAPSHOT')
-            if gen_snapshot is None:
-                sys.exit('Set GEN_SNAPSHOT to location of executable gen_snapshot')
+            print_banner(f'aot_elf_{runtime_mode}: Started')
 
             #
-            # Create libapp.so
+            # Create app-aot-elf
             #
             app_gen_snapshot_flags = os.getenv("APP_GEN_SNAPSHOT_FLAGS")
             if app_gen_snapshot_flags is None:
                 app_gen_snapshot_flags = ''
+            app_gen_snapshot_flags += ' --strip'
+            app_gen_snapshot_flags += ' --obfuscate'
+            app_gen_snapshot_flags += ' --deterministic'
 
-            cmd = f'{gen_snapshot} \
-                --deterministic \
-                --snapshot_kind=app-aot-elf \
-                --elf=libapp.so.{runtime_mode} \
-                --strip \
-                --obfuscate \
-                {app_gen_snapshot_flags} \
-                .dart_tool/flutter_build/*/app.dill'
+            print_banner(gen_snapshot_variant)
 
-            run_command(cmd, app_path)
+            gen_snapshot_kind_flags = ''
+            app_gen_snapshot_aot_filename = os.getenv("APP_GEN_SNAPSHOT_AOT_FILENAME")
+            if gen_snapshot_variant == 'linux_simarm64':
+                gen_snapshot_kind_flags = '--snapshot_kind=app-aot-elf'
+                if app_gen_snapshot_aot_filename is None:
+                    app_gen_snapshot_aot_filename = f'libapp.so.{runtime_mode}'
+                gen_snapshot_kind_flags += f' --elf={app_gen_snapshot_aot_filename}'
+
+            if runtime_mode != 'debug':
+                cmd = f'{gen_snapshot} \
+                    {gen_snapshot_kind_flags} \
+                    {app_gen_snapshot_flags} \
+                    {app_path}/.dart_tool/flutter_build/*/app.dill'
+
+                run_command(cmd, app_path)
 
     print_banner('Complete')
     sys.exit()
