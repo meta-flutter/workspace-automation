@@ -13,6 +13,7 @@ import sys
 
 from fw_common import handle_ctrl_c
 from fw_common import print_banner
+from fw_common import run_command
 
 
 def main():
@@ -80,23 +81,6 @@ def filter_linux_plugin_registrant(dart_file: str):
         f.write('    }\n  }\n}\n')
 
 
-def run_command(cmd, cwd):
-    """ Run Command in specified working directory """
-    import re
-    import subprocess
-
-    # replace all consecutive whitespace characters (tabs, newlines etc.) with a single space
-    cmd = re.sub('\s{2,}', ' ', cmd)
-
-    print('Running [%s] in %s' % (cmd, cwd))
-    (retval, output) = subprocess.getstatusoutput(f'cd {cwd} && {cmd}')
-    if retval:
-        sys.exit("failed %s (cmd was %s)%s" % (retval, cmd, ":\n%s" % output if output else ""))
-    
-    print(output.rstrip())
-    return output.rstrip()
-
-
 def get_yaml_obj(filepath: str):
     """ Returns python object of yaml file """
     import yaml
@@ -151,6 +135,10 @@ def create_platform_aot(app_path: str):
     flutter_build_args = os.getenv('FLUTTER_BUILD_ARGS')
     if flutter_build_args is None:
         flutter_build_args = 'bundle'
+    
+    flutter_sdk_root=os.getenv("LOCAL_ENGINE_HOST")
+    if flutter_sdk_root is None:
+        flutter_sdk_root = f'{flutter_sdk}/bin/cache/artifacts/engine/common'
 
     for runtime_mode in flutter_runtime_modes:
 
@@ -170,10 +158,12 @@ def create_platform_aot(app_path: str):
 
             print_banner(f'kernel_snapshot_{runtime_mode}: Starting')
 
-            flutter_app_sdk_root = f'{flutter_sdk}/bin/cache/artifacts/engine/common/flutter_patched_sdk/'
+            flutter_sdk_root_patched = f'{flutter_sdk_root}/flutter_patched_sdk/'
             flutter_app_vm_product = 'false'
             if runtime_mode == 'release':
-                flutter_app_sdk_root = f'{flutter_sdk}/bin/cache/artifacts/engine/common/flutter_patched_sdk_product/'
+                flutter_sdk_root_patched = f'{flutter_sdk_root}/flutter_patched_sdk_product/'
+                if not os.path.exists(flutter_sdk_root_patched):
+                    flutter_sdk_root_patched = f'{flutter_sdk_root}/flutter_patched_sdk/'
                 flutter_app_vm_product = 'true'
 
             flutter_app_profile_flags = ''
@@ -217,7 +207,7 @@ def create_platform_aot(app_path: str):
                 --disable-analytics \
                 --disable-dart-dev \
                 {flutter_sdk}/bin/cache/artifacts/engine/linux-x64/frontend_server.dart.snapshot \
-                --sdk-root {flutter_app_sdk_root} \
+                --sdk-root {flutter_sdk_root_patched} \
                 --target=flutter \
                 --no-print-incremental-dependencies \
                 -Ddart.vm.profile={flutter_app_vm_profile} \
@@ -280,4 +270,5 @@ def check_python_version():
 
 
 if __name__ == "__main__":
+    check_python_version()
     main()

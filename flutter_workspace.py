@@ -28,8 +28,6 @@
 # if QEMU image is loaded type `run-<platform id>` to run QEMU image
 #
 
-
-import errno
 import io
 import json
 import os
@@ -41,15 +39,23 @@ import sys
 import time
 import zipfile
 from platform import system
-from sys import stderr as stream
 
 import create_aot
 from pubspec import Pubspec
+from fw_common import check_python_version
 from fw_common import print_banner
 from fw_common import handle_ctrl_c
-from fw_common import kb
+from fw_common import make_sure_path_exists
+from fw_common import compare_sha256
+from fw_common import download_https_file
+from fw_common import write_sha256_file
+from fw_common import fetch_https_binary_file
+
 
 def main():
+    # check python version
+    check_python_version()
+
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--clean', default=False,
@@ -105,9 +111,6 @@ def main():
     if args.find_working_commit:
         flutter_analyze_git_commits()
         return
-
-    # check python version
-    check_python_version()
 
     # reset sudo timestamp
     subprocess.check_call(['sudo', '-k'], stdout=subprocess.DEVNULL)
@@ -334,37 +337,6 @@ def main():
     # Done
     #
     print_banner("Setup Flutter Workspace - Complete")
-
-
-def test_internet_connection():
-    """Test internet by connecting to nameserver"""
-    import pycurl
-
-    c = pycurl.Curl()
-    c.setopt(pycurl.URL, "https://dns.google")
-    c.setopt(pycurl.FOLLOWLOCATION, 0)
-    c.setopt(pycurl.CONNECTTIMEOUT, 5)
-    c.setopt(pycurl.NOSIGNAL, 1)
-    c.setopt(pycurl.NOPROGRESS, 1)
-    c.setopt(pycurl.NOBODY, 1)
-    try:
-        c.perform()
-    except:
-        pass
-
-    res = False
-    if c.getinfo(pycurl.RESPONSE_CODE) == 200:
-        res = True
-
-    return res
-
-
-def make_sure_path_exists(path):
-    try:
-        os.makedirs(path)
-    except OSError as exception:
-        if exception.errno != errno.EEXIST:
-            raise
 
 
 def clear_folder(dir_):
@@ -1089,73 +1061,6 @@ def get_host_type() -> str:
     return system().lower().rstrip()
 
 
-def fetch_https_progress(download_t, download_d, _upload_t, _upload_d):
-    """callback function for pycurl.XFERINFOFUNCTION"""
-    stream.write('Progress: {}/{} kiB ({}%)\r'.format(str(int(download_d / kb)), str(int(download_t / kb)),
-                                                      str(int(download_d / download_t * 100) if download_t > 0 else 0)))
-    stream.flush()
-
-
-def fetch_https_binary_file(url, filename, redirect, headers, cookie_file, netrc):
-    """Fetches binary file via HTTPS"""
-    import pycurl
-    import time
-
-    retries_left = 3
-    delay_between_retries = 5  # seconds
-    success = False
-
-    c = pycurl.Curl()
-    c.setopt(pycurl.URL, url)
-    c.setopt(pycurl.CONNECTTIMEOUT, 30)
-    c.setopt(pycurl.NOSIGNAL, 1)
-    c.setopt(pycurl.NOPROGRESS, False)
-    c.setopt(pycurl.XFERINFOFUNCTION, fetch_https_progress)
-
-    if headers:
-        c.setopt(pycurl.HTTPHEADER, headers)
-
-    if redirect:
-        c.setopt(pycurl.FOLLOWLOCATION, 1)
-        c.setopt(pycurl.AUTOREFERER, 1)
-        c.setopt(pycurl.MAXREDIRS, 255)
-
-    if cookie_file:
-        cookie_file = os.path.expandvars(cookie_file)
-        print("Using cookie file: %s" % cookie_file)
-        c.setopt(pycurl.COOKIEFILE, cookie_file)
-
-    if netrc:
-        c.setopt(pycurl.NETRC, 1)
-
-    while retries_left > 0:
-        try:
-            with open(filename, 'wb') as f:
-                c.setopt(pycurl.WRITEFUNCTION, f.write)
-                c.perform()
-
-            success = True
-            break
-
-        except pycurl.error:
-            retries_left -= 1
-            time.sleep(delay_between_retries)
-
-    status = c.getinfo(pycurl.HTTP_CODE)
-
-    c.close()
-    os.sync()
-
-    if not redirect and status == 302:
-        print_banner("Download Status: %d" % status)
-        return False
-    if not status == 200:
-        print_banner("Download Status: %d" % status)
-        return False
-
-    return success
-
-
 def get_host_machine_arch():
     return platform.machine()
 
@@ -1179,33 +1084,6 @@ def get_google_flutter_engine_url():
         url = 'https://storage.googleapis.com/flutter_infra_release/flutter/%s/linux-arm64/artifacts.zip' % \
               engine_version
     return url, engine_version
-
-
-def compare_sha256(archive_path: str, sha256_file: str) -> bool:
-    if not os.path.exists(archive_path):
-        return False
-
-    if not os.path.exists(sha256_file):
-        return False
-
-    archive_sha256_val = get_sha256sum(archive_path)
-
-    with open(sha256_file, 'r') as f:
-        sha256_file_val = f.read().replace('\n', '')
-
-        if archive_sha256_val == sha256_file_val:
-            return True
-
-    return False
-
-
-def write_sha256_file(cwd: str, filename: str):
-    file = os.path.join(cwd, filename)
-    sha256_val = get_sha256sum(file)
-    sha256_file = os.path.join(cwd, filename + '.sha256')
-
-    with open(sha256_file, 'w+') as f:
-        f.write(sha256_val)
 
 
 def get_flutter_engine_runtime(clean_workspace):
@@ -1318,114 +1196,6 @@ def handle_pre_requisites(obj, cwd):
             handle_commands(distro.get('cmds'), cwd)
         else:
             print('handle_pre_requisites: Not supported')
-
-
-def get_md5sum(file):
-    """Return md5sum of specified file"""
-    import hashlib
-
-    if not os.path.exists(file):
-        return ''
-
-    md5_hash = hashlib.md5()
-    with open(file, "rb") as f:
-        # Read and update hash in chunks of 4K
-        for byte_block in iter(lambda: f.read(4096), b""):
-            md5_hash.update(byte_block)
-
-    return md5_hash.hexdigest()
-
-
-def get_sha1sum(file):
-    """Return sha1sum of specified file"""
-    import hashlib
-
-    if not os.path.exists(file):
-        return ''
-
-    sha1_hash = hashlib.sha1()
-    with open(file, "rb") as f:
-        # Read and update hash in chunks of 4K
-        for byte_block in iter(lambda: f.read(4096), b""):
-            sha1_hash.update(byte_block)
-
-    return sha1_hash.hexdigest()
-
-
-def get_sha256sum(file):
-    """Return sha256sum of specified file"""
-    import hashlib
-
-    if not os.path.exists(file):
-        return ''
-
-    sha256_hash = hashlib.sha256()
-    with open(file, "rb") as f:
-        # Read and update hash in chunks of 4K
-        for byte_block in iter(lambda: f.read(4096), b""):
-            sha256_hash.update(byte_block)
-
-    return sha256_hash.hexdigest()
-
-
-def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1, sha256):
-    download_filepath = os.path.join(cwd, file)
-
-    sha256_file = os.path.join(cwd, file + '.sha256')
-    if compare_sha256(download_filepath, sha256_file):
-        print("%s exists, skipping download" % download_filepath)
-        return True
-
-    if os.path.exists(download_filepath):
-        if md5:
-            # don't download if md5 is good
-            if md5 == get_md5sum(download_filepath):
-                print("** Using %s" % download_filepath)
-                return True
-            else:
-                os.remove(download_filepath)
-        elif sha1:
-            # don't download if sha1 is good
-            if sha1 == get_sha1sum(download_filepath):
-                print("** Using %s" % download_filepath)
-                return True
-            else:
-                os.remove(download_filepath)
-        elif sha256:
-            # don't download if sha256 is good
-            if sha256 == get_sha256sum(download_filepath):
-                print("** Using %s" % download_filepath)
-                return True
-            else:
-                os.remove(download_filepath)
-
-    print("** Downloading %s via %s" % (file, url))
-    res = fetch_https_binary_file(
-        url, download_filepath, False, None, cookie_file, netrc)
-    if not res:
-        os.remove(download_filepath)
-        print_banner("Failed to download %s" % file)
-        return False
-
-    if os.path.exists(download_filepath):
-        if md5:
-            expected_md5 = get_md5sum(download_filepath)
-            if md5 != expected_md5:
-                sys.exit('Download artifact %s md5: %s does not match expected: %s' %
-                         (download_filepath, md5, expected_md5))
-        elif sha1:
-            expected_sha1 = get_sha1sum(download_filepath)
-            if sha1 != expected_sha1:
-                sys.exit('Download artifact %s sha1: %s does not match expected: %s' %
-                         (download_filepath, md5, expected_sha1))
-        elif sha256:
-            expected_sha256 = get_sha256sum(download_filepath)
-            if sha256 != expected_sha256:
-                sys.exit('Download artifact %s sha256: %s does not match expected: %s' %
-                         (download_filepath, sha256, expected_sha256))
-
-    write_sha256_file(cwd, file)
-    return True
 
 
 def get_filename_from_url(url):
@@ -2271,71 +2041,6 @@ def get_engine_commit(version, hash_):
     return version, get_body.decode('utf8').strip()
 
 
-def get_linux_release_file(cwd):
-    """Returns dictionary of releases_linux.json"""
-
-    filename = 'releases_linux.json'
-    url = f'https://storage.googleapis.com/flutter_infra_release/releases/{filename}'
-
-    sha256_file = os.path.join(cwd, f'{filename}.sha256')
-    if os.path.exists(sha256_file):
-        os.remove(sha256_file)
-
-    download_https_file(cwd, url, filename, None, None, None, None, None)
-
-    return os.path.join(cwd, filename)
-
-
-def get_version_files(cwd):
-    """Get Dart and Engine Version files"""
-    import concurrent.futures
-
-    if cwd is None:
-        cwd = get_platform_working_dir('flutter-engine')
-    else:
-        make_sure_path_exists(cwd)
-
-    release_linux = get_linux_release_file(cwd)
-
-    res = {}
-    with open(release_linux, 'r') as f:
-        for release in json.load(f).get('releases', []):
-            if 'dart_sdk_version' in release:
-                res[release['version']] = release['dart_sdk_version']
-
-    dest_file = os.path.join(cwd, 'dart-revision.json')
-    print_banner("Writing %s" % dest_file)
-    with open(dest_file, 'w+') as o:
-        json.dump(res, o, sort_keys=True, indent=2)
-
-    print_banner('Fetching Engine revisions')
-    engine_revs = {}
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = []
-        with open(release_linux, 'r') as f:
-            for release in json.load(f).get('releases', []):
-                version_ = release['version']
-                hash_ = release['hash']
-                futures.append(executor.submit(get_engine_commit, version_, hash_))
-                subprocess.check_call(
-                    ['sudo', '-v'], stdout=subprocess.DEVNULL)
-
-            for future in concurrent.futures.as_completed(futures):
-                res = future.result()
-                engine_revs[res[0]] = res[1]
-                subprocess.check_call(
-                    ['sudo', '-v'], stdout=subprocess.DEVNULL)
-
-    dest_file = os.path.join(cwd, 'engine-revision.json')
-    print_banner("Writing %s" % dest_file)
-    with open(dest_file, 'w+') as o:
-        json.dump(engine_revs, o, sort_keys=True, indent=2)
-
-    os.remove(os.path.join(cwd, 'releases_linux.json.sha256'))
-
-    print_banner("Done")
-
-
 def get_launch_obj(repo, device_id):
     """returns dictionary of launch target"""
     uri = repo.get('uri')
@@ -2527,12 +2232,6 @@ def flutter_analyze_git_commits():
 
         print('*** Found working commit: %s' % commit)
         break
-
-
-def check_python_version():
-    if sys.version_info[1] < 7:
-        sys.exit('Python >= 3.7 required.  This machine is running 3.%s' %
-                 sys.version_info[1])
 
 
 if __name__ == "__main__":
