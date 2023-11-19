@@ -38,6 +38,12 @@
         "pubspec_path": "gallery"
     },
     {
+        "uri": "https://github.com/flutter/games.git",
+        "branch": "main",
+        "rev": "acd048d2b5654421e1dbf41355aa5647233c9e24",
+        "pubspec_path": "games/templates/endless_runner"
+    },
+    {
         "uri": "https://github.com/mogol/flutter_secure_storage.git",
         "branch": "develop",
         "pubspec_path": "flutter_secure_storage/flutter_secure_storage/example"
