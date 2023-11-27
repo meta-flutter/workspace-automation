@@ -1,6 +1,6 @@
 {
     "id": "agl-qemu-octopus",
-    "load": true,
+    "load": false,
     "supported_archs": [
         "x86_64",
         "arm64"

@@ -44,9 +44,19 @@
         "pubspec_path": "games/templates/endless_runner"
     },
     {
+        "uri": "https://github.com/knopp/layer_playground",
+        "branch": "main",
+        "pubspec_path": "layer_playground"
+    },
+    {
         "uri": "https://github.com/mogol/flutter_secure_storage.git",
         "branch": "develop",
         "pubspec_path": "flutter_secure_storage/flutter_secure_storage/example"
+    },
+    {
+        "uri": "https://github.com/theyakka/qr.flutter.git",
+        "branch": "master",
+        "pubspec_path": "qr.flutter/example"
     },
     {
         "uri": "https://github.com/meta-flutter/flutter_animated_background.git",
