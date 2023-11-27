@@ -33,9 +33,12 @@
     },
     {
         "uri": "https://github.com/flutter/gallery.git",
-        "branch": "master",
-        "rev": "9eb785cb997ff56c46e933c1c591f0a6f31454f6",
+        "branch": "main",
         "pubspec_path": "gallery"
+    },
+    {
+        "uri": "https://github.com/flutter/samples.git",
+        "branch": "main"
     },
     {
         "uri": "https://github.com/flutter/games.git",
