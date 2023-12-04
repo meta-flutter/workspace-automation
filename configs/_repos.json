@@ -47,6 +47,10 @@
         "pubspec_path": "games/templates/endless_runner"
     },
     {
+        "uri": "https://github.com/flutter/super_dash.git",
+        "branch": "main"
+    },
+    {
         "uri": "https://github.com/meta-flutter/layer_playground",
         "branch": "main",
         "pubspec_path": "layer_playground"
