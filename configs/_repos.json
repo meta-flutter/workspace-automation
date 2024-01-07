@@ -68,7 +68,6 @@
     {
         "uri": "https://github.com/meta-flutter/flutter_animated_background.git",
         "branch": "meta-flutter",
-        "rev": "46f35ad2a323ab006813a3c4748163536b0fc332",
         "pubspec_path": "flutter_animated_background/example"
     },
     {
@@ -79,8 +78,46 @@
     },
     {
         "uri": "https://github.com/bernardpumped/ped.git",
-        "branch": "agl",
+        "branch": "next_main",
         "pubspec_path": "ped"
+    },
+    {
+        "uri": "https://github.com/bluefireteam/audioplayers.git",
+        "branch": "main"
+
+    },
+    {
+        "uri": "https://github.com/knopp/layer_playground.git",
+        "branch": "main"
+
+    },
+    {
+        "uri": "https://github.com/playx-flutter/playx-3d-scene.git",
+        "branch": "main"
+
+    },
+    {
+        "uri": "https://github.com/mix1009/desktop_window.git",
+        "branch": "master"
+
+    },
+    {
+        "uri": "https://github.com/Baseflow/flutter-geolocator.git",
+        "branch": "main"
+
+    },
+    {
+        "uri": "https://github.com/firebase/flutterfire.git",
+        "branch": "master",
+        "rev": "c6341b92209d6ac80733eb7bfdbac679f44306ec"
+    },
+    {
+        "uri": "https://github.com/google/filament.git",
+        "rev" : "v1.49.2"
+    },
+    {
+        "uri": "https://github.com/firebase/firebase-cpp-sdk.git",
+        "rev" : "v11.7.0"
     },
     {
         "uri": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
