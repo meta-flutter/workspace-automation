@@ -1,0 +1,28 @@
+From a9e36c8f4e792745e94126861149c5510b850fc1 Mon Sep 17 00:00:00 2001
+From: Joel Winarske <joel.winarske@gmail.com>
+Date: Fri, 5 Jan 2024 15:55:37 -0800
+Subject: [PATCH] missing reference to strlen
+
+-adds <cstring> reference
+
+Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
+---
+ filament/include/filament/MaterialInstance.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/filament/include/filament/MaterialInstance.h b/filament/include/filament/MaterialInstance.h
+index 0c6ef2057..91fce4992 100644
+--- a/filament/include/filament/MaterialInstance.h
++++ b/filament/include/filament/MaterialInstance.h
+@@ -28,6 +28,8 @@
+ 
+ #include <math/mathfwd.h>
+ 
++#include <cstring>
++
+ namespace filament {
+ 
+ class Material;
+-- 
+2.43.0
+

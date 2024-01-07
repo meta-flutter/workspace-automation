@@ -1,0 +1,27 @@
+From a984fc8ddf7e5512b98af7594c5a8f70179cf524 Mon Sep 17 00:00:00 2001
+From: Joel Winarske <joel.winarske@gmail.com>
+Date: Fri, 5 Jan 2024 07:16:34 -0800
+Subject: [PATCH] error: ignoring return value of function declared with
+ 'warn_unused_result' attribute
+
+Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
+---
+ libs/utils/include/utils/memalign.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libs/utils/include/utils/memalign.h b/libs/utils/include/utils/memalign.h
+index 4c048bffd..a96a08a70 100644
+--- a/libs/utils/include/utils/memalign.h
++++ b/libs/utils/include/utils/memalign.h
+@@ -40,7 +40,7 @@ inline void* aligned_alloc(size_t size, size_t align) noexcept {
+ #if defined(WIN32)
+     p = ::_aligned_malloc(size, align);
+ #else
+-    ::posix_memalign(&p, align, size);
++    (void)::posix_memalign(&p, align, size);
+ #endif
+     return p;
+ }
+-- 
+2.43.0
+

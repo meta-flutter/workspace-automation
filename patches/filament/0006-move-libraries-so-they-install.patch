@@ -1,0 +1,51 @@
+From 7c102f9e291163da37fb1d6e5422919a5d301e88 Mon Sep 17 00:00:00 2001
+From: Joel Winarske <joel.winarske@gmail.com>
+Date: Fri, 5 Jan 2024 17:04:36 -0800
+Subject: [PATCH] move libraries so they install
+
+Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
+---
+ CMakeLists.txt | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 7547efa95..941ffbe1e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -726,6 +726,7 @@ add_subdirectory(${LIBRARIES}/gltfio)
+ add_subdirectory(${LIBRARIES}/ibl)
+ add_subdirectory(${LIBRARIES}/iblprefilter)
+ add_subdirectory(${LIBRARIES}/image)
++add_subdirectory(${LIBRARIES}/imageio)
+ add_subdirectory(${LIBRARIES}/ktxreader)
+ add_subdirectory(${LIBRARIES}/math)
+ add_subdirectory(${LIBRARIES}/mathio)
+@@ -748,6 +749,9 @@ add_subdirectory(${EXTERNAL}/draco/tnt)
+ add_subdirectory(${EXTERNAL}/jsmn/tnt)
+ add_subdirectory(${EXTERNAL}/stb/tnt)
+ add_subdirectory(${EXTERNAL}/getopt)
++add_subdirectory(${EXTERNAL}/libpng/tnt)
++add_subdirectory(${EXTERNAL}/tinyexr/tnt)
++add_subdirectory(${EXTERNAL}/libz/tnt)
+ 
+ if (FILAMENT_BUILD_FILAMAT OR IS_HOST_PLATFORM)
+     # spirv-tools must come before filamat, as filamat relies on the presence of the
+@@ -784,15 +788,11 @@ if (IS_HOST_PLATFORM)
+     if (NOT FILAMENT_SKIP_SDL2)
+       add_subdirectory(${LIBRARIES}/filamentapp)
+     endif()
+-    add_subdirectory(${LIBRARIES}/imageio)
+ 
+     add_subdirectory(${FILAMENT}/samples)
+ 
+     add_subdirectory(${EXTERNAL}/libassimp/tnt)
+-    add_subdirectory(${EXTERNAL}/libpng/tnt)
+     add_subdirectory(${EXTERNAL}/libsdl2/tnt)
+-    add_subdirectory(${EXTERNAL}/libz/tnt)
+-    add_subdirectory(${EXTERNAL}/tinyexr/tnt)
+ 
+     add_subdirectory(${TOOLS}/cmgen)
+     add_subdirectory(${TOOLS}/cso-lut)
+-- 
+2.43.0
+
