@@ -113,11 +113,11 @@
     },
     {
         "uri": "https://github.com/google/filament.git",
-        "rev" : "v1.49.2"
+        "rev" : "1a9063d53a4438dbe2d12ee64512740a3ef4faef"
     },
     {
         "uri": "https://github.com/firebase/firebase-cpp-sdk.git",
-        "rev" : "v11.7.0"
+        "rev" : "b5b7e05b6a6e3c7ca4baadb7f15ef6fc6f36829c"
     },
     {
         "uri": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
