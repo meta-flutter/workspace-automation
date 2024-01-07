@@ -1,0 +1,53 @@
+{
+    "id": "firebase-cpp-sdk",
+    "load": false,
+    "supported_archs": [
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "ubuntu",
+        "fedora"
+    ],
+    "type": "generic",
+    "flutter_runtime": "debug",
+    "env": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "FIREBASE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk",
+        "FIREBASE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk/cmake-build-debug",
+        "FIREBASE_STAGING_DIR": "${FIREBASE_BUILD_DIR}/staging/debug",
+        "FIREBASE_CMAKE_ARGS": "-DFIREBASE_USE_BORINGSSL=YES -DFIREBASE_LINUX_USE_CXX11_ABI=ON -DCMAKE_CXX_FLAGS=-stdlib=libc++ -DCMAKE_STAGING_PREFIX=${FIREBASE_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+    },
+    "runtime": {
+        "pre-requisites": {
+            "x86_64": {
+                "ubuntu": {
+                    "cmds": [
+                        "pip3 install absl-py",
+                        "sudo rm -rf /usr/local/go | true",
+                        "sudo tar -C /usr/local -xzf go1.21.5.linux-amd64.tar.gz"
+                    ]
+                },
+                "fedora": {
+                    "cmds": [
+                        "pip3 install absl-py",
+                        "sudo dnf install go"
+                    ]
+                }
+            }
+        },
+        "post_cmds": [
+            {
+                "env": {
+                    "CC": "/usr/bin/clang",
+                    "CXX": "/usr/bin/clang++"
+                },
+                "cwd": "${FIREBASE_BUILD_DIR}",
+                "cmds": [
+                  "go version",
+                  "cmake ${FIREBASE_SRC_DIR} ${FIREBASE_CMAKE_ARGS}",
+                  "make -j"
+                ]
+            }
+        ]
+    }
+}

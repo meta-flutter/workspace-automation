@@ -1,0 +1,45 @@
+{
+    "id": "sentry-native",
+    "load": false,
+    "supported_archs": [
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "ubuntu",
+        "fedora"
+    ],
+    "type": "generic",
+    "flutter_runtime": "debug",
+    "env": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "SENTRY_NATIVE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/sentry-native",
+        "SENTRY_NATIVE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/sentry-native/cmake-build-debug",
+        "SENTRY_NATIVE_STAGING_DIR": "${SENTRY_NATIVE_BUILD_DIR}/staging/debug",
+        "SENTRY_NATIVE_CMAKE_ARGS": "-D SENTRY_BUILD_TESTS=OFF -D SENTRY_BUILD_EXAMPLES=OFF -D SENTRY_BUILD_FORCE32=OFF -DCMAKE_STAGING_PREFIX=${SENTRY_NATIVE_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+    },
+    "runtime": {
+        "pre-requisites": {
+            "x86_64": {
+                "ubuntu": {
+                    "cmds": [
+                        "sudo apt-get install libunwind-dev"
+                    ]
+                },
+                "fedora": {
+                    "cmds": [
+                        "sudo dnf install libunwind-devel"
+                    ]
+                }
+            }
+        },
+        "post_cmds": [
+            {
+                "cwd": "${SENTRY_NATIVE_BUILD_DIR}",
+                "cmds": [
+                  "cmake ${SENTRY_NATIVE_SRC_DIR} ${SENTRY_NATIVE_CMAKE_ARGS}",
+                  "make install -j"
+                ]
+            }
+        ]
+    }
+}
