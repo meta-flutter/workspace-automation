@@ -166,7 +166,7 @@ def main():
     make_sure_path_exists(args.path)
     get_workspace_repos(repo_path, flutter_apps, args.path)
     
-    # clear_folder(repo_path)
+    clear_folder(repo_path)
 
     print_banner('Done')
 
