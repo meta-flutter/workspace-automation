@@ -100,7 +100,12 @@ def get_repo_vars(directory):
     remote_lines = remote_verbose.split('\n')
     remote_tokens = remote_lines[0]
     remote_lines = remote_tokens.split('\t')
+    remote_lines[1] = remote_lines[1].replace('git@','https')
+    remote_lines[1] = remote_lines[1].replace(':','/')
     repo = remote_lines[1].rsplit(sep='/', maxsplit=2)
+    print(len(repo))
+    print(repo)
+
     org = repo[-2]
     repo = repo[-1]
     unit = repo.split('.')
