@@ -55,12 +55,12 @@ def main():
             raise Exception(f'--path {args.path} is not a directory')
 
         # Check license file if specified
+        license_md5 = ''
         if args.license:
             license_path = args.path + '/' + args.license
             if not os.path.isfile(license_path):
                 raise Exception('--license {license_path} is not present')
 
-            license_md5 = ''
             if args.license_type != 'CLOSED':
                 license_md5 = get_file_md5(license_path)
 
@@ -120,7 +120,17 @@ def get_repo_vars(directory):
     url_raw = get_process_stdout('git config --get remote.origin.url', directory)
     url = url_raw.split('//')
 
-    return org, unit[0], submodules, url[1], lfs, branch, commit
+    value = ''
+    if len(url) > 1:
+        value = url[1]
+    else:
+        url = url_raw.split('@')
+        if len(url) > 1:
+            value = url[1]
+        else:
+            print('delimiter not handled')
+
+    return org, unit[0], submodules, value, lfs, branch, commit
 
 
 def get_yaml_obj(filepath: str):
