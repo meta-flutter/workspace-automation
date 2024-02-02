@@ -67,6 +67,7 @@ def main():
         create_yocto_recipes(args.path, args.license, args.license_type, license_md5, args.author, args.out)
         return
 
+
 def get_process_stdout(cmd, directory):
     import subprocess
 
@@ -153,15 +154,16 @@ def get_yaml_obj(filepath: str):
         return data_loaded
 
 
-def create_recipe(pubspec_yaml,
+def create_recipe(directory,
+                  pubspec_yaml,
                   org, unit, submodules, url, lfs, branch, commit,
                   license_file, license_type, license_file_md5,
                   author,
-                  output_path):
+                  output_path) -> str:
 
-    if '_ios' in pubspec_yaml or '_android' in pubspec_yaml or '_windows' in pubspec_yaml or '_macos' in pubspec_yaml or '_web' in pubspec_yaml:
+    if '_ios' in pubspec_yaml or '_android' in pubspec_yaml or '_windows' in pubspec_yaml or '_macos' in pubspec_yaml:
         print(f'Skipping: {pubspec_yaml}')
-        return
+        return ''
 
     path_tokens = pubspec_yaml.split('/')
 
@@ -187,9 +189,11 @@ def create_recipe(pubspec_yaml,
         else:
             filename = f'{output_path}/{recipe_name}_git.bb'
 
-        print(f'Recipe: {filename}')
-
         with open(filename, "w") as f:
+            f.write('#\n')
+            f.write('# Copyright (c) 2020-2024 Joel Winarske. All rights reserved.\n')
+            f.write('#\n')
+            f.write('\n')
 
             f.write(f'SUMMARY = "{project_name}"\n')
             f.write(f'DESCRIPTION = "{project_description}"\n')
@@ -225,11 +229,43 @@ def create_recipe(pubspec_yaml,
             f.write('S = "${WORKDIR}/git"\n')
             f.write('\n')
             f.write(f'PUBSPEC_APPNAME = "{project_name}"\n')
+
+            # make application path relative
+            directory = directory.split('/')
+            for i in range(len(directory)):
+                del path_tokens[0]
             flutter_application_path = '/'.join(path_tokens[:-1])
             f.write(f'FLUTTER_APPLICATION_PATH = "{flutter_application_path}"\n')
             f.write('\n')
-            # TODO detect if web or app. Use app for now
-            f.write('inherit flutter-app\n')
+            
+            if '_web' in pubspec_yaml:
+                f.write('inherit flutter-web\n')
+            else:
+                f.write('inherit flutter-app\n')
+
+        return recipe_name
+
+
+def create_package_group(org, unit, recipes, output_path):
+    """Create package group file"""
+
+    filename = f'{output_path}/packagegroup-flutter-{org}-{unit}.bb'
+
+    with open(filename, "w") as f:
+        f.write('#\n')
+        f.write('# Copyright (c) 2020-2024 Joel Winarske. All rights reserved.\n')
+        f.write('#\n')
+        f.write('\n')
+        f.write(f'SUMMARY = "Package of Flutter {org} {unit} apps"\n')
+        f.write('\n')
+        f.write('PACKAGE_ARCH = "${MACHINE_ARCH}"\n')
+        f.write('\n')
+        f.write('inherit packagegroup\n')
+        f.write('\n')
+        f.write('RDEPENDS:${PN} += " \\\n')
+        for i in range(len(recipes)):
+            f.write(f'    {recipes[i]} \\\n')
+        f.write('"\n')
 
 
 def create_yocto_recipes(directory, license_file, license_type, license_md5, author, output_path):
@@ -247,11 +283,16 @@ def create_yocto_recipes(directory, license_file, license_type, license_md5, aut
     org, unit, submodules, url, lfs, branch, commit = get_repo_vars(directory)
 
     #
-    # Iterate on all pubspec.yaml files
+    # Iterate all pubspec.yaml files
     #
+    recipes = []
     for filename in glob.iglob(directory + '**/pubspec.yaml', recursive=True):
-        create_recipe(filename, org, unit, submodules, url, lfs, branch, commit, license_file, license_type, license_md5, author, output_path)
+        recipe = create_recipe(directory, filename, org, unit, submodules, url, lfs, branch, commit, license_file, license_type, license_md5, author, output_path)
+        if recipe != '':
+            recipes.append(recipe)
 
+    create_package_group(org, unit, recipes, output_path)
+    
     print_banner("Done.")
 
 
