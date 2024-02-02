@@ -98,11 +98,11 @@ def get_repo_vars(directory):
         raise Exception(f'{directory} is not a git repository')
 
     remote_verbose = get_process_stdout('git remote -v', directory)
+    remote_verbose = remote_verbose.split(' ')[0]
     remote_lines = remote_verbose.split('\n')
     remote_tokens = remote_lines[0]
     remote_lines = remote_tokens.split('\t')
     remote_lines[1] = remote_lines[1].replace('git@','https')
-    remote_lines[1] = remote_lines[1].replace(':','/')
     repo = remote_lines[1].rsplit(sep='/', maxsplit=2)
 
     org = repo[-2]
@@ -239,6 +239,14 @@ def create_recipe(directory,
             f.write('\n')
             f.write('S = "${WORKDIR}/git"\n')
             f.write('\n')
+
+            # detect melos
+            if os.path.isfile(directory + '/melos.yaml'):
+                f.write('PUB_CACHE_EXTRA_ARCHIVE_PATH = "${WORKDIR}/pub_cache/bin"\n')
+                f.write('PUB_CACHE_EXTRA_ARCHIVE_CMD = "flutter pub global activate melos; \\\n')
+                f.write('    melos bootstrap"\n')
+                f.write('\n')
+
             f.write(f'PUBSPEC_APPNAME = "{project_name}"\n')
 
             # make application path relative
