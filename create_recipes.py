@@ -64,7 +64,7 @@ def main():
             if args.license_type != 'CLOSED':
                 license_md5 = get_file_md5(license_path)
 
-        create_yocto_recipes(args.path, args.license, args.license_type, license_md5, args.author, args.out)
+        create_yocto_recipes(args.path, args.license, args.license_type, license_md5, args.author, args.out, args.out)
         return
 
 
@@ -91,10 +91,12 @@ def get_repo_vars(directory):
     """Gets variables associated with repository"""
     
     if not os.path.isdir(directory):
+        print_banner(f'ERROR: {directory} is not valid')
         raise Exception(f'{directory} is not valid')
 
     git_path = directory + '.git'
     if not os.path.isdir(git_path):
+        print_banner(f'ERROR: {directory} is not a git repository')
         raise Exception(f'{directory} is not a git repository')
 
     remote_verbose = get_process_stdout('git remote -v', directory)
@@ -105,8 +107,8 @@ def get_repo_vars(directory):
     remote_lines[1] = remote_lines[1].replace('git@','https')
     repo = remote_lines[1].rsplit(sep='/', maxsplit=2)
 
-    org = repo[-2]
-    repo = repo[-1]
+    org = repo[-2].lower()
+    repo = repo[-1].lower()
     unit = repo.split('.')
 
     submodules = False
@@ -169,10 +171,10 @@ def create_recipe(directory,
 
     if path_tokens[-1] == 'pubspec.yaml':
 
-        if unit != path_tokens[-3]:
-            recipe_name = f'{org}-{unit}-{path_tokens[-3]}-{path_tokens[-2]}'
-        else:
+        if {path_tokens[-2]}:
             recipe_name = f'{org}-{unit}-{path_tokens[-2]}'
+        else:
+            recipe_name = f'{org}-{unit}'
 
         recipe_name = recipe_name.replace('_','-')
 
@@ -287,30 +289,46 @@ def create_package_group(org, unit, recipes, output_path):
         f.write('"\n')
 
 
-def create_yocto_recipes(directory, license_file, license_type, license_md5, author, output_path):
+def create_yocto_recipes(directory,
+                         license_file,
+                         license_type,
+                         license_md5,
+                         author,
+                         flutter_app_output_path,
+                         packagegroups_output_path):
     """Create bb recipe for each pubspec.yaml file in path"""
     import glob
     from subprocess import Popen, PIPE
 
     print_banner("Creating Yocto Recipes")
 
-    make_sure_path_exists(output_path)
+    make_sure_path_exists(flutter_app_output_path)
+    make_sure_path_exists(packagegroups_output_path)
+
+    if not directory.endswith('/'):
+        directory += '/'
 
     #
     # Get repo variables
     #
     org, unit, submodules, url, lfs, branch, commit = get_repo_vars(directory)
+    print(f'repo_vars: {org}, {unit}, {submodules}, {url}, {lfs}, {branch}, {commit}')
 
     #
     # Iterate all pubspec.yaml files
     #
     recipes = []
     for filename in glob.iglob(directory + '**/pubspec.yaml', recursive=True):
-        recipe = create_recipe(directory, filename, org, unit, submodules, url, lfs, branch, commit, license_file, license_type, license_md5, author, output_path)
+        recipe = create_recipe(directory, filename,
+                               org, unit, submodules, url, lfs, branch, commit,
+                               license_file, license_type, license_md5,
+                               author,
+                               flutter_app_output_path
+                               )
         if recipe != '':
             recipes.append(recipe)
 
-    create_package_group(org, unit, recipes, output_path)
+    create_package_group(org, unit, recipes, packagegroups_output_path)
     
     print_banner("Done.")
 

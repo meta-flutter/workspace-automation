@@ -1,0 +1,140 @@
+[
+    {
+        "uri": "https://github.com/flutter/packages.git",
+        "branch": "main",
+        "license_file": "LICENSE",
+        "license_type": "BSD3-Clause",
+        "author": "Google"
+    },
+    {
+        "uri": "https://github.com/flutter/samples.git",
+        "branch": "main",
+        "license_file": "LICENSE",
+        "license_type": "BSD3-Clause",
+        "author": "Google"
+    },
+    {
+        "uri": "https://github.com/flutter/games.git",
+        "branch": "main",
+        "license_file": "",
+        "license_type": "CLOSED",
+        "author": "Google"
+    },
+    {
+        "uri": "https://github.com/flutter/super_dash.git",
+        "branch": "main",
+        "license_file": "LICENSE",
+        "license_type": "BSD-3-Clause",
+        "author": "Very Good Ventures"
+    },
+    {
+        "uri": "https://github.com/gskinnerTeam/flutter-wonderous-app.git",
+        "branch": "main",
+        "license_file": "LICENSE",
+        "license_type": "MIT",
+        "author": "gskinner team"
+    },
+    {
+        "uri": "https://github.com/flutter/pinball.git",
+        "branch": "main",
+        "license_file": "LICENSE",
+        "license_type": "MIT",
+        "author": "Very Good Ventures"
+    },
+    {
+        "uri": "https://github.com/bdero/flutter-scene-example.git",
+        "branch": "master",
+        "license_type": "CLOSED",
+        "author": "Brandon DeRosier"
+    },
+    {
+        "uri": "https://github.com/flutter/gallery.git",
+        "branch": "main",
+        "license_file": "LICENSE",
+        "license_type": "BSD-3-Clause",
+        "author": "Google"
+    },
+    {
+        "uri": "https://github.com/mogol/flutter_secure_storage.git",
+        "branch": "develop",
+        "license_file": "LICENSE",
+        "license_type": "BSD-3-Clause",
+        "author": "German Saprykin"
+    },
+    {
+        "uri": "https://github.com/theyakka/qr.flutter.git",
+        "branch": "master",
+        "license_file": "LICENSE",
+        "license_type": "BSD-3-Clause",
+        "author": "Yakka"
+    },
+    {
+        "uri": "https://github.com/meta-flutter/flutter_animated_background.git",
+        "branch": "meta-flutter",
+        "license_file": "LICENSE",
+        "license_type": "MIT",
+        "author": "Andre Baltazar"
+    },
+    {
+        "uri": "https://github.com/felipeerias/flutter_homescreen.git",
+        "branch": "main",
+        "license_file": "LICENSE",
+        "license_type": "Apache-2.0",
+        "author": "Felipe Erias"
+    },
+    {
+        "uri": "https://github.com/bernardpumped/ped.git",
+        "branch": "next_main",
+        "license_file": "COPYING",
+        "license_type": "GPL-3.0",
+        "author": "Bernard Craddock"
+    },
+    {
+        "uri": "https://github.com/bluefireteam/audioplayers.git",
+        "branch": "main",
+        "license_file": "LICENSE",
+        "license_type": "MIT",
+        "author": "Luan Nico"
+    },
+    {
+        "uri": "https://github.com/knopp/layer_playground.git",
+        "branch": "main",
+        "license_type": "CLOSED",
+        "author": "Matej Knopp"
+    },
+    {
+        "uri": "https://github.com/playx-flutter/playx-3d-scene.git",
+        "branch": "main",
+        "license_file": "LICENSE",
+        "license_type": "MIT",
+        "author": "Sourcya.io"
+    },
+    {
+        "uri": "https://github.com/mix1009/desktop_window.git",
+        "branch": "master",
+        "license_file": "LICENSE",
+        "license_type": "MIT",
+        "author": "ChunKoo Park"
+    },
+    {
+        "uri": "https://github.com/Baseflow/flutter-geolocator.git",
+        "branch": "main",
+        "license_file": "LICENSE",
+        "license_type": "MIT",
+        "author": "baseflow"
+    },
+    {
+        "uri": "https://github.com/firebase/flutterfire.git",
+        "branch": "master",
+        "license_file": "LICENSE",
+        "license_type": "BSD-3-Clause",
+        "author": "Google"
+    },
+    {
+        "uri": "https://github.com/meta-flutter/tests",
+        "branch": "main",
+        "license_file": "LICENSE",
+        "license_type": "BSD-3-Clause",
+        "author": "Misc"
+    }
+]
