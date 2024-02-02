@@ -44,7 +44,7 @@ def run_command(cmd: str, cwd: str) -> str:
     (retval, output) = subprocess.getstatusoutput(f'cd {cwd} && {cmd}')
     if retval:
         sys.exit("failed %s (cmd was %s)%s" % (retval, cmd, ":\n%s" % output if output else ""))
-    
+
     print(output.rstrip())
     return output.rstrip()
 
@@ -280,4 +280,3 @@ def test_internet_connection() -> bool:
         res = True
 
     return res
-

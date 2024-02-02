@@ -41,15 +41,15 @@ import zipfile
 from platform import system
 
 import create_aot
-from pubspec import Pubspec
 from fw_common import check_python_version
-from fw_common import print_banner
-from fw_common import handle_ctrl_c
-from fw_common import make_sure_path_exists
 from fw_common import compare_sha256
 from fw_common import download_https_file
-from fw_common import write_sha256_file
 from fw_common import fetch_https_binary_file
+from fw_common import handle_ctrl_c
+from fw_common import make_sure_path_exists
+from fw_common import print_banner
+from fw_common import write_sha256_file
+from pubspec import Pubspec
 
 
 def main():
@@ -90,12 +90,11 @@ def main():
     parser.add_argument('--create-aot', default=False, action='store_true', help='Generate AOT')
     parser.add_argument('--app-path', default='', type=str, help='Specify Application path')
 
-
     args = parser.parse_args()
 
     if args.create_aot:
         if args.app_path == '':
-          sys.exit("Must specify value for --app-path")
+            sys.exit("Must specify value for --app-path")
 
     #
     # pubspec parsing
@@ -225,9 +224,9 @@ def main():
     #
     if args.create_aot:
         if args.app_path != '':
-          create_aot.create_platform_aot(args.app_path)
+            create_aot.create_platform_aot(args.app_path)
         else:
-          sys.exit("Must specify value for --app-path")
+            sys.exit("Must specify value for --app-path")
         return
 
     #

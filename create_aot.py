@@ -135,8 +135,8 @@ def create_platform_aot(app_path: str):
     flutter_build_args = os.getenv('FLUTTER_BUILD_ARGS')
     if flutter_build_args is None:
         flutter_build_args = 'bundle'
-    
-    flutter_sdk_root=os.getenv("LOCAL_ENGINE_HOST")
+
+    flutter_sdk_root = os.getenv("LOCAL_ENGINE_HOST")
     if flutter_sdk_root is None:
         flutter_sdk_root = f'{flutter_sdk}/bin/cache/artifacts/engine/common'
 
@@ -190,7 +190,7 @@ def create_platform_aot(app_path: str):
             flutter_source_flags = ''
             dart_plugin_registrant_file = f'{app_path}/.dart_tool/flutter_build/dart_plugin_registrant.dart'
             if os.path.exists(dart_plugin_registrant_file):
-                #filter_linux_plugin_registrant(dart_plugin_registrant_file)
+                # filter_linux_plugin_registrant(dart_plugin_registrant_file)
                 flutter_source_flags = f'--source file://{dart_plugin_registrant_file}'
                 flutter_source_flags += ' --source package:flutter/src/dart_plugin_registrant.dart'
                 flutter_source_flags += f' -Dflutter.dart_plugin_registrant=file://{dart_plugin_registrant_file}'

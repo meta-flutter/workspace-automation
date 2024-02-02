@@ -20,7 +20,7 @@ from fw_common import check_python_version
 def get_file_md5(file_name):
     import hashlib
     with open(file_name, 'rb') as f:
-        data = f.read()    
+        data = f.read()
         md5_returned = hashlib.md5(data).hexdigest()
         return md5_returned
 
@@ -89,7 +89,7 @@ def get_git_branch(directory) -> str:
 
 def get_repo_vars(directory):
     """Gets variables associated with repository"""
-    
+
     if not os.path.isdir(directory):
         print_banner(f'ERROR: {directory} is not valid')
         raise Exception(f'{directory} is not valid')
@@ -104,7 +104,7 @@ def get_repo_vars(directory):
     remote_lines = remote_verbose.split('\n')
     remote_tokens = remote_lines[0]
     remote_lines = remote_tokens.split('\t')
-    remote_lines[1] = remote_lines[1].replace('git@','https')
+    remote_lines[1] = remote_lines[1].replace('git@', 'https')
     repo = remote_lines[1].rsplit(sep='/', maxsplit=2)
 
     org = repo[-2].lower()
@@ -118,7 +118,7 @@ def get_repo_vars(directory):
     lfs = False
     if os.path.isfile(directory + '/.gitattributes'):
         lfs = True
-    
+
     branch = get_git_branch(directory)
 
     commit = get_process_stdout('git rev-parse --verify HEAD', directory)
@@ -162,7 +162,6 @@ def create_recipe(directory,
                   license_file, license_type, license_file_md5,
                   author,
                   output_path) -> str:
-
     if '_ios' in pubspec_yaml or '_android' in pubspec_yaml or '_windows' in pubspec_yaml or '_macos' in pubspec_yaml:
         print(f'Skipping: {pubspec_yaml}')
         return ''
@@ -171,12 +170,12 @@ def create_recipe(directory,
 
     if path_tokens[-1] == 'pubspec.yaml':
 
-        if {path_tokens[-2]}:
+        if path_tokens[-2]:
             recipe_name = f'{org}-{unit}-{path_tokens[-2]}'
         else:
             recipe_name = f'{org}-{unit}'
 
-        recipe_name = recipe_name.replace('_','-')
+        recipe_name = recipe_name.replace('_', '-')
 
         yaml_obj = get_yaml_obj(pubspec_yaml)
         project_name = yaml_obj.get('name')
@@ -185,7 +184,7 @@ def create_recipe(directory,
         project_issue_tracker = yaml_obj.get('issue_tracker')
         project_version = yaml_obj.get('version')
 
-        if project_version != None:
+        if project_version is not None:
             version = project_version.split('+')
             filename = f'{output_path}/{recipe_name}_{version[0]}.bb'
         else:
@@ -258,7 +257,7 @@ def create_recipe(directory,
             flutter_application_path = '/'.join(path_tokens[:-1])
             f.write(f'FLUTTER_APPLICATION_PATH = "{flutter_application_path}"\n')
             f.write('\n')
-            
+
             if '_web' in pubspec_yaml:
                 f.write('inherit flutter-web\n')
             else:
@@ -298,7 +297,6 @@ def create_yocto_recipes(directory,
                          packagegroups_output_path):
     """Create bb recipe for each pubspec.yaml file in path"""
     import glob
-    from subprocess import Popen, PIPE
 
     print_banner("Creating Yocto Recipes")
 
@@ -312,7 +310,6 @@ def create_yocto_recipes(directory,
     # Get repo variables
     #
     org, unit, submodules, url, lfs, branch, commit = get_repo_vars(directory)
-    print(f'repo_vars: {org}, {unit}, {submodules}, {url}, {lfs}, {branch}, {commit}')
 
     #
     # Iterate all pubspec.yaml files
@@ -329,7 +326,7 @@ def create_yocto_recipes(directory,
             recipes.append(recipe)
 
     create_package_group(org, unit, recipes, packagegroups_output_path)
-    
+
     print_banner("Done.")
 
 

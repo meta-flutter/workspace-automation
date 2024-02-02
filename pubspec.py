@@ -16,14 +16,13 @@ class Pubspec:
     def __init__(self, filepath, platform):
         self.pub_cache = os.getenv("PUB_CACHE")
         if self.pub_cache == None:
-            raise Exception ("Environmental variable PUB_CACHE is not set")
+            raise Exception("Environmental variable PUB_CACHE is not set")
 
         self.root_path = os.path.abspath(filepath)
         self.platform = platform
         self.plugins = []
 
         self.parse_platform_plugins()
-
 
     def get_yaml(self, filepath: str):
         """ Returns python object of yaml file """
@@ -38,16 +37,14 @@ class Pubspec:
 
             except yaml.YAMLError as exc:
                 raise Exception(f'Failed loading {exc} - {filepath}')
-            
-            return data
 
+            return data
 
     def write_to_file(self, obj: object, filepath: str):
         """ Writes YAML object to file """
 
         with open(filepath, 'w') as file:
             yaml.dump(obj, file)
-
 
     def get_plugin_default_package(self, filepath: str):
         pubspec = os.path.join(filepath, 'pubspec.yaml')
@@ -62,7 +59,6 @@ class Pubspec:
                             return default_package
         return None
 
-
     def get_dart_plugin_class(self, filepath: str):
         pubspec = os.path.join(filepath, 'pubspec.yaml')
         obj = self.get_yaml(pubspec)
@@ -76,9 +72,8 @@ class Pubspec:
                             return dart_plugin_class
         return None
 
-
     def parse_platform_plugins(self):
-        pubspec_lock_file = os.path.join(self.root_path,'pubspec.lock')
+        pubspec_lock_file = os.path.join(self.root_path, 'pubspec.lock')
         lock = self.get_yaml(pubspec_lock_file)
         for package in lock['packages']:
             source = lock['packages'][package]['source']
@@ -89,7 +84,8 @@ class Pubspec:
                 if default_package:
                     source = lock['packages'][default_package]['source']
                     version = lock['packages'][default_package]['version']
-                    default_package_path = os.path.join(self.pub_cache, source, 'pub.dev', f'{default_package }-{version}')
+                    default_package_path = os.path.join(self.pub_cache, source, 'pub.dev',
+                                                        f'{default_package}-{version}')
                     if os.path.exists(default_package_path):
                         dart_plugin_class = self.get_dart_plugin_class(default_package_path)
                         if dart_plugin_class:

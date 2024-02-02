@@ -12,11 +12,11 @@ import os
 import signal
 import sys
 
-from fw_common import handle_ctrl_c
-from fw_common import print_banner
-from fw_common import make_sure_path_exists
-from fw_common import download_https_file
 from fw_common import check_python_version
+from fw_common import download_https_file
+from fw_common import handle_ctrl_c
+from fw_common import make_sure_path_exists
+from fw_common import print_banner
 from fw_common import test_internet_connection
 
 
@@ -129,7 +129,7 @@ def get_engine_commit(version, hash_):
 if __name__ == "__main__":
     check_python_version()
 
-    if test_internet_connection() == False:
+    if not test_internet_connection():
         sys.exit("version_files.py requires an internet connection")
 
     main()

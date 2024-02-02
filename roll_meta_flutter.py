@@ -10,14 +10,16 @@
 import os
 import signal
 import subprocess
+import sys
 
+from create_recipes import create_yocto_recipes
+from create_recipes import get_file_md5
+from fw_common import check_python_version
 from fw_common import handle_ctrl_c
 from fw_common import make_sure_path_exists
 from fw_common import print_banner
-from fw_common import check_python_version
+from fw_common import test_internet_connection
 from version_files import get_version_files
-from create_recipes import get_file_md5
-from create_recipes import create_yocto_recipes
 
 
 def get_flutter_apps(filename) -> dict:
@@ -90,7 +92,6 @@ def get_repo(base_folder, uri, branch, rev, license_file, license_type, author, 
         cmd = ['git', 'lfs', 'fetch', '--all']
         subprocess.check_call(cmd, cwd=git_folder)
 
-
     repo_path = os.path.join(base_folder, repo_name)
 
     # Check license file
@@ -131,7 +132,7 @@ def get_workspace_repos(base_folder, repos, output_path):
                                            ))
 
     print_banner("Repos Cloned")
-    
+
 
 def main():
     import argparse
@@ -156,7 +157,7 @@ def main():
     get_version_files(include_path)
 
     print_banner('Done updating version files')
-    
+
     print_banner('Updating flutter apps recipes')
     flutter_apps = get_flutter_apps(args.json)
 
@@ -165,7 +166,7 @@ def main():
 
     make_sure_path_exists(args.path)
     get_workspace_repos(repo_path, flutter_apps, args.path)
-    
+
     clear_folder(repo_path)
 
     print_banner('Done')
@@ -173,5 +174,8 @@ def main():
 
 if __name__ == "__main__":
     check_python_version()
+
+    if not test_internet_connection():
+        sys.exit("roll_meta_flutter.py requires an internet connection")
 
     main()
