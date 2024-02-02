@@ -176,12 +176,12 @@ def create_recipe(directory,
 
         recipe_name = recipe_name.replace('_','-')
 
-        obj = get_yaml_obj(pubspec_yaml)
-        project_name = obj.get('name')
-        project_description = obj.get('description')
-        project_homepage = obj.get('repository')
-        project_issue_tracker = obj.get('issue_tracker')
-        project_version = obj.get('version')
+        yaml_obj = get_yaml_obj(pubspec_yaml)
+        project_name = yaml_obj.get('name')
+        project_description = yaml_obj.get('description')
+        project_homepage = yaml_obj.get('repository')
+        project_issue_tracker = yaml_obj.get('issue_tracker')
+        project_version = yaml_obj.get('version')
 
         if project_version != None:
             version = project_version.split('+')
@@ -194,6 +194,17 @@ def create_recipe(directory,
             f.write('# Copyright (c) 2020-2024 Joel Winarske. All rights reserved.\n')
             f.write('#\n')
             f.write('\n')
+
+            if project_name:
+                project_name = project_name.strip()
+            if project_description:
+                project_description = project_description.strip()
+            if author:
+                author = author.strip()
+            if project_homepage:
+                project_homepage = project_homepage.strip()
+            if project_issue_tracker:
+                project_issue_tracker = project_issue_tracker.strip()
 
             f.write(f'SUMMARY = "{project_name}"\n')
             f.write(f'DESCRIPTION = "{project_description}"\n')
