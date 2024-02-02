@@ -103,8 +103,6 @@ def get_repo_vars(directory):
     remote_lines[1] = remote_lines[1].replace('git@','https')
     remote_lines[1] = remote_lines[1].replace(':','/')
     repo = remote_lines[1].rsplit(sep='/', maxsplit=2)
-    print(len(repo))
-    print(repo)
 
     org = repo[-2]
     repo = repo[-1]
@@ -229,6 +227,9 @@ def create_recipe(pubspec_yaml,
             f.write(f'PUBSPEC_APPNAME = "{project_name}"\n')
             flutter_application_path = '/'.join(path_tokens[:-1])
             f.write(f'FLUTTER_APPLICATION_PATH = "{flutter_application_path}"\n')
+            f.write('\n')
+            # TODO detect if web or app. Use app for now
+            f.write('inherit flutter-app\n')
 
 
 def create_yocto_recipes(directory, license_file, license_type, license_md5, author, output_path):
