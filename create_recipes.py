@@ -162,7 +162,7 @@ def create_recipe(directory,
                   license_file, license_type, license_file_md5,
                   author,
                   output_path) -> str:
-    if '_ios' in pubspec_yaml or '_android' in pubspec_yaml or '_windows' in pubspec_yaml or '_macos' in pubspec_yaml:
+    if '_ios' in pubspec_yaml or '_android' in pubspec_yaml or '_windows' in pubspec_yaml or '_macos' in pubspec_yaml  or '_web' in pubspec_yaml:
         print(f'Skipping: {pubspec_yaml}')
         return ''
 
@@ -258,10 +258,7 @@ def create_recipe(directory,
             f.write(f'FLUTTER_APPLICATION_PATH = "{flutter_application_path}"\n')
             f.write('\n')
 
-            if '_web' in pubspec_yaml:
-                f.write('inherit flutter-web\n')
-            else:
-                f.write('inherit flutter-app\n')
+            f.write('inherit flutter-app\n')
 
         return recipe_name
 
