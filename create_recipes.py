@@ -64,7 +64,13 @@ def main():
             if args.license_type != 'CLOSED':
                 license_md5 = get_file_md5(license_path)
 
-        create_yocto_recipes(args.path, args.license, args.license_type, license_md5, args.author, [], args.out, args.out)
+        create_yocto_recipes(args.path,
+                             args.license,
+                             args.license_type,
+                             license_md5,
+                             args.author,
+                             [],
+                             args.out, args.out)
         return
 
 
@@ -172,7 +178,7 @@ def create_recipe(directory,
         '_macos/pubspec.yaml' in pubspec_yaml or \
         '_platform_interface/pubspec.yaml' in pubspec_yaml or \
         '_web/pubspec.yaml' in pubspec_yaml or \
-        '_windows/pubspec.yaml' in pubspec_yaml:
+            '_windows/pubspec.yaml' in pubspec_yaml:
         print(f'Skipping Pre: {pubspec_yaml}')
         return ''
 
@@ -203,9 +209,7 @@ def create_recipe(directory,
     for i in range(len(directory_tokens)):
         del app_path[0]
     flutter_application_path = '/'.join(app_path[:-1])
-    # if len(flutter_application_path):
-        # print(f'flutter_application_path: [{flutter_application_path}]')
-    
+
     # exclude filtering
     if exclude_list and flutter_application_path in exclude_list:
         print(f'Exclude: {flutter_application_path}')
@@ -235,7 +239,7 @@ def create_recipe(directory,
         '-avfoundation_' in filename or \
         '-darwin_' in filename or \
         '-linux_' in filename or \
-        '-web_' in filename:
+            '-web_' in filename:
         print(f'Skipping Post: {pubspec_yaml}')
         return ''
 

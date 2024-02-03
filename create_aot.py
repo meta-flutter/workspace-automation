@@ -185,7 +185,8 @@ def create_platform_aot(app_path: str):
                 flutter_app_debug_flags += ' --no-link-platform'
                 flutter_app_debug_flags_extra = '--filesystem-scheme org-dartlang-root'
                 flutter_app_debug_flags_extra += ' --incremental'
-                flutter_app_debug_flags_extra += f' --initialize-from-dill {app_path}/.dart_tool/flutter_build/*/app.dill'
+                flutter_app_debug_flags_extra += \
+                    f' --initialize-from-dill {app_path}/.dart_tool/flutter_build/*/app.dill'
 
             flutter_source_flags = ''
             dart_plugin_registrant_file = f'{app_path}/.dart_tool/flutter_build/dart_plugin_registrant.dart'
