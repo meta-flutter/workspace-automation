@@ -311,6 +311,7 @@ def create_package_group(org, unit, recipes, output_path):
     """Create package group file"""
 
     filename = f'{output_path}/packagegroup-flutter-{org}-{unit}.bb'
+    filename = filename.replace('_', '-')
 
     with open(filename, "w") as f:
         f.write('#\n')
