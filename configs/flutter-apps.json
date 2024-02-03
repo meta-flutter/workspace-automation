@@ -15,6 +15,7 @@
             "packages/camera/camera_web/example",
             "packages/camera/camera_windows/example",
             "packages/cross_file",
+            "packages/cross_file/example",
             "packages/css_colors",
             "packages/dynamic_layouts",
             "packages/espresso",
@@ -71,6 +72,7 @@
             "packages/path_provider/path_provider_foundation/example",
             "packages/path_provider/path_provider_windows/example",
             "packages/pigeon",
+            "packages/pigeon/example",
             "packages/pigeon/example/app",
             "packages/pigeon/platform_tests/alternate_language_test_plugin",
             "packages/pigeon/platform_tests/shared_test_plugin_code",
@@ -95,6 +97,7 @@
             "packages/shared_preferences/shared_preferences_web/example",
             "packages/shared_preferences/shared_preferences_windows/example",
             "packages/standard_message_codec",
+            "packages/standard_message_codec/example",
             "third_party/packages/cupertino_icons",
             "packages/two_dimensional_scrollables",
             "packages/url_launcher/url_launcher",
@@ -129,6 +132,8 @@
         "author": "Google",
         "exclude": [
             "analysis_defaults",
+            "code_sharing/server",
+            "code_sharing/shared",
             "experimental/federated_plugin/federated_plugin",
             "experimental/linting_tool",
             "experimental/pedometer",
@@ -209,13 +214,6 @@
         ]
     },
     {
-        "uri": "https://github.com/felipeerias/flutter_homescreen.git",
-        "branch": "main",
-        "license_file": "LICENSE",
-        "license_type": "Apache-2.0",
-        "author": "Felipe Erias"
-    },
-    {
         "uri": "https://github.com/bernardpumped/ped.git",
         "branch": "next_main",
         "license_file": "COPYING",
@@ -229,7 +227,9 @@
         "license_type": "MIT",
         "author": "Luan Nico",
         "exclude": [
-            ""
+            "",
+            "packages/audioplayers",
+            "packages/audioplayers/example/server"
         ]
     },
     {

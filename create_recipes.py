@@ -205,7 +205,7 @@ def create_recipe(directory,
     flutter_application_path = '/'.join(app_path[:-1])
     # if len(flutter_application_path):
         # print(f'flutter_application_path: [{flutter_application_path}]')
-
+    
     # exclude filtering
     if exclude_list and flutter_application_path in exclude_list:
         print(f'Exclude: {flutter_application_path}')
@@ -217,7 +217,10 @@ def create_recipe(directory,
         else:
             recipe_name = f'{org}-{unit}-{flutter_application_path}'
     else:
-        recipe_name = f'{org}-{unit}-{project_name}'
+        if project_name.startswith(unit):
+            recipe_name = f'{org}-{project_name}'
+        else:
+            recipe_name = f'{org}-{unit}-{project_name}'
 
     recipe_name = recipe_name.replace('/', '-')
     recipe_name = recipe_name.replace('_', '-')
