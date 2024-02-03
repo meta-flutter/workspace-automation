@@ -24,7 +24,7 @@ from version_files import get_version_files
 
 def get_flutter_apps(filename) -> dict:
     import json
-    filepath = os.path.join(os.getcwd(), filename)
+    filepath = os.path.join(filename)
     with open(filepath, 'r') as f:
         try:
             return json.load(f)
@@ -40,7 +40,7 @@ def clear_folder(dir_):
         shutil.rmtree(dir_)
 
 
-def get_repo(base_folder, uri, branch, rev, license_file, license_type, author, output_path):
+def get_repo(base_folder, uri, branch, rev, license_file, license_type, author, exclude_list, output_path):
     """ Clone Git Repo """
     if not uri:
         print("repo entry needs a 'uri' key.  Skipping")
@@ -63,7 +63,7 @@ def get_repo(base_folder, uri, branch, rev, license_file, license_type, author, 
 
         is_exist = os.path.exists(git_folder)
         if is_exist:
-            os.removedirs(git_folder)
+            clear_folder(git_folder)
 
         cmd = ['git', 'clone', uri, '-b', branch, repo_name]
         subprocess.check_call(cmd, cwd=base_folder)
@@ -110,6 +110,7 @@ def get_repo(base_folder, uri, branch, rev, license_file, license_type, author, 
                          license_type,
                          license_md5,
                          author,
+                         exclude_list,
                          os.path.join(output_path, 'recipes-graphics', 'flutter-apps'),
                          os.path.join(output_path, 'recipes-platform', 'packagegroups'))
 
@@ -128,6 +129,7 @@ def get_workspace_repos(base_folder, repos, output_path):
                                            license_file=repo.get('license_file'),
                                            license_type=repo.get('license_type'),
                                            author=repo.get('author'),
+                                           exclude_list=repo.get('exclude'),
                                            output_path=output_path
                                            ))
 

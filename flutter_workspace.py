@@ -567,7 +567,7 @@ def get_repo(base_folder, uri, branch, rev):
 
         is_exist = os.path.exists(git_folder)
         if is_exist:
-            os.removedirs(git_folder)
+            clear_folder(git_folder)
 
         cmd = ['git', 'clone', uri, '-b', branch, repo_name]
         subprocess.check_call(cmd, cwd=base_folder)

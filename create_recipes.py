@@ -64,7 +64,7 @@ def main():
             if args.license_type != 'CLOSED':
                 license_md5 = get_file_md5(license_path)
 
-        create_yocto_recipes(args.path, args.license, args.license_type, license_md5, args.author, args.out, args.out)
+        create_yocto_recipes(args.path, args.license, args.license_type, license_md5, args.author, [], args.out, args.out)
         return
 
 
@@ -161,6 +161,7 @@ def create_recipe(directory,
                   org, unit, submodules, url, lfs, branch, commit,
                   license_file, license_type, license_file_md5,
                   author,
+                  exclude_list,
                   output_path) -> str:
 
     # print(f'pubspec_yaml: {pubspec_yaml}')
@@ -172,7 +173,7 @@ def create_recipe(directory,
         '_platform_interface/pubspec.yaml' in pubspec_yaml or \
         '_web/pubspec.yaml' in pubspec_yaml or \
         '_windows/pubspec.yaml' in pubspec_yaml:
-        print(f'Skipping: {pubspec_yaml}')
+        print(f'Skipping Pre: {pubspec_yaml}')
         return ''
 
     is_web = False
@@ -186,8 +187,18 @@ def create_recipe(directory,
 
     # get relative path
     directory_tokens = directory.split('/')
-    del directory_tokens[len(directory_tokens)-1]
+    # remove end null entry
+    del directory_tokens[-1]
+    
+    # pubspec.yaml key/values
+    yaml_obj = get_yaml_obj(pubspec_yaml)
+    project_name = yaml_obj.get('name')
+    project_description = yaml_obj.get('description')
+    project_homepage = yaml_obj.get('repository')
+    project_issue_tracker = yaml_obj.get('issue_tracker')
+    project_version = yaml_obj.get('version')
 
+    # copy list
     app_path = path_tokens
     for i in range(len(directory_tokens)):
         del app_path[0]
@@ -195,12 +206,10 @@ def create_recipe(directory,
     # if len(flutter_application_path):
         # print(f'flutter_application_path: [{flutter_application_path}]')
 
-    yaml_obj = get_yaml_obj(pubspec_yaml)
-    project_name = yaml_obj.get('name')
-    project_description = yaml_obj.get('description')
-    project_homepage = yaml_obj.get('repository')
-    project_issue_tracker = yaml_obj.get('issue_tracker')
-    project_version = yaml_obj.get('version')
+    # exclude filtering
+    if exclude_list and flutter_application_path in exclude_list:
+        print(f'Exclude: {flutter_application_path}')
+        return ''
 
     if len(flutter_application_path) != 0:
         if flutter_application_path.startswith(unit):
@@ -223,12 +232,9 @@ def create_recipe(directory,
         '-avfoundation_' in filename or \
         '-darwin_' in filename or \
         '-linux_' in filename or \
-        '-web_' in filename or \
-        f'-{unit}_' in filename:
-        print(f'Skipping: {pubspec_yaml}')
+        '-web_' in filename:
+        print(f'Skipping Post: {pubspec_yaml}')
         return ''
-
-    make_sure_path_exists(output_path)
 
     with open(filename, "w") as f:
         f.write('#\n')
@@ -328,6 +334,7 @@ def create_yocto_recipes(directory,
                          license_type,
                          license_md5,
                          author,
+                         exclude_list,
                          flutter_app_output_path,
                          packagegroups_output_path):
     """Create bb recipe for each pubspec.yaml file in path"""
@@ -355,6 +362,7 @@ def create_yocto_recipes(directory,
                                org, unit, submodules, url, lfs, branch, commit,
                                license_file, license_type, license_md5,
                                author,
+                               exclude_list,
                                flutter_app_output_path
                                )
         if recipe != '':
@@ -362,7 +370,7 @@ def create_yocto_recipes(directory,
 
     create_package_group(org, unit, recipes, packagegroups_output_path)
 
-    print_banner("Done.")
+    print_banner("Creating Yocto Recipes done.")
 
 
 if __name__ == "__main__":
