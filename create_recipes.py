@@ -162,102 +162,140 @@ def create_recipe(directory,
                   license_file, license_type, license_file_md5,
                   author,
                   output_path) -> str:
-    if '_ios' in pubspec_yaml or '_android' in pubspec_yaml or '_windows' in pubspec_yaml or '_macos' in pubspec_yaml  or '_web' in pubspec_yaml:
+
+    # print(f'pubspec_yaml: {pubspec_yaml}')
+
+    if '_android/pubspec.yaml' in pubspec_yaml or \
+        '_ios/pubspec.yaml' in pubspec_yaml or \
+        '_linux/pubspec.yaml' in pubspec_yaml or \
+        '_macos/pubspec.yaml' in pubspec_yaml or \
+        '_platform_interface/pubspec.yaml' in pubspec_yaml or \
+        '_web/pubspec.yaml' in pubspec_yaml or \
+        '_windows/pubspec.yaml' in pubspec_yaml:
         print(f'Skipping: {pubspec_yaml}')
         return ''
 
+    is_web = False
+    # TODO detect web
+
     path_tokens = pubspec_yaml.split('/')
 
-    if path_tokens[-1] == 'pubspec.yaml':
+    if path_tokens[-1] != 'pubspec.yaml':
+        print_banner(f'ERROR: invalid {pubspec_yaml}')
+        return ''
 
-        if path_tokens[-2]:
-            recipe_name = f'{org}-{unit}-{path_tokens[-2]}'
+    # get relative path
+    directory_tokens = directory.split('/')
+    del directory_tokens[len(directory_tokens)-1]
+
+    app_path = path_tokens
+    for i in range(len(directory_tokens)):
+        del app_path[0]
+    flutter_application_path = '/'.join(app_path[:-1])
+    # if len(flutter_application_path):
+        # print(f'flutter_application_path: [{flutter_application_path}]')
+
+    yaml_obj = get_yaml_obj(pubspec_yaml)
+    project_name = yaml_obj.get('name')
+    project_description = yaml_obj.get('description')
+    project_homepage = yaml_obj.get('repository')
+    project_issue_tracker = yaml_obj.get('issue_tracker')
+    project_version = yaml_obj.get('version')
+
+    if len(flutter_application_path) != 0:
+        if flutter_application_path.startswith(unit):
+            recipe_name = f'{org}-{flutter_application_path}'
         else:
-            recipe_name = f'{org}-{unit}'
+            recipe_name = f'{org}-{unit}-{flutter_application_path}'
+    else:
+        recipe_name = f'{org}-{unit}-{project_name}'
 
-        recipe_name = recipe_name.replace('_', '-')
+    recipe_name = recipe_name.replace('/', '-')
+    recipe_name = recipe_name.replace('_', '-')
 
-        yaml_obj = get_yaml_obj(pubspec_yaml)
-        project_name = yaml_obj.get('name')
-        project_description = yaml_obj.get('description')
-        project_homepage = yaml_obj.get('repository')
-        project_issue_tracker = yaml_obj.get('issue_tracker')
-        project_version = yaml_obj.get('version')
+    if project_version is not None:
+        version = project_version.split('+')
+        filename = f'{output_path}/{recipe_name}_{version[0]}.bb'
+    else:
+        filename = f'{output_path}/{recipe_name}_git.bb'
 
-        if project_version is not None:
-            version = project_version.split('+')
-            filename = f'{output_path}/{recipe_name}_{version[0]}.bb'
+    if '-apple_' in filename or \
+        '-avfoundation_' in filename or \
+        '-darwin_' in filename or \
+        '-linux_' in filename or \
+        '-web_' in filename or \
+        f'-{unit}_' in filename:
+        print(f'Skipping: {pubspec_yaml}')
+        return ''
+
+    make_sure_path_exists(output_path)
+
+    with open(filename, "w") as f:
+        f.write('#\n')
+        f.write('# Copyright (c) 2020-2024 Joel Winarske. All rights reserved.\n')
+        f.write('#\n')
+        f.write('\n')
+
+        if project_name:
+            project_name = project_name.strip()
+        if project_description:
+            project_description = project_description.strip()
+        if author:
+            author = author.strip()
+        if project_homepage:
+            project_homepage = project_homepage.strip()
+        if project_issue_tracker:
+            project_issue_tracker = project_issue_tracker.strip()
+
+        f.write(f'SUMMARY = "{project_name}"\n')
+        f.write(f'DESCRIPTION = "{project_description}"\n')
+        f.write(f'AUTHOR = "{author}"\n')
+        f.write(f'HOMEPAGE = "{project_homepage}"\n')
+        f.write(f'BUGTRACKER = "{project_issue_tracker}"\n')
+
+        f.write('SECTION = "graphics"\n')
+        f.write('\n')
+
+        f.write(f'LICENSE = "{license_type}"\n')
+        if license_type != 'CLOSED':
+            f.write(f'LIC_FILES_CHKSUM = "file://{license_file};md5={license_file_md5}"\n')
+
+        f.write('\n')
+        f.write(f'SRCREV = "{commit}"\n')
+
+        if submodules:
+            fetcher = 'gitsm'
         else:
-            filename = f'{output_path}/{recipe_name}_git.bb'
+            fetcher = 'git'
+        if lfs:
+            lfs_option = 'lfs=1'
+        else:
+            lfs_option = 'lfs=0'
+        if branch:
+            branch_option = f'branch={branch}'
+        else:
+            branch_option = f'nobranch=1'
 
-        with open(filename, "w") as f:
-            f.write('#\n')
-            f.write('# Copyright (c) 2020-2024 Joel Winarske. All rights reserved.\n')
-            f.write('#\n')
+        f.write(f'SRC_URI = "{fetcher}://{url};{lfs_option};{branch_option};protocol=https;destsuffix=git"\n')
+        f.write('\n')
+        f.write('S = "${WORKDIR}/git"\n')
+        f.write('\n')
+
+        # detect melos
+        if os.path.isfile(directory + '/melos.yaml'):
+            f.write('PUB_CACHE_EXTRA_ARCHIVE_PATH = "${WORKDIR}/pub_cache/bin"\n')
+            f.write('PUB_CACHE_EXTRA_ARCHIVE_CMD = "flutter pub global activate melos; \\\n')
+            f.write('    melos bootstrap"\n')
             f.write('\n')
 
-            if project_name:
-                project_name = project_name.strip()
-            if project_description:
-                project_description = project_description.strip()
-            if author:
-                author = author.strip()
-            if project_homepage:
-                project_homepage = project_homepage.strip()
-            if project_issue_tracker:
-                project_issue_tracker = project_issue_tracker.strip()
+        f.write(f'PUBSPEC_APPNAME = "{project_name}"\n')
 
-            f.write(f'SUMMARY = "{project_name}"\n')
-            f.write(f'DESCRIPTION = "{project_description}"\n')
-            f.write(f'AUTHOR = "{author}"\n')
-            f.write(f'HOMEPAGE = "{project_homepage}"\n')
-            f.write(f'BUGTRACKER = "{project_issue_tracker}"\n')
+        f.write(f'FLUTTER_APPLICATION_PATH = "{flutter_application_path}"\n')
+        f.write('\n')
 
-            f.write('SECTION = "graphics"\n')
-            f.write('\n')
-
-            f.write(f'LICENSE = "{license_type}"\n')
-            if license_type != 'CLOSED':
-                f.write(f'LIC_FILES_CHKSUM = "file://{license_file};md5={license_file_md5}"\n')
-
-            f.write('\n')
-            f.write(f'SRCREV = "{commit}"\n')
-
-            if submodules:
-                fetcher = 'gitsm'
-            else:
-                fetcher = 'git'
-            if lfs:
-                lfs_option = 'lfs=1'
-            else:
-                lfs_option = 'lfs=0'
-            if branch:
-                branch_option = f'branch={branch}'
-            else:
-                branch_option = f'nobranch=1'
-
-            f.write(f'SRC_URI = "{fetcher}://{url};{lfs_option};{branch_option};protocol=https;destsuffix=git"\n')
-            f.write('\n')
-            f.write('S = "${WORKDIR}/git"\n')
-            f.write('\n')
-
-            # detect melos
-            if os.path.isfile(directory + '/melos.yaml'):
-                f.write('PUB_CACHE_EXTRA_ARCHIVE_PATH = "${WORKDIR}/pub_cache/bin"\n')
-                f.write('PUB_CACHE_EXTRA_ARCHIVE_CMD = "flutter pub global activate melos; \\\n')
-                f.write('    melos bootstrap"\n')
-                f.write('\n')
-
-            f.write(f'PUBSPEC_APPNAME = "{project_name}"\n')
-
-            # make application path relative
-            directory = directory.split('/')
-            for i in range(len(directory)):
-                del path_tokens[0]
-            flutter_application_path = '/'.join(path_tokens[:-1])
-            f.write(f'FLUTTER_APPLICATION_PATH = "{flutter_application_path}"\n')
-            f.write('\n')
-
+        if is_web:
+            f.write('inherit flutter-web\n')
+        else:
             f.write('inherit flutter-app\n')
 
         return recipe_name
