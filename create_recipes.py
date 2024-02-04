@@ -198,6 +198,8 @@ def get_recipe_name(org, unit, flutter_application_path) -> str:
     else:
         recipe_name = f'{header}-{app_path}'
 
+    recipe_name = recipe_name.replace('_', '-')
+
     vals = dedupe_adjacent(recipe_name.split('-'))
     recipe_name = '-'.join(vals)
     if recipe_name.endswith('-'):
