@@ -170,18 +170,6 @@ def create_recipe(directory,
                   exclude_list,
                   output_path) -> str:
 
-    # print(f'pubspec_yaml: {pubspec_yaml}')
-
-    if '_android/pubspec.yaml' in pubspec_yaml or \
-        '_ios/pubspec.yaml' in pubspec_yaml or \
-        '_linux/pubspec.yaml' in pubspec_yaml or \
-        '_macos/pubspec.yaml' in pubspec_yaml or \
-        '_platform_interface/pubspec.yaml' in pubspec_yaml or \
-        '_web/pubspec.yaml' in pubspec_yaml or \
-            '_windows/pubspec.yaml' in pubspec_yaml:
-        print(f'Skipping Pre: {pubspec_yaml}')
-        return ''
-
     is_web = False
     # TODO detect web
 
@@ -210,6 +198,11 @@ def create_recipe(directory,
         del app_path[0]
     flutter_application_path = '/'.join(app_path[:-1])
 
+    lib_main_dart = os.path.join(directory, flutter_application_path, 'lib', 'main.dart')
+    if not os.path.exists(lib_main_dart):
+        print(f'Skipping: {flutter_application_path}')
+        return ''
+
     # exclude filtering
     if exclude_list and flutter_application_path in exclude_list:
         print(f'Exclude: {flutter_application_path}')
@@ -234,14 +227,6 @@ def create_recipe(directory,
         filename = f'{output_path}/{recipe_name}_{version[0]}.bb'
     else:
         filename = f'{output_path}/{recipe_name}_git.bb'
-
-    if '-apple_' in filename or \
-        '-avfoundation_' in filename or \
-        '-darwin_' in filename or \
-        '-linux_' in filename or \
-            '-web_' in filename:
-        print(f'Skipping Post: {pubspec_yaml}')
-        return ''
 
     with open(filename, "w") as f:
         f.write('#\n')
