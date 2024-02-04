@@ -171,6 +171,41 @@ def dedupe_adjacent(iterable):
             yield item
 
 
+def get_recipe_name(org, unit, flutter_application_path) -> str:
+    """Gets recipe name string"""
+
+    # check if org and unit have overlap
+    org_tokens = org.split('-')
+    unit_tokens = unit.split('-')
+    if org_tokens[-1] == unit_tokens[0]:
+        tmp_header = org_tokens + unit_tokens[-1:]
+        header = '-'.join(tmp_header)
+    else:
+        header = f'{org}-{unit}'
+
+    app_path = flutter_application_path.replace('/', '-')
+    app_path = app_path.replace('_', '-')
+
+    app_path_tokens = app_path.split('-')
+    header_tokens = header.split('-')
+
+    if header_tokens[-1] == app_path_tokens[0]:
+        tmp_app_path = header_tokens + app_path_tokens[:-1]
+        app_path = '-'.join(tmp_app_path)
+
+    if app_path.startswith(header):
+        recipe_name = app_path
+    else:
+        recipe_name = f'{header}-{app_path}'
+
+    vals = dedupe_adjacent(recipe_name.split('-'))
+    recipe_name = '-'.join(vals)
+    if recipe_name.endswith('-'):
+        recipe_name = recipe_name[:-1]
+    
+    return recipe_name
+
+
 def create_recipe(directory,
                   pubspec_yaml,
                   org, unit, submodules, url, lfs, branch, commit,
@@ -221,38 +256,7 @@ def create_recipe(directory,
         print(f'Exclude: {flutter_application_path}')
         return ''
 
-    #
-    # generate recipe name
-    #
-
-    # check if org and unit have overlap
-    org_tokens = org.split('-')
-    unit_tokens = unit.split('-')
-    if org_tokens[-1] == unit_tokens[0]:
-        tmp_header = org_tokens + unit_tokens[-1:]
-        header = '-'.join(tmp_header)
-    else:
-        header = f'{org}-{unit}'
-
-    app_path = flutter_application_path.replace('/', '-')
-    app_path = app_path.replace('_', '-')
-
-    app_path_tokens = app_path.split('-')
-    header_tokens = header.split('-')
-
-    if header_tokens[-1] == app_path_tokens[0]:
-        tmp_app_path = header_tokens + app_path_tokens[:-1]
-        app_path = '-'.join(tmp_app_path)
-
-    if app_path.startswith(header):
-        recipe_name = app_path
-    else:
-        recipe_name = f'{header}-{app_path}'
-
-    vals = dedupe_adjacent(recipe_name.split('-'))
-    recipe_name = '-'.join(vals)
-    if recipe_name.endswith('-'):
-        recipe_name = recipe_name[:-1]
+    recipe_name = get_recipe_name(org, unit, flutter_application_path)
 
     if project_version is not None:
         version = project_version.split('+')
@@ -335,7 +339,8 @@ def create_recipe(directory,
 def create_package_group(org, unit, recipes, output_path):
     """Create package group file"""
 
-    filename = f'{output_path}/packagegroup-flutter-{org}-{unit}.bb'
+    recipe_name = get_recipe_name(org, unit, '')
+    filename = f'{output_path}/packagegroup-{recipe_name}.bb'
     filename = filename.replace('_', '-')
 
     with open(filename, "w") as f:
