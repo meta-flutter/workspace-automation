@@ -157,9 +157,18 @@ def get_yaml_obj(filepath: str):
             data_loaded = yaml.full_load(stream_)
 
         except yaml.YAMLError as exc:
-            sys.exit(f'Failed loading {exc} - {filepath}')
+            print(f'Failed loading {exc} - {filepath}')
+            return []
 
         return data_loaded
+
+
+def dedupe_adjacent(iterable):
+    prev = object()
+    for item in iterable:
+        if item != prev:
+            prev = item
+            yield item
 
 
 def create_recipe(directory,
@@ -186,6 +195,10 @@ def create_recipe(directory,
     
     # pubspec.yaml key/values
     yaml_obj = get_yaml_obj(pubspec_yaml)
+    if len(yaml_obj) == 0:
+        print(f'Invalid YAML: {pubspec_yaml}')
+        return ''
+
     project_name = yaml_obj.get('name')
     project_description = yaml_obj.get('description')
     project_homepage = yaml_obj.get('repository')
@@ -208,19 +221,38 @@ def create_recipe(directory,
         print(f'Exclude: {flutter_application_path}')
         return ''
 
-    if len(flutter_application_path) != 0:
-        if flutter_application_path.startswith(unit):
-            recipe_name = f'{org}-{flutter_application_path}'
-        else:
-            recipe_name = f'{org}-{unit}-{flutter_application_path}'
-    else:
-        if project_name.startswith(unit):
-            recipe_name = f'{org}-{project_name}'
-        else:
-            recipe_name = f'{org}-{unit}-{project_name}'
+    #
+    # generate recipe name
+    #
 
-    recipe_name = recipe_name.replace('/', '-')
-    recipe_name = recipe_name.replace('_', '-')
+    # check if org and unit have overlap
+    org_tokens = org.split('-')
+    unit_tokens = unit.split('-')
+    if org_tokens[-1] == unit_tokens[0]:
+        tmp_header = org_tokens + unit_tokens[-1:]
+        header = '-'.join(tmp_header)
+    else:
+        header = f'{org}-{unit}'
+
+    app_path = flutter_application_path.replace('/', '-')
+    app_path = app_path.replace('_', '-')
+
+    app_path_tokens = app_path.split('-')
+    header_tokens = header.split('-')
+
+    if header_tokens[-1] == app_path_tokens[0]:
+        tmp_app_path = header_tokens + app_path_tokens[:-1]
+        app_path = '-'.join(tmp_app_path)
+
+    if app_path.startswith(header):
+        recipe_name = app_path
+    else:
+        recipe_name = f'{header}-{app_path}'
+
+    vals = dedupe_adjacent(recipe_name.split('-'))
+    recipe_name = '-'.join(vals)
+    if recipe_name.endswith('-'):
+        recipe_name = recipe_name[:-1]
 
     if project_version is not None:
         version = project_version.split('+')
