@@ -92,12 +92,9 @@ def get_repo(base_folder, uri, branch, rev, license_file, license_type, author, 
         cmd = ['git', 'lfs', 'fetch', '--all']
         subprocess.check_call(cmd, cwd=git_folder)
 
-    repo_path = os.path.join(base_folder, repo_name)
-
-    # Check license file
     license_md5 = ''
     if license_file:
-        license_path = os.path.join(repo_path, license_file)
+        license_path = os.path.join(base_folder, repo_name, license_file)
         if not os.path.isfile(license_path):
             print_banner(f'ERROR: {license_path} is not present')
             exit(1)
@@ -105,6 +102,7 @@ def get_repo(base_folder, uri, branch, rev, license_file, license_type, author, 
         if license_type != 'CLOSED':
             license_md5 = get_file_md5(license_path)
 
+    repo_path = os.path.join(base_folder, repo_name)
     create_yocto_recipes(repo_path,
                          license_file,
                          license_type,
