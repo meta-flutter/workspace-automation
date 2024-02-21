@@ -45,20 +45,17 @@ def get_repo(repo_path: str, output_path: str,
              author: str,
              recipe_folder: str,
              package_output_path: str,
-             exclude_list: dict,
+             ignore_list: dict,
              rdepends_list: dict,
              output_path_override_list: dict):
     """ Clone Git Repo """
 
-    print(exclude_list)
-    if not exclude_list:
-        exclude_list = []
-    print(rdepends_list)
-    if not rdepends_list:
-        rdepends_list = []
-    print(output_path_override_list)
-    if not output_path_override_list:
-        output_path_override_list = []
+    # if not ignore_list:
+    #    ignore_list = []
+    # if not rdepends_list:
+    #    rdepends_list = []
+    # if not output_path_override_list:
+    #    output_path_override_list = []
 
     if not uri:
         print("repo entry needs a 'uri' key.  Skipping")
@@ -94,7 +91,6 @@ def get_repo(repo_path: str, output_path: str,
         subprocess.check_call(cmd, cwd=repo_path)
 
     if rev:
-
         cmd = ['git', 'reset', '--hard', rev]
         subprocess.check_call(cmd, cwd=git_folder)
 
@@ -129,7 +125,7 @@ def get_repo(repo_path: str, output_path: str,
                          recipe_folder,
                          output_path,
                          package_output_path,
-                         exclude_list,
+                         ignore_list,
                          rdepends_list,
                          output_path_override_list)
 
@@ -141,21 +137,19 @@ def get_workspace_repos(repo_path, repos, output_path, package_output_path):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []
         for r in repos:
-            futures.append(executor.submit(get_repo,
-                           repo_path=repo_path,
-                           output_path=output_path,
-                           package_output_path=package_output_path,
-                           uri=r.get('uri'),
-                           branch=r.get('branch'),
-                           rev=r.get('rev'),
-                           license_file=r.get('license_file'),
-                           license_type=r.get('license_type'),
-                           author=r.get('author'),
-                           recipe_folder=r.get('folder'),
-                           exclude_list=r.get('exclude_list'),
-                           rdepends_list=r.get('rdepends_list'),
-                           output_path_override_list=r.get('output_path_override_list')))
-
+            get_repo(repo_path=repo_path,
+                     output_path=output_path,
+                     package_output_path=package_output_path,
+                     uri=r.get('uri'),
+                     branch=r.get('branch'),
+                     rev=r.get('rev'),
+                     license_file=r.get('license_file'),
+                     license_type=r.get('license_type'),
+                     author=r.get('author'),
+                     recipe_folder=r.get('folder'),
+                     ignore_list=r.get('ignore'),
+                     rdepends_list=r.get('rdepends'),
+                     output_path_override_list=r.get('output_folder'))
 
     print_banner("Repos Cloned")
 
@@ -188,11 +182,12 @@ def main():
     flutter_apps = get_flutter_apps(args.json)
 
     repo_path = os.path.join(os.getcwd(), '.flutter-apps')
-    make_sure_path_exists(repo_path)
-
-    make_sure_path_exists(args.path)
+    clear_folder(repo_path)
 
     package_output_path = os.path.join(args.path, 'recipes-platform')
+
+    make_sure_path_exists(repo_path)
+    make_sure_path_exists(args.path)
     make_sure_path_exists(package_output_path)
 
     get_workspace_repos(repo_path, flutter_apps, args.path, package_output_path)

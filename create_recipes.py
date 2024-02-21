@@ -172,7 +172,7 @@ def dedupe_adjacent(iterable):
             yield item
 
 
-def get_recipe_name(org, unit, flutter_application_path) -> str:
+def get_recipe_name(org, unit, flutter_application_path, project_name) -> str:
     """Gets recipe name string"""
 
     # check if org and unit have overlap
@@ -183,6 +183,9 @@ def get_recipe_name(org, unit, flutter_application_path) -> str:
         header = '-'.join(tmp_header)
     else:
         header = f'{org}-{unit}'
+
+    if project_name:
+        project_name = project_name.replace('_','-')
 
     app_path = flutter_application_path.replace('/', '-')
     app_path = app_path.replace('_', '-')
@@ -195,45 +198,40 @@ def get_recipe_name(org, unit, flutter_application_path) -> str:
         app_path = '-'.join(tmp_app_path)
 
     if app_path.startswith(header):
-        recipe_name = app_path
+        if project_name and project_name not in app_path:
+            recipe_name = f'{app_path}-{project_name}'
+        else:
+            recipe_name = app_path
     else:
-        recipe_name = f'{header}-{app_path}'
+        if project_name and project_name not in app_path:
+            recipe_name = f'{header}-{app_path}-{project_name}'
+        else:
+            recipe_name = f'{header}-{app_path}'
 
     recipe_name = recipe_name.replace('_', '-')
+    recipe_name = recipe_name.replace('--', '-')
 
     vals = dedupe_adjacent(recipe_name.split('-'))
     recipe_name = '-'.join(vals)
     if recipe_name.endswith('-'):
         recipe_name = recipe_name[:-1]
-    
+
     return recipe_name
 
 
 def create_recipe(directory,
                   pubspec_yaml,
+                  flutter_application_path,
                   org, unit, submodules, url, lfs, branch, commit,
                   license_file, license_type, license_file_md5,
                   author,
                   recipe_folder,
                   output_path,
-                  exclude_list,
                   rdepends_list,
                   output_path_override_list) -> str:
-
     is_web = False
     # TODO detect web
 
-    path_tokens = pubspec_yaml.split('/')
-
-    if path_tokens[-1] != 'pubspec.yaml':
-        print_banner(f'ERROR: invalid {pubspec_yaml}')
-        return ''
-
-    # get relative path
-    directory_tokens = directory.split('/')
-    # remove end null entry
-    del directory_tokens[-1]
-    
     # pubspec.yaml key/values
     yaml_obj = get_yaml_obj(pubspec_yaml)
     if len(yaml_obj) == 0:
@@ -246,38 +244,19 @@ def create_recipe(directory,
     project_issue_tracker = yaml_obj.get('issue_tracker')
     project_version = yaml_obj.get('version')
 
-    # copy list
-    app_path = path_tokens
-    for i in range(len(directory_tokens)):
-        del app_path[0]
-    flutter_application_path = '/'.join(app_path[:-1])
-
-    lib_main_dart = os.path.join(directory, flutter_application_path, 'lib', 'main.dart')
-    if not os.path.exists(lib_main_dart):
-        print(f'Skipping: {flutter_application_path}')
-        return ''
-
-    # exclude filtering
-    if exclude_list and flutter_application_path in exclude_list:
-        print(f'Exclude: {flutter_application_path}')
-        return ''
-
-    if rdepends_list and flutter_application_path in rdepends_list:
-        rdepends = rdepends_list[flutter_application_path]
-        print(rdepends)
-        
     if output_path_override_list and flutter_application_path in output_path_override_list:
-        output_path_override = output_path_override_list[flutter_application_path]
-        print(output_path_override)
-
-    if recipe_folder:
+        output_path = os.path.join(output_path, output_path_override_list[flutter_application_path])
+        if recipe_folder:
+            output_path = os.path.join(output_path, recipe_folder)
+        print(f'Output Path: {output_path}')
+    elif recipe_folder:
         output_path = os.path.join(output_path, 'recipes-graphics', 'flutter-apps', recipe_folder)
     else:
         output_path = os.path.join(output_path, 'recipes-graphics', 'flutter-apps')
 
     make_sure_path_exists(output_path)
 
-    recipe_name = get_recipe_name(org, unit, flutter_application_path)
+    recipe_name = get_recipe_name(org, unit, flutter_application_path, project_name)
 
     if project_version is not None:
         version = project_version.split('+')
@@ -354,13 +333,24 @@ def create_recipe(directory,
         else:
             f.write('inherit flutter-app\n')
 
+        if rdepends_list and flutter_application_path in rdepends_list:
+            rdepends = rdepends_list[flutter_application_path]
+            f.write('\n')
+            f.write('RDEPENDS:${PN} = " \\\n')
+            for rdepend in rdepends:
+                f.write(f'    {rdepend} \\\n')
+            f.write(f'"\n')
+
         return recipe_name
 
 
-def create_package_group(org, unit, recipes, output_path):
+def create_package_group(org, unit, recipes,
+                         output_path_override_list,
+                         output_path):
     """Create package group file"""
+    print_banner("Creating Package Group recipe")
 
-    recipe_name = get_recipe_name(org, unit, '')
+    recipe_name = get_recipe_name(org, unit, '', None)
     filename = f'{output_path}/packagegroup-{recipe_name}.bb'
     filename = filename.replace('_', '-')
 
@@ -376,8 +366,15 @@ def create_package_group(org, unit, recipes, output_path):
         f.write('inherit packagegroup\n')
         f.write('\n')
         f.write('RDEPENDS:${PN} += " \\\n')
-        for i in range(len(recipes)):
-            f.write(f'    {recipes[i]} \\\n')
+        for item in recipes:
+            recipe = item[0]
+
+            # don't include custom path based recipes in package recipe
+            if output_path_override_list:
+                flutter_app_path = item[1]
+                if flutter_app_path in output_path_override_list:
+                    continue
+            f.write(f'    {recipe} \\\n')
         f.write('"\n')
 
 
@@ -389,7 +386,7 @@ def create_yocto_recipes(directory,
                          recipe_folder,
                          output_path,
                          package_output_path,
-                         exclude_list,
+                         ignore_list,
                          rdepends_list,
                          output_path_override_list):
     """Create bb recipe for each pubspec.yaml file in path"""
@@ -399,6 +396,10 @@ def create_yocto_recipes(directory,
 
     if not directory.endswith('/'):
         directory += '/'
+
+    print(f'ignore_list: {ignore_list}')
+    print(f'rdepends_list: {rdepends_list}')
+    print(f'output_path_override_list: {output_path_override_list}')
 
     #
     # Get repo variables
@@ -410,19 +411,50 @@ def create_yocto_recipes(directory,
     #
     recipes = []
     for filename in glob.iglob(directory + '**/pubspec.yaml', recursive=True):
-        recipe = create_recipe(directory, filename,
+
+        path_tokens = filename.split('/')
+
+        if path_tokens[-1] != 'pubspec.yaml':
+            print_banner(f'ERROR: invalid {filename}')
+            return ''
+
+        # get relative path
+        directory_tokens = directory.split('/')
+        # remove end null entry
+        del directory_tokens[-1]
+
+        # copy list
+        app_path = path_tokens
+        for i in range(len(directory_tokens)):
+            del app_path[0]
+        flutter_application_path = '/'.join(app_path[:-1])
+
+        lib_main_dart = os.path.join(directory, flutter_application_path, 'lib', 'main.dart')
+        if not os.path.exists(lib_main_dart):
+            continue
+
+        # filtering
+        if ignore_list and flutter_application_path in ignore_list:
+            print(f'Ignore: {flutter_application_path}')
+            continue
+
+        recipe = create_recipe(directory,
+                               filename,
+                               flutter_application_path,
                                org, unit, submodules, url, lfs, branch, commit,
                                license_file, license_type, license_md5,
                                author,
                                recipe_folder,
                                output_path,
-                               exclude_list,
                                rdepends_list,
                                output_path_override_list)
-        if recipe != '':
-            recipes.append(recipe)
 
-    create_package_group(org, unit, recipes, package_output_path)
+        if recipe != '':
+            recipes.append([recipe, flutter_application_path])
+
+    create_package_group(org, unit, recipes,
+                         output_path_override_list,
+                         package_output_path)
 
     print_banner("Creating Yocto Recipes done.")
 
