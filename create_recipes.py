@@ -158,7 +158,7 @@ def get_yaml_obj(filepath: str):
             data_loaded = yaml.full_load(stream_)
 
         except yaml.YAMLError as exc:
-            print(f'Failed loading {exc} - {filepath}')
+            # print(f'Failed loading {exc} - {filepath}')
             return []
 
         return data_loaded
@@ -411,6 +411,12 @@ def create_yocto_recipes(directory,
     #
     recipes = []
     for filename in glob.iglob(directory + '**/pubspec.yaml', recursive=True):
+
+        # handle invalid pubspec.yaml files
+        yaml_obj = get_yaml_obj(filename)
+        if len(yaml_obj) == 0:
+            print(f'Invalid YAML: {filename}')
+            continue
 
         path_tokens = filename.split('/')
 

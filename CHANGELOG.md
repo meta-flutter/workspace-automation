@@ -4,6 +4,7 @@ Feb 21, 2024
 1. rework create_recipes.py + roll_meta_flutter.py
    add output_path key to override location where recipe gets written
    add rdepends key which writes recipe RDEPENDS
+2. skip projects with malformed pubspec.yaml
 
 Feb 20, 2024
 1. update to Flutter SDK 3.19.0.
