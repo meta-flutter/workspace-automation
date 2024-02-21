@@ -69,8 +69,9 @@ def main():
                              args.license_type,
                              license_md5,
                              args.author,
-                             [],
-                             args.out, args.out)
+                             None,
+                             args.out,
+                             [], [], [])
         return
 
 
@@ -213,8 +214,11 @@ def create_recipe(directory,
                   org, unit, submodules, url, lfs, branch, commit,
                   license_file, license_type, license_file_md5,
                   author,
+                  recipe_folder,
+                  output_path,
                   exclude_list,
-                  output_path) -> str:
+                  rdepends_list,
+                  output_path_override_list) -> str:
 
     is_web = False
     # TODO detect web
@@ -257,6 +261,21 @@ def create_recipe(directory,
     if exclude_list and flutter_application_path in exclude_list:
         print(f'Exclude: {flutter_application_path}')
         return ''
+
+    if rdepends_list and flutter_application_path in rdepends_list:
+        rdepends = rdepends_list[flutter_application_path]
+        print(rdepends)
+        
+    if output_path_override_list and flutter_application_path in output_path_override_list:
+        output_path_override = output_path_override_list[flutter_application_path]
+        print(output_path_override)
+
+    if recipe_folder:
+        output_path = os.path.join(output_path, 'recipes-graphics', 'flutter-apps', recipe_folder)
+    else:
+        output_path = os.path.join(output_path, 'recipes-graphics', 'flutter-apps')
+
+    make_sure_path_exists(output_path)
 
     recipe_name = get_recipe_name(org, unit, flutter_application_path)
 
@@ -367,16 +386,16 @@ def create_yocto_recipes(directory,
                          license_type,
                          license_md5,
                          author,
+                         recipe_folder,
+                         output_path,
+                         package_output_path,
                          exclude_list,
-                         flutter_app_output_path,
-                         packagegroups_output_path):
+                         rdepends_list,
+                         output_path_override_list):
     """Create bb recipe for each pubspec.yaml file in path"""
     import glob
 
     print_banner("Creating Yocto Recipes")
-
-    make_sure_path_exists(flutter_app_output_path)
-    make_sure_path_exists(packagegroups_output_path)
 
     if not directory.endswith('/'):
         directory += '/'
@@ -395,13 +414,15 @@ def create_yocto_recipes(directory,
                                org, unit, submodules, url, lfs, branch, commit,
                                license_file, license_type, license_md5,
                                author,
+                               recipe_folder,
+                               output_path,
                                exclude_list,
-                               flutter_app_output_path
-                               )
+                               rdepends_list,
+                               output_path_override_list)
         if recipe != '':
             recipes.append(recipe)
 
-    create_package_group(org, unit, recipes, packagegroups_output_path)
+    create_package_group(org, unit, recipes, package_output_path)
 
     print_banner("Creating Yocto Recipes done.")
 
