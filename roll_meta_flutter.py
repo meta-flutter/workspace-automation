@@ -184,7 +184,7 @@ def main():
     repo_path = os.path.join(os.getcwd(), '.flutter-apps')
     clear_folder(repo_path)
 
-    package_output_path = os.path.join(args.path, 'recipes-platform')
+    package_output_path = os.path.join(args.path, 'recipes-platform', 'packagegroups')
 
     make_sure_path_exists(repo_path)
     make_sure_path_exists(args.path)

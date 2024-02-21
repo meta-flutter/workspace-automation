@@ -336,7 +336,7 @@ def create_recipe(directory,
         if rdepends_list and flutter_application_path in rdepends_list:
             rdepends = rdepends_list[flutter_application_path]
             f.write('\n')
-            f.write('RDEPENDS:${PN} = " \\\n')
+            f.write('RDEPENDS:${PN} += " \\\n')
             for rdepend in rdepends:
                 f.write(f'    {rdepend} \\\n')
             f.write(f'"\n')
