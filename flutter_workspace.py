@@ -333,6 +333,13 @@ def main():
         subprocess.check_call(cmd)
 
     #
+    # Recursively change ownership to $USER
+    #
+    user = os.environ.get('USER')
+    cmd = ['sudo', 'chown', '-R', f'{user}:{user}', '.']
+    subprocess.check_call(cmd, cwd=flutter_sdk_path)
+
+    #
     # Done
     #
     print_banner("Setup Flutter Workspace - Complete")
@@ -563,11 +570,18 @@ def get_repo(base_folder, uri, branch, rev):
     git_folder_git = os.path.join(base_folder, repo_name, '.git')
 
     is_exist = os.path.exists(git_folder_git)
-    if not is_exist:
+    if is_exist:
 
-        is_exist = os.path.exists(git_folder)
-        if is_exist:
-            clear_folder(git_folder)
+        cmd = ['git', 'reset', '--hard']
+        subprocess.check_call(cmd, cwd=git_folder)
+
+        cmd = ['git', 'fetch', '--all', rev]
+        subprocess.check_call(cmd, cwd=git_folder)
+
+        cmd = ['git', 'checkout', branch]
+        subprocess.check_call(cmd, cwd=git_folder)
+
+    else:
 
         cmd = ['git', 'clone', uri, '-b', branch, repo_name]
         subprocess.check_call(cmd, cwd=base_folder)
@@ -577,12 +591,10 @@ def get_repo(base_folder, uri, branch, rev):
         cmd = ['git', 'reset', '--hard', rev]
         subprocess.check_call(cmd, cwd=git_folder)
 
-    else:
-
-        cmd = ['git', 'reset', '--hard']
-        subprocess.check_call(cmd, cwd=git_folder)
-
-        cmd = ['git', 'pull', '--all']
+    # get lfs
+    git_lfs_file = os.path.join(base_folder, repo_name, '.gitattributes')
+    if os.path.exists(git_submodule_file):
+        cmd = ['git', 'lfs', 'fetch', '--all']
         subprocess.check_call(cmd, cwd=git_folder)
 
     # get all submodules
