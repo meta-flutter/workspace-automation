@@ -593,7 +593,7 @@ def get_repo(base_folder, uri, branch, rev):
 
     # get lfs
     git_lfs_file = os.path.join(base_folder, repo_name, '.gitattributes')
-    if os.path.exists(git_submodule_file):
+    if os.path.exists(git_lfs_file):
         cmd = ['git', 'lfs', 'fetch', '--all']
         subprocess.check_call(cmd, cwd=git_folder)
 
