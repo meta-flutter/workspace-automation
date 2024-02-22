@@ -33,6 +33,7 @@ def main():
     parser.add_argument('--license', default='', type=str, help='License file relative to path value')
     parser.add_argument('--license_type', default='CLOSED', type=str, help='License type')
     parser.add_argument('--author', default='', type=str, help='value to assign to AUTHOR')
+    parser.add_argument('--patch-dir', default='', type=str, help='Path to patch folder')
     parser.add_argument('--out', default='.', type=str, help='Output path to create the Yocto recipes in')
     args = parser.parse_args()
 
@@ -64,14 +65,23 @@ def main():
             if args.license_type != 'CLOSED':
                 license_md5 = get_file_md5(license_path)
 
-        create_yocto_recipes(args.path,
-                             args.license,
-                             args.license_type,
-                             license_md5,
-                             args.author,
-                             None,
-                             args.out,
-                             [], [], [])
+
+        create_yocto_recipes(directory=args.path,
+                             license_file=args.license,
+                             license_type=args.license_type,
+                             license_md5=license_md5,
+                             author=args.author,
+                             recipe_folder=None,
+                             output_path=args.out,
+                             package_output_path=args.out,
+                             ignore_list=[], 
+                             rdepends_list=[],
+                             output_path_override_list=[],
+                             src_folder="",
+                             src_files=[],
+                             entry_files=[],
+                             variables=[],
+                             patch_dir=args.patch_dir)
         return
 
 
@@ -219,16 +229,35 @@ def get_recipe_name(org, unit, flutter_application_path, project_name) -> str:
     return recipe_name
 
 
+def copy_src_file(file: str, src_folder: str, dst_folder: str):
+    print(f'copy_src_file: {file}, {src_folder}, {dst_folder}')
+    import shutil
+
+    file = file.split(';')[0]
+    src_file = os.path.join(src_folder, file)
+    if not os.path.exists(src_file):
+        print(f'Missing: {src_file}')
+        return
+
+    make_sure_path_exists(dst_folder)
+    dst_file = os.path.join(dst_folder, file)
+    shutil.copy2(src_file, dst_file)
+
+
 def create_recipe(directory,
                   pubspec_yaml,
                   flutter_application_path,
                   org, unit, submodules, url, lfs, branch, commit,
-                  license_file, license_type, license_file_md5,
+                  license_file, license_type, license_md5,
                   author,
                   recipe_folder,
                   output_path,
                   rdepends_list,
-                  output_path_override_list) -> str:
+                  output_path_override_list,
+                  src_folder,
+                  src_files,
+                  variables,
+                  patch_dir) -> str:
     is_web = False
     # TODO detect web
 
@@ -264,6 +293,8 @@ def create_recipe(directory,
     else:
         filename = f'{output_path}/{recipe_name}_git.bb'
 
+    print(f'pubspec_yaml: {pubspec_yaml}')
+    print(f'filename: {filename}')
     with open(filename, "w") as f:
         f.write('#\n')
         f.write('# Copyright (c) 2020-2024 Joel Winarske. All rights reserved.\n')
@@ -292,7 +323,7 @@ def create_recipe(directory,
 
         f.write(f'LICENSE = "{license_type}"\n')
         if license_type != 'CLOSED':
-            f.write(f'LIC_FILES_CHKSUM = "file://{license_file};md5={license_file_md5}"\n')
+            f.write(f'LIC_FILES_CHKSUM = "file://{license_file};md5={license_md5}"\n')
 
         f.write('\n')
         f.write(f'SRCREV = "{commit}"\n')
@@ -310,7 +341,23 @@ def create_recipe(directory,
         else:
             branch_option = f'nobranch=1'
 
-        f.write(f'SRC_URI = "{fetcher}://{url};{lfs_option};{branch_option};protocol=https;destsuffix=git"\n')
+        if patch_dir and src_files:
+            print(f'flutter_application_path: {flutter_application_path}')
+            f.write('SRC_URI = " \\\n')
+            f.write(f'    {fetcher}://{url};{lfs_option};{branch_option};protocol=https;destsuffix=git \\\n')
+            files = src_files.get(f'{flutter_application_path}')
+            if files:
+                for file in files:
+                    if src_folder:
+                        src = os.path.join(patch_dir, src_folder)
+                        dst_folder = os.path.join(output_path, src_folder)
+                        copy_src_file(file, src, dst_folder)
+                        f.write(f'    file://{src_folder}/{file} \\ \n')
+                    else:
+                        f.write(f'    file://{file} \\ \n')
+                f.write('\"\n')
+        else:
+            f.write(f'SRC_URI = "{fetcher}://{url};{lfs_option};{branch_option};protocol=https;destsuffix=git"\n')
         f.write('\n')
         f.write('S = "${WORKDIR}/git"\n')
         f.write('\n')
@@ -326,6 +373,13 @@ def create_recipe(directory,
         f.write(f'FLUTTER_APPLICATION_INSTALL_SUFFIX = "{recipe_name}"\n')
 
         f.write(f'FLUTTER_APPLICATION_PATH = "{flutter_application_path}"\n')
+
+        # variables
+        if variables:
+            print(f'flutter_application_path: {flutter_application_path}')
+            vars = variables.get(f'{flutter_application_path}')
+            for var in vars:
+                f.write(f'{var}\n')
         f.write('\n')
 
         if is_web:
@@ -379,16 +433,19 @@ def create_package_group(org, unit, recipes,
 
 
 def create_yocto_recipes(directory,
-                         license_file,
-                         license_type,
-                         license_md5,
+                         license_file, license_type, license_md5,
                          author,
                          recipe_folder,
                          output_path,
                          package_output_path,
                          ignore_list,
                          rdepends_list,
-                         output_path_override_list):
+                         output_path_override_list,
+                         src_folder,
+                         src_files,
+                         entry_files,
+                         variables,
+                         patch_dir):
     """Create bb recipe for each pubspec.yaml file in path"""
     import glob
 
@@ -400,6 +457,12 @@ def create_yocto_recipes(directory,
     print(f'ignore_list: {ignore_list}')
     print(f'rdepends_list: {rdepends_list}')
     print(f'output_path_override_list: {output_path_override_list}')
+    print(f'src_folder: {src_folder}')
+    print(f'src_files: {src_files}')
+    print(f'entry_files: {entry_files}')
+    print(f'variables: {variables}')
+    print(f'patch_dir: {patch_dir}')
+
 
     #
     # Get repo variables
@@ -435,25 +498,34 @@ def create_yocto_recipes(directory,
             del app_path[0]
         flutter_application_path = '/'.join(app_path[:-1])
 
-        lib_main_dart = os.path.join(directory, flutter_application_path, 'lib', 'main.dart')
+        entry_file = 'main.dart'
+        if entry_files:
+            if flutter_application_path in entry_files:
+                entry_file = entry_files.get(f'{flutter_application_path}')[0]
+
+        lib_main_dart = os.path.join(directory, flutter_application_path, 'lib', entry_file)
         if not os.path.exists(lib_main_dart):
             continue
 
         # filtering
         if ignore_list and flutter_application_path in ignore_list:
-            print(f'Ignore: {flutter_application_path}')
+            print(f'Ignoring: {flutter_application_path}')
             continue
 
-        recipe = create_recipe(directory,
-                               filename,
-                               flutter_application_path,
-                               org, unit, submodules, url, lfs, branch, commit,
-                               license_file, license_type, license_md5,
-                               author,
-                               recipe_folder,
-                               output_path,
-                               rdepends_list,
-                               output_path_override_list)
+        recipe = create_recipe(directory=directory,
+                               pubspec_yaml=filename,
+                               flutter_application_path=flutter_application_path,
+                               org=org, unit=unit, submodules=submodules, url=url, lfs=lfs, branch=branch, commit=commit,
+                               license_file=license_file, license_type=license_type, license_md5=license_md5,
+                               author=author,
+                               recipe_folder=recipe_folder,
+                               output_path=output_path,
+                               rdepends_list=rdepends_list,
+                               output_path_override_list=output_path_override_list,
+                               src_folder=src_folder,
+                               src_files=src_files,
+                               variables=variables,
+                               patch_dir=patch_dir)
 
         if recipe != '':
             recipes.append([recipe, flutter_application_path])

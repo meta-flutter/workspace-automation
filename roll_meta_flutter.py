@@ -47,7 +47,12 @@ def get_repo(repo_path: str, output_path: str,
              package_output_path: str,
              ignore_list: dict,
              rdepends_list: dict,
-             output_path_override_list: dict):
+             output_path_override_list: dict,
+             src_folder: str,
+             src_files: dict,
+             entry_files: dict,
+             variables: dict,
+             patch_dir: str):
     """ Clone Git Repo """
 
     # if not ignore_list:
@@ -117,25 +122,31 @@ def get_repo(repo_path: str, output_path: str,
             license_md5 = get_file_md5(license_path)
 
     repo_path = os.path.join(repo_path, repo_name)
-    create_yocto_recipes(repo_path,
-                         license_file,
-                         license_type,
-                         license_md5,
-                         author,
-                         recipe_folder,
-                         output_path,
-                         package_output_path,
-                         ignore_list,
-                         rdepends_list,
-                         output_path_override_list)
 
 
-def get_workspace_repos(repo_path, repos, output_path, package_output_path):
+    create_yocto_recipes(directory=repo_path,
+                         license_file=license_file,
+                         license_type=license_type,
+                         license_md5=license_md5,
+                         author=author,
+                         recipe_folder=recipe_folder,
+                         output_path=output_path,
+                         package_output_path=package_output_path,
+                         ignore_list=ignore_list,
+                         rdepends_list=rdepends_list,
+                         output_path_override_list=output_path_override_list,
+                         src_folder=src_folder,
+                         src_files=src_files,
+                         entry_files=entry_files,
+                         variables=variables,
+                         patch_dir=patch_dir)
+
+
+def get_workspace_repos(repo_path, repos, output_path, package_output_path, patch_dir):
     """ Clone GIT repos referenced in config repos dict to base_folder """
     import concurrent.futures
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = []
         for r in repos:
             get_repo(repo_path=repo_path,
                      output_path=output_path,
@@ -149,7 +160,12 @@ def get_workspace_repos(repo_path, repos, output_path, package_output_path):
                      recipe_folder=r.get('folder'),
                      ignore_list=r.get('ignore'),
                      rdepends_list=r.get('rdepends'),
-                     output_path_override_list=r.get('output_folder'))
+                     output_path_override_list=r.get('output_folder'),
+                     src_folder=r.get('src_folder'),
+                     src_files=r.get('src_files'),
+                     entry_files=r.get('entry_files'),
+                     variables=r.get('variables'),
+                     patch_dir=patch_dir)
 
     print_banner("Repos Cloned")
 
@@ -160,6 +176,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--path', default='', type=str, help='meta-flutter root path')
     parser.add_argument('--json', default='configs/flutter-apps.json', type=str, help='JSON file of flutter apps')
+    parser.add_argument('--patch-dir', default='', type=str, help='Path to patch folder')
     args = parser.parse_args()
 
     #
@@ -190,7 +207,7 @@ def main():
     make_sure_path_exists(args.path)
     make_sure_path_exists(package_output_path)
 
-    get_workspace_repos(repo_path, flutter_apps, args.path, package_output_path)
+    get_workspace_repos(repo_path, flutter_apps, args.path, package_output_path, args.patch_dir)
 
     clear_folder(repo_path)
 
