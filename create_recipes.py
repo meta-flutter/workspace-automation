@@ -229,18 +229,20 @@ def get_recipe_name(org, unit, flutter_application_path, project_name) -> str:
     return recipe_name
 
 
-def copy_src_file(file: str, src_folder: str, dst_folder: str):
-    print(f'copy_src_file: {file}, {src_folder}, {dst_folder}')
+def copy_src_file(file: str, src_folder:str, patch_dir: str, output_path: str):
+    print(f'copy_src_file: {file}, {src_folder}, {patch_dir}, {output_path}')
     import shutil
 
     file = file.split(';')[0]
-    src_file = os.path.join(src_folder, file)
+    src_file = os.path.join(patch_dir, src_folder, file)
     if not os.path.exists(src_file):
         print(f'Missing: {src_file}')
         return
 
-    make_sure_path_exists(dst_folder)
+    dst_folder = os.path.join(output_path, 'files', src_folder)
     dst_file = os.path.join(dst_folder, file)
+
+    make_sure_path_exists(dst_folder)
     shutil.copy2(src_file, dst_file)
 
 
@@ -342,16 +344,13 @@ def create_recipe(directory,
             branch_option = f'nobranch=1'
 
         if patch_dir and src_files:
-            print(f'flutter_application_path: {flutter_application_path}')
             f.write('SRC_URI = " \\\n')
             f.write(f'    {fetcher}://{url};{lfs_option};{branch_option};protocol=https;destsuffix=git \\\n')
             files = src_files.get(f'{flutter_application_path}')
             if files:
                 for file in files:
                     if src_folder:
-                        src = os.path.join(patch_dir, src_folder)
-                        dst_folder = os.path.join(output_path, src_folder)
-                        copy_src_file(file, src, dst_folder)
+                        copy_src_file(file, src_folder, patch_dir, output_path)
                         f.write(f'    file://{src_folder}/{file} \\ \n')
                     else:
                         f.write(f'    file://{file} \\ \n')
@@ -376,7 +375,6 @@ def create_recipe(directory,
 
         # variables
         if variables:
-            print(f'flutter_application_path: {flutter_application_path}')
             vars = variables.get(f'{flutter_application_path}')
             for var in vars:
                 f.write(f'{var}\n')
