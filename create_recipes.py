@@ -97,11 +97,13 @@ def get_process_stdout(cmd, directory):
     return ret.strip()
 
 
-def get_git_branch(directory) -> str:
+def get_git_branch(directory: str, commit: str) -> str:
     """Get branch name"""
-    branch = get_process_stdout('git symbolic-ref --short HEAD', directory)
-    branch_lines = branch.split('\n')
-    return branch_lines[0]
+    response = get_process_stdout(f'git branch --contains {str}', directory)
+    if '(HEAD detached' in response:
+        return None
+    else:
+        return response.split(' ')[-1]
 
 
 def get_repo_vars(directory):
@@ -136,9 +138,9 @@ def get_repo_vars(directory):
     if os.path.isfile(directory + '/.gitattributes'):
         lfs = True
 
-    branch = get_git_branch(directory)
-
     commit = get_process_stdout('git rev-parse --verify HEAD', directory)
+
+    branch = get_git_branch(directory, commit)
 
     url_raw = get_process_stdout('git config --get remote.origin.url', directory)
     url = url_raw.split('//')
