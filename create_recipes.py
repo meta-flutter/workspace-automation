@@ -228,7 +228,7 @@ def get_recipe_name(org, unit, flutter_application_path, project_name) -> str:
     if recipe_name.endswith('-'):
         recipe_name = recipe_name[:-1]
 
-    return recipe_name
+    return recipe_name.lower()
 
 
 def copy_src_file(file: str, src_folder:str, patch_dir: str, output_path: str):
@@ -353,9 +353,9 @@ def create_recipe(directory,
                 for file in files:
                     if src_folder:
                         copy_src_file(file, src_folder, patch_dir, output_path)
-                        f.write(f'    file://{src_folder}/{file} \\ \n')
+                        f.write(f'    file://{src_folder}/{file} \\\n')
                     else:
-                        f.write(f'    file://{file} \\ \n')
+                        f.write(f'    file://{file} \\\n')
                 f.write('\"\n')
         else:
             f.write(f'SRC_URI = "{fetcher}://{url};{lfs_option};{branch_option};protocol=https;destsuffix=git"\n')
