@@ -1,5 +1,9 @@
 # Changelog
 
+Mar 11, 2024
+1. ensure recipes are lowercase
+2. remove trailing space on file patch line
+
 Feb 21, 2024
 1. rework create_recipes.py + roll_meta_flutter.py
    add output_path key to override location where recipe gets written
