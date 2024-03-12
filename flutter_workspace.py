@@ -997,6 +997,8 @@ def get_flutter_sdk(version):
     if is_repo(flutter_sdk_path):
 
         print('Checking out %s' % version)
+        cmd = ["git", "fetch", "--all"]
+        subprocess.check_call(cmd, cwd=flutter_sdk_path)
         cmd = ["git", "reset", "--hard"]
         subprocess.check_call(cmd, cwd=flutter_sdk_path)
         cmd = ["git", "checkout", version]
