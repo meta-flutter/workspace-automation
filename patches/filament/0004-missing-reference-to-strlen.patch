@@ -1,9 +1,7 @@
-From a9e36c8f4e792745e94126861149c5510b850fc1 Mon Sep 17 00:00:00 2001
+From e781a53dcae5c90a4d258c7e2e1082a52b5765ae Mon Sep 17 00:00:00 2001
 From: Joel Winarske <joel.winarske@gmail.com>
-Date: Fri, 5 Jan 2024 15:55:37 -0800
-Subject: [PATCH] missing reference to strlen
-
--adds <cstring> reference
+Date: Mon, 10 Jun 2024 13:18:33 -0700
+Subject: [PATCH 4/7] missing reference to strlen
 
 Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
 ---
@@ -24,5 +22,5 @@ index 0c6ef2057..91fce4992 100644
  
  class Material;
 -- 
-2.43.0
+2.45.1
 

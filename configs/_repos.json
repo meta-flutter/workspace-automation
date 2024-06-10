@@ -1,7 +1,7 @@
 [
     {
         "uri": "https://github.com/toyota-connected/ivi-homescreen.git",
-        "branch": "main"
+        "branch": "v2.0"
     },
     {
         "uri": "https://github.com/bdero/flutter-scene-example.git",
@@ -113,7 +113,7 @@
     },
     {
         "uri": "https://github.com/google/filament.git",
-        "rev" : "1a9063d53a4438dbe2d12ee64512740a3ef4faef"
+        "rev" : "acfe9298d9113e64e71e63ad2f50f7e76db019dd"
     },
     {
         "uri": "https://github.com/firebase/firebase-cpp-sdk.git",

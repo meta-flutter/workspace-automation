@@ -1,7 +1,7 @@
-From 9d1d9b16ade43f7431136ae1e741980440bc2801 Mon Sep 17 00:00:00 2001
+From a18337e55f7229227269a4bfb8a100a44dd883b2 Mon Sep 17 00:00:00 2001
 From: Joel Winarske <joel.winarske@gmail.com>
-Date: Fri, 5 Jan 2024 16:27:53 -0800
-Subject: [PATCH] move include contents to include/filament
+Date: Mon, 10 Jun 2024 13:23:27 -0700
+Subject: [PATCH 5/7] move include contents to include filament
 
 Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
 ---
@@ -35,10 +35,10 @@ Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
  27 files changed, 31 insertions(+), 31 deletions(-)
 
 diff --git a/filament/CMakeLists.txt b/filament/CMakeLists.txt
-index e1a39cd22..7fa35507d 100644
+index 578c4594a..1b83456a1 100644
 --- a/filament/CMakeLists.txt
 +++ b/filament/CMakeLists.txt
-@@ -588,7 +588,7 @@ target_link_libraries(${TARGET} PRIVATE
+@@ -587,7 +587,7 @@ target_link_libraries(${TARGET} PRIVATE
  # ==================================================================================================
  set(INSTALL_TYPE ARCHIVE)
  install(TARGETS ${TARGET} ${INSTALL_TYPE} DESTINATION lib/${DIST_DIR})
@@ -359,5 +359,5 @@ index ffe7cdfe1..6ae9c7787 100644
 +install(FILES ${PUBLIC_HDRS} DESTINATION include/filament)
  install(TARGETS ${TARGET} ARCHIVE DESTINATION lib/${DIST_DIR})
 -- 
-2.43.0
+2.45.1
 
