@@ -4,92 +4,9 @@
         "branch": "v2.0"
     },
     {
-        "uri": "https://github.com/bdero/flutter-scene-example.git",
-        "branch": "master",
-        "pubspec_path": "flutter-scene-example"
-    },
-    {
-        "uri": "https://github.com/meta-flutter/comp_surf_pbr.git",
-        "branch": "main"
-    },
-    {
-        "uri": "https://github.com/flutter/packages.git",
-        "branch": "main"
-    },
-    {
-        "uri": "https://github.com/gskinnerTeam/flutter-wonderous-app.git",
-        "branch": "main",
-        "pubspec_path": "flutter-wonderous-app"
-    },
-    {
-        "uri": "https://github.com/flutter/pinball.git",
-        "branch": "main",
-        "pubspec_path": "pinball"
-    },
-    {
-        "uri": "https://github.com/bdero/flutter-scene-example.git",
-        "branch": "master",
-        "pubspec_path": "flutter-scene-example"
-    },
-    {
         "uri": "https://github.com/flutter/gallery.git",
         "branch": "main",
         "pubspec_path": "gallery"
-    },
-    {
-        "uri": "https://github.com/flutter/samples.git",
-        "branch": "main"
-    },
-    {
-        "uri": "https://github.com/flutter/games.git",
-        "branch": "main",
-        "rev": "acd048d2b5654421e1dbf41355aa5647233c9e24",
-        "pubspec_path": "games/templates/endless_runner"
-    },
-    {
-        "uri": "https://github.com/flutter/super_dash.git",
-        "branch": "main"
-    },
-    {
-        "uri": "https://github.com/meta-flutter/layer_playground",
-        "branch": "main",
-        "pubspec_path": "layer_playground"
-    },
-    {
-        "uri": "https://github.com/mogol/flutter_secure_storage.git",
-        "branch": "develop",
-        "pubspec_path": "flutter_secure_storage/flutter_secure_storage/example"
-    },
-    {
-        "uri": "https://github.com/theyakka/qr.flutter.git",
-        "branch": "master",
-        "pubspec_path": "qr.flutter/example"
-    },
-    {
-        "uri": "https://github.com/meta-flutter/flutter_animated_background.git",
-        "branch": "meta-flutter",
-        "pubspec_path": "flutter_animated_background/example"
-    },
-    {
-        "uri": "https://github.com/felipeerias/flutter_homescreen.git",
-        "branch": "main",
-        "rev": "08bf271f7f1f14153a41005718a2090fa8e783f0",
-        "pubspec_path": "flutter_homescreen"
-    },
-    {
-        "uri": "https://github.com/bernardpumped/ped.git",
-        "branch": "next_main",
-        "pubspec_path": "ped"
-    },
-    {
-        "uri": "https://github.com/bluefireteam/audioplayers.git",
-        "branch": "main"
-
-    },
-    {
-        "uri": "https://github.com/knopp/layer_playground.git",
-        "branch": "main"
-
     },
     {
         "uri": "https://github.com/playx-flutter/playx-3d-scene.git",
@@ -97,27 +14,9 @@
 
     },
     {
-        "uri": "https://github.com/mix1009/desktop_window.git",
-        "branch": "master"
-
-    },
-    {
-        "uri": "https://github.com/Baseflow/flutter-geolocator.git",
-        "branch": "main"
-
-    },
-    {
-        "uri": "https://github.com/firebase/flutterfire.git",
-        "branch": "master",
-        "rev": "c6341b92209d6ac80733eb7bfdbac679f44306ec"
-    },
-    {
         "uri": "https://github.com/google/filament.git",
+        "branch": "release",
         "rev" : "acfe9298d9113e64e71e63ad2f50f7e76db019dd"
-    },
-    {
-        "uri": "https://github.com/firebase/firebase-cpp-sdk.git",
-        "rev" : "b5b7e05b6a6e3c7ca4baadb7f15ef6fc6f36829c"
     },
     {
         "uri": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",

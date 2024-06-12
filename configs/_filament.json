@@ -16,7 +16,7 @@
         "FILAMENT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/filament",
         "FILAMENT_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/filament/cmake-build-release",
         "FILAMENT_STAGING_DIR": "${FILAMENT_BUILD_DIR}/staging/debug",
-        "FILAMENT_CMAKE_ARGS": "-DFILAMENT_SUPPORTS_VULKAN=ON -DFILAMENT_ENABLE_LTO=ON -DFILAMENT_SUPPORTS_OPENGL=OFF -DFILAMENT_USE_EXTERNAL_GLES3=OFF -DFILAMENT_SUPPORTS_WAYLAND=ON -DFILAMENT_SUPPORTS_X11=OFF -DFILAMENT_SUPPORTS_EGL_ON_LINUX=OFF -DFILAMENT_SKIP_SDL2=ON -DFILAMENT_SKIP_SAMPLES=ON -DFILAMENT_USE_SWIFTSHADER=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_STAGING_PREFIX=${FILAMENT_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+        "FILAMENT_CMAKE_ARGS": "-DFILAMENT_SUPPORTS_VULKAN=ON -DFILAMENT_ENABLE_LTO=ON -DFILAMENT_SUPPORTS_OPENGL=OFF -DFILAMENT_USE_EXTERNAL_GLES3=OFF -DFILAMENT_SUPPORTS_WAYLAND=ON -DFILAMENT_SUPPORTS_X11=OFF -DFILAMENT_SUPPORTS_XCB=OFF -DFILAMENT_SUPPORTS_EGL_ON_LINUX=OFF -DFILAMENT_SKIP_SDL2=ON -DFILAMENT_SKIP_SAMPLES=ON -DFILAMENT_USE_SWIFTSHADER=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_STAGING_PREFIX=${FILAMENT_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
     },
     "runtime": {
         "pre-requisites": {
@@ -43,8 +43,7 @@
                     "git apply ${PATCH_FOLDER}/filament/0003-install-required-files.patch",
                     "git apply ${PATCH_FOLDER}/filament/0004-missing-reference-to-strlen.patch",
                     "git apply ${PATCH_FOLDER}/filament/0005-move-include-contents-to-include-filament.patch",
-                    "git apply ${PATCH_FOLDER}/filament/0006-move-libraries-so-they-install.patch",
-                    "git apply ${PATCH_FOLDER}/filament/0007-return-shader-type-mobile-for-linux-vulkan.patch"
+                    "git apply ${PATCH_FOLDER}/filament/0006-move-libraries-so-they-install.patch"
                 ]
             },
             {
