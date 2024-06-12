@@ -15,7 +15,7 @@
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches",
         "FILAMENT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/filament",
         "FILAMENT_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/filament/cmake-build-release",
-        "FILAMENT_STAGING_DIR": "${FILAMENT_BUILD_DIR}/staging/debug",
+        "FILAMENT_STAGING_DIR": "${FILAMENT_BUILD_DIR}/staging/release",
         "FILAMENT_CMAKE_ARGS": "-DFILAMENT_SUPPORTS_VULKAN=ON -DFILAMENT_ENABLE_LTO=ON -DFILAMENT_SUPPORTS_OPENGL=OFF -DFILAMENT_USE_EXTERNAL_GLES3=OFF -DFILAMENT_SUPPORTS_WAYLAND=ON -DFILAMENT_SUPPORTS_X11=OFF -DFILAMENT_SUPPORTS_XCB=OFF -DFILAMENT_SUPPORTS_EGL_ON_LINUX=OFF -DFILAMENT_SKIP_SDL2=ON -DFILAMENT_SKIP_SAMPLES=ON -DFILAMENT_USE_SWIFTSHADER=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_STAGING_PREFIX=${FILAMENT_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}",
         "PLAYX_3D_SCENE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/playx-3d-scene"
     },
@@ -36,14 +36,6 @@
         },
         "post_cmds": [
             {
-                "cwd": "${PLAYX_3D_SCENE_SRC_DIR}",
-                "cmds": [
-                    "git reset --hard",
-                    "git apply ${PATCH_FOLDER}/sourcya-playx-3d-scene/0001-ivi-homescreen-support.patch",
-                    "cp ${PATCH_FOLDER}/sourcya-playx-3d-scene/textured_pbr.filamat example/assets/materials/"
-                ]
-            },
-            {
                 "cwd": "${FILAMENT_SRC_DIR}",
                 "cmds": [
                     "git reset --hard",
@@ -63,6 +55,15 @@
                 "cmds": [
                   "cmake ${FILAMENT_SRC_DIR} ${FILAMENT_CMAKE_ARGS}",
                   "make install -j"
+                ]
+            },
+            {
+                "cwd": "${PLAYX_3D_SCENE_SRC_DIR}",
+                "cmds": [
+                    "git reset --hard",
+                    "git apply ${PATCH_FOLDER}/sourcya-playx-3d-scene/0001-ivi-homescreen-support.patch",
+                    "${FILAMENT_STAGING_DIR}/bin/matc --api vulkan -o example/assets/materials/textured_pbr.filamat ${FILAMENT_SRC_DIR}/android/samples/sample-textured-object/src/main/materials/textured_pbr.mat",
+                    "${FILAMENT_STAGING_DIR}/bin/matc --api vulkan -o example/assets/materials/lit.filamat ${FILAMENT_SRC_DIR}/android/samples/sample-hello-camera/src/main/materials/lit.mat"
                 ]
             }
         ]
