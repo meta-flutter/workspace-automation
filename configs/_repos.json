@@ -10,13 +10,13 @@
     },
     {
         "uri": "https://github.com/playx-flutter/playx-3d-scene.git",
-        "branch": "main"
-
+        "branch": "main",
+        "rev": "4a9c0f846c980b680fac041ecf5e3f645e2c67cd"
     },
     {
         "uri": "https://github.com/google/filament.git",
         "branch": "release",
-        "rev" : "acfe9298d9113e64e71e63ad2f50f7e76db019dd"
+        "rev" : "9db913af592a4bedb55792c3e8cf4ea2751f9bee"
     },
     {
         "uri": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
