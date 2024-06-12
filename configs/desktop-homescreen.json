@@ -26,8 +26,8 @@
     "config": {
       "view": [
         {
-          "width": 1920,
-          "height": 1080,
+          "width": 800,
+          "height": 600,
           "cursor_theme": "DMZ-White",
           "fullscreen": false
         }
