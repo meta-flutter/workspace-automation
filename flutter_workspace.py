@@ -336,8 +336,9 @@ def main():
     # Recursively change ownership to $SUDO_USER
     #
     user = os.environ.get('SUDO_USER')
+    flutter_workspace = os.environ.get('FLUTTER_WORKSPACE')
     cmd = ['sudo', 'chown', '-R', f'{user}:{user}', '.']
-    subprocess.check_call(cmd, cwd=flutter_sdk_path)
+    subprocess.check_call(cmd, cwd=flutter_workspace)
 
     #
     # Done
