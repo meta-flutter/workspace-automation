@@ -43,7 +43,8 @@
                     "git apply ${PATCH_FOLDER}/filament/0002-disable-backend-tests.patch",
                     "git apply ${PATCH_FOLDER}/filament/0003-install-required-files.patch",
                     "git apply ${PATCH_FOLDER}/filament/0004-move-include-contents-to-include-filament.patch",
-                    "git apply ${PATCH_FOLDER}/filament/0005-move-libraries-so-they-install.patch"
+                    "git apply ${PATCH_FOLDER}/filament/0005-move-libraries-so-they-install.patch",
+                    "git apply ${PATCH_FOLDER}/filament/0006-return-shader-type-mobile-for-linux-vulkan.patch"
                 ]
             },
             {
@@ -62,8 +63,8 @@
                 "cmds": [
                     "git reset --hard",
                     "git apply ${PATCH_FOLDER}/sourcya-playx-3d-scene/0001-ivi-homescreen-support.patch",
-                    "${FILAMENT_STAGING_DIR}/bin/matc --api vulkan -o example/assets/materials/textured_pbr.filamat ${FILAMENT_SRC_DIR}/android/samples/sample-textured-object/src/main/materials/textured_pbr.mat",
-                    "${FILAMENT_STAGING_DIR}/bin/matc --api vulkan -o example/assets/materials/lit.filamat ${FILAMENT_SRC_DIR}/android/samples/sample-hello-camera/src/main/materials/lit.mat"
+                    "${FILAMENT_STAGING_DIR}/bin/matc --api vulkan --platform mobile -o example/assets/materials/textured_pbr.filamat ${FILAMENT_SRC_DIR}/android/samples/sample-textured-object/src/main/materials/textured_pbr.mat",
+                    "${FILAMENT_STAGING_DIR}/bin/matc --api vulkan --platform mobile -o example/assets/materials/lit.filamat ${FILAMENT_SRC_DIR}/android/samples/sample-hello-camera/src/main/materials/lit.mat"
                 ]
             }
         ]
