@@ -50,9 +50,8 @@
                     "git apply ${PATCH_FOLDER}/filament/0001-error-ignoring-return-value-of-function-declared-wit.patch",
                     "git apply ${PATCH_FOLDER}/filament/0002-disable-backend-tests.patch",
                     "git apply ${PATCH_FOLDER}/filament/0003-install-required-files.patch",
-                    "git apply ${PATCH_FOLDER}/filament/0004-missing-reference-to-strlen.patch",
-                    "git apply ${PATCH_FOLDER}/filament/0005-move-include-contents-to-include-filament.patch",
-                    "git apply ${PATCH_FOLDER}/filament/0006-move-libraries-so-they-install.patch"
+                    "git apply ${PATCH_FOLDER}/filament/0004-move-include-contents-to-include-filament.patch",
+                    "git apply ${PATCH_FOLDER}/filament/0005-move-libraries-so-they-install.patch"
                 ]
             },
             {

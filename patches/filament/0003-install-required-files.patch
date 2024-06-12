@@ -1,7 +1,7 @@
-From 47f7aed1ec5058de273c5e8d302d855a8a5ced0c Mon Sep 17 00:00:00 2001
+From cc923cd0b88c587f0559fe2d6a830f3781154a69 Mon Sep 17 00:00:00 2001
 From: Joel Winarske <joel.winarske@gmail.com>
-Date: Mon, 10 Jun 2024 13:18:10 -0700
-Subject: [PATCH 3/7] install required files
+Date: Wed, 12 Jun 2024 06:43:06 -0700
+Subject: [PATCH 3/5] install required files
 
 Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
 ---

@@ -1,18 +1,18 @@
-From e01400458428bb879b01804351055a67b7d025e6 Mon Sep 17 00:00:00 2001
+From 6a920a7612cfea25bbea78600b16e3075a30a8f7 Mon Sep 17 00:00:00 2001
 From: Joel Winarske <joel.winarske@gmail.com>
-Date: Mon, 10 Jun 2024 13:17:50 -0700
-Subject: [PATCH 2/7] disable backend tests
+Date: Wed, 12 Jun 2024 06:41:19 -0700
+Subject: [PATCH 2/5] disable backend tests
 
 Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
 ---
- filament/backend/CMakeLists.txt | 107 --------------------------------
- 1 file changed, 107 deletions(-)
+ filament/backend/CMakeLists.txt | 113 --------------------------------
+ 1 file changed, 113 deletions(-)
 
 diff --git a/filament/backend/CMakeLists.txt b/filament/backend/CMakeLists.txt
-index 4edf04af1..ce5795c9b 100644
+index 6a7f66cc2..378f45aed 100644
 --- a/filament/backend/CMakeLists.txt
 +++ b/filament/backend/CMakeLists.txt
-@@ -394,110 +394,3 @@ set(INSTALL_TYPE ARCHIVE)
+@@ -400,116 +400,3 @@ set(INSTALL_TYPE ARCHIVE)
  install(TARGETS ${TARGET} ${INSTALL_TYPE} DESTINATION lib/${DIST_DIR})
  install(TARGETS vkshaders ${INSTALL_TYPE} DESTINATION lib/${DIST_DIR})
  install(DIRECTORY ${PUBLIC_HDR_DIR}/backend DESTINATION include)
@@ -33,7 +33,9 @@ index 4edf04af1..ce5795c9b 100644
 -        test/test_MissingRequiredAttributes.cpp
 -        test/test_ReadPixels.cpp
 -        test/test_BufferUpdates.cpp
+-        test/test_Callbacks.cpp
 -        test/test_MRT.cpp
+-        test/test_PushConstants.cpp
 -        test/test_LoadImage.cpp
 -        test/test_StencilBuffer.cpp
 -        test/test_Scissor.cpp
@@ -94,6 +96,10 @@ index 4edf04af1..ce5795c9b 100644
 -       # linker from removing "unused" symbols.
 -       target_link_libraries(backend_test_mac PRIVATE -force_load backend_test)
 -       set_target_properties(backend_test_mac PROPERTIES FOLDER Tests)
+-
+-       # This is needed after XCode 15.3
+-       set_target_properties(backend_test_mac PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE)
+-       set_target_properties(backend_test_mac PROPERTIES INSTALL_RPATH /usr/local/lib)
 -    endif()
 -endif()
 -

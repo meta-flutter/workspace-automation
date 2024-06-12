@@ -16,7 +16,7 @@
     {
         "uri": "https://github.com/google/filament.git",
         "branch": "release",
-        "rev" : "9db913af592a4bedb55792c3e8cf4ea2751f9bee"
+        "rev" : "v1.52.3"
     },
     {
         "uri": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
