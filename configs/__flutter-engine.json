@@ -14,7 +14,7 @@
     "env": {
         "RUNTIME_MODE": "debug",
         "DEPOT_TOOLS": "${FLUTTER_WORKSPACE}/app/depot_tools",
-        "ENGINE_ROOT": "${PLATFORM_ID_DIR}/engine",
+        "ENGINE_ROOT": "${FLUTTER_WORKSPACE}/app/engine",
         "ENGINE_SRC_DIR_RELATIVE": "src",
         "ENGINE_SRC_DIR": "${ENGINE_ROOT}/${ENGINE_SRC_DIR_RELATIVE}",
         "ENGINE_BUILD_FLAGS": "--runtime-mode=${RUNTIME_MODE} --embedder-for-target --enable-fontconfig --disable-desktop-embeddings --no-build-embedder-examples --enable-impeller-3d --enable-impeller-opengles --no-lto --no-goma --no-stripped --no-enable-unittests",

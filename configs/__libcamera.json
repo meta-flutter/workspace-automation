@@ -1,0 +1,62 @@
+{
+    "id": "libcamera",
+    "load": true,
+    "supported_archs": [
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "ubuntu",
+        "fedora"
+    ],
+    "type": "generic",
+    "flutter_runtime": "debug",
+    "env": {
+        "CAMERA_SRC_DIR": "${FLUTTER_WORKSPACE}/app/libcamera",
+        "CAMERA_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/libcamera/build",
+        "CAMERA_MESON_ARGS": "-Dqcam=\"disabled\" -Dlc-compliance=\"disabled\" -Dcam=\"disabled\""
+    },
+    "runtime": {
+        "pre-requisites": {
+            "x86_64": {
+                "ubuntu": {
+                    "cmds": [
+                        "sudo apt install -y libjpeg-dev",
+                        "pip3 install meson jinja2 ply --user"
+                    ]
+                },
+                "fedora": {
+                    "cmds": [
+                        "sudo dnf install -y libjpeg-devel",
+                        "pip3 install meson jinja2 ply --user"
+                    ]
+                }
+            }
+        },
+        "post_cmds": [
+            {
+                "env": {
+                    "CC": "/usr/bin/clang",
+                    "CXX": "/usr/bin/clang++"
+                },
+                "cwd": "${CAMERA_SRC_DIR}",
+                "cmds": [
+                    "rm -rf build |true",
+                    "meson build ${CAMERA_MESON_ARGS}",
+                    "ninja -C build"
+                ]
+            },
+            {
+                "env": {
+                    "CC": "/usr/bin/clang",
+                    "CXX": "/usr/bin/clang++"
+                },
+                "cwd": "${CAMERA_BUILD_DIR}",
+                "cmds": [
+                    "rm -rf out|true",
+                    "mkdir -p out",
+                    "sudo ninja -C . install"
+                ]
+            }
+        ]
+    }
+}

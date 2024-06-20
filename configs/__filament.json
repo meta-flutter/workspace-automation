@@ -24,12 +24,12 @@
             "x86_64": {
                 "ubuntu": {
                     "cmds": [
-                        "pip3 install absl-py"
+                        "pip3 install absl-py --user"
                     ]
                 },
                 "fedora": {
                     "cmds": [
-                        "pip3 install absl-py"
+                        "pip3 install absl-py --user"
                     ]
                 }
             }

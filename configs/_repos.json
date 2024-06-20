@@ -19,6 +19,11 @@
         "rev" : "v1.52.3"
     },
     {
+        "uri": "https://git.libcamera.org/libcamera/libcamera.git",
+        "branch": "master",
+        "rev" : "v0.3.0"
+    },
+    {
         "uri": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
         "branch": "main"
     }
