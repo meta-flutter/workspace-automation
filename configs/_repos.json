@@ -1,17 +1,11 @@
 [
     {
+        "uri": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
+        "branch": "main"
+    },
+    {
         "uri": "https://github.com/toyota-connected/ivi-homescreen.git",
         "branch": "v2.0"
-    },
-    {
-        "uri": "https://github.com/flutter/gallery.git",
-        "branch": "main",
-        "pubspec_path": "gallery"
-    },
-    {
-        "uri": "https://github.com/playx-flutter/playx-3d-scene.git",
-        "branch": "main",
-        "rev": "46cd40546b4b06aea4fae0889926d24e441ad825"
     },
     {
         "uri": "https://github.com/google/filament.git",
@@ -24,7 +18,17 @@
         "rev" : "v0.3.0"
     },
     {
-        "uri": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
-        "branch": "main"
+        "uri": "https://github.com/flutter/gallery.git",
+        "branch": "main",
+        "pubspec_path": "gallery"
+    },
+    {
+        "uri": "https://github.com/flutter/packages.git",
+        "branch": "mainn"
+    },
+    {
+        "uri": "https://github.com/playx-flutter/playx-3d-scene.git",
+        "branch": "main",
+        "rev": "46cd40546b4b06aea4fae0889926d24e441ad825"
     }
 ]
