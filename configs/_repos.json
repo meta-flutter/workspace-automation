@@ -24,7 +24,11 @@
     },
     {
         "uri": "https://github.com/flutter/packages.git",
-        "branch": "mainn"
+        "branch": "main"
+    },
+    {
+        "uri": "https://github.com/meta-flutter/video_player_linux",
+        "branch": "main"
     },
     {
         "uri": "https://github.com/playx-flutter/playx-3d-scene.git",
