@@ -67,6 +67,9 @@
     {
         "uri": "https://github.com/Baseflow/flutter-geolocator.git",
         "branch": "main"
-
+    },
+    {
+        "uri": "https://github.com/maplibre/maplibre-native.git",
+        "branch": "main"
     }
 ]

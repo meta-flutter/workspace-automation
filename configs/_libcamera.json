@@ -20,14 +20,18 @@
             "x86_64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt install -y libjpeg-dev",
-                        "pip3 install meson jinja2 ply --user"
+                        "sudo apt remove -y libcamera",
+                        "sudo apt install -y libjpeg-dev libevent-dev",
+                        "pip3 install jinja2 ply --user",
+                        "sudo pip3 install meson"
                     ]
                 },
                 "fedora": {
                     "cmds": [
-                        "sudo dnf install -y libjpeg-devel",
-                        "pip3 install meson jinja2 ply --user"
+                        "sudo dnf remove -y libcamera",
+                        "sudo dnf install -y libjpeg-devel libevent-devel",
+                        "pip3 install jinja2 ply --user",
+                        "sudo pip3 install meson"
                     ]
                 }
             }

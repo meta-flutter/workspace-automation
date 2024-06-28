@@ -1,0 +1,47 @@
+{
+    "id": "maplibre",
+    "load": true,
+    "supported_archs": [
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "ubuntu",
+        "fedora"
+    ],
+    "type": "generic",
+    "flutter_runtime": "debug",
+    "env": {
+        "MAPLIBRE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native",
+        "MAPLIBRE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native/build",
+        "MAPLIBRE_CMAKE_ARGS": "-DMLN_WITH_ELG=ON -DMMLN_WITH_X11=OFF -DMLN_WITH_WAYLAND=ON"
+    },
+    "runtime": {
+        "pre-requisites": {
+            "x86_64": {
+                "ubuntu": {
+                    "cmds": [
+                        "sudo apt install -y libwebp-dev libuv-dev libcurl-dev libjpeg-dev libpng-dev libicu-dev libglfw3-dev"
+                    ]
+                },
+                "fedora": {
+                    "cmds": [
+                        "sudo dnf install -y libwebp-devel libuv-devel libcurl-devel libjpeg-devel libpng-devel libicu-devel glfw-devel"
+                    ]
+                }
+            }
+        },
+        "post_cmds": [
+            {
+                "env": {
+                    "CC": "/usr/bin/clang",
+                    "CXX": "/usr/bin/clang++"
+                  },
+                  "cwd": "${MAPLIBRE_BUILD_DIR}",
+                  "cmds": [
+                    "cmake -GNinja ${MAPLIBRE_SRC_DIR} ${MAPLIBRE_CMAKE_ARGS}",
+                    "ninja"
+                  ]
+            }
+        ]
+    }
+}

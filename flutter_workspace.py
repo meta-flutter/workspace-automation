@@ -361,7 +361,7 @@ def get_workspace_config(path):
         data = {'globals': None, 'repos': None, 'platforms': []}
 
         import glob
-        for filename in glob.glob(os.path.join(path, '*.json')):
+        for filename in sorted(glob.glob(os.path.join(path, '*.json'))):
 
             with open(os.path.join(os.getcwd(), filename), 'r') as f:
 

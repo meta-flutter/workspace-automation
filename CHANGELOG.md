@@ -1,5 +1,15 @@
 # Changelog
 
+June 27, 2024
+1. Add maplibre platform
+2. add zenity to runtime package list
+3. change libcamera meson install from user to sudo
+
+June 26, 2024
+1. sort platforms.  Allows platforms prefixed with "_" to run first.
+2. increase plugin flags for ivi-homescreen
+3. add maplibre platform - wayland + no x11
+
 Mar 11, 2024
 1. ensure recipes are lowercase
 2. remove trailing space on file patch line
