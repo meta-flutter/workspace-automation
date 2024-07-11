@@ -1,6 +1,6 @@
 {
     "id": "maplibre",
-    "load": true,
+    "load": false,
     "supported_archs": [
         "x86_64"
     ],
@@ -20,7 +20,7 @@
             "x86_64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt install -y libwebp-dev libuv-dev libcurl-dev libjpeg-dev libpng-dev libicu-dev libglfw3-dev"
+                        "sudo apt install -y libwebp-dev libuv1-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libicu-dev libglfw3-dev"
                     ]
                 },
                 "fedora": {

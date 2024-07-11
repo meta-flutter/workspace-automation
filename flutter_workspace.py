@@ -582,6 +582,9 @@ def get_repo(base_folder, uri, branch, rev):
         cmd = ['git', 'checkout', branch]
         subprocess.check_call(cmd, cwd=git_folder)
 
+        cmd = ['git', 'pull']
+        subprocess.check_call(cmd, cwd=git_folder)
+
     else:
 
         cmd = ['git', 'clone', uri, '-b', branch, repo_name]
@@ -1613,12 +1616,16 @@ def get_platform_working_dir(platform_id):
 
 
 def create_platform_config_file(obj, cwd):
+    import toml
     if obj is None:
         return
 
-    default_config_filepath = cwd.joinpath('default_config.json')
+    toml_config = toml.dumps(obj)
+    
+    default_config_filepath = cwd.joinpath('config.toml')
     with open(default_config_filepath, 'w+') as f:
-        json.dump(obj, f, indent=2)
+        f.write(toml_config)
+#        json.dump(obj, f, indent=2)
 
 
 def create_gclient_config_file(obj):
@@ -1955,7 +1962,7 @@ def install_minimum_runtime_deps():
             cmd = ['sudo', 'apt', 'update', '-y']
             subprocess.check_output(cmd)
             packages = 'git git-lfs curl libcurl4-openssl-dev libssl-dev libgtk-3-dev ' \
-                       'python3-dotenv python3-pycurl python3-pip'.split(' ')
+                       'python3-dotenv python3-pycurl python3-toml python3-pip'.split(' ')
             for package in packages:
                 ubuntu_install_pkg_if_not_installed(package)
 
@@ -1963,7 +1970,7 @@ def install_minimum_runtime_deps():
             cmd = ['sudo', 'dnf', '-y', 'update']
             subprocess.check_output(cmd)
             packages = 'dnf-plugins-core git git-lfs curl libcurl-devel openssl-devel ' \
-                       'gtk3-devel python3-dotenv python3-pycurl python3-pip'.split(' ')
+                       'gtk3-devel python3-dotenv python3-pycurl python3-toml python3-pip'.split(' ')
             for package in packages:
                 fedora_install_pkg_if_not_installed(package)
 

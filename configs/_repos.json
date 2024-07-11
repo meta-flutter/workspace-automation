@@ -8,6 +8,10 @@
         "branch": "v2.0"
     },
     {
+        "uri": "https://github.com/toyota-connected/plugins.git",
+        "branch": "v2.0"
+    },
+    {
         "uri": "https://github.com/google/filament.git",
         "branch": "release",
         "rev" : "v1.52.3"
