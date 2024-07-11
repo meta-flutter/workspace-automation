@@ -5,6 +5,7 @@ Workspace Automation that supports embedded Flutter development
 We developed a Python script, `flutter_workspace.py` to automate embedded flutter setup.
 This script reads a configuration folder of JSON files, or a single JSON configuration file and sets up a Flutter Workspace.
 
+### Discord Server https://discord.gg/VKcpSHgjGQ
 
 ### create_aot.py
 
