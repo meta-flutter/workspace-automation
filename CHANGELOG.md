@@ -1,5 +1,8 @@
 # Changelog
 
+Aug 1, 2024
+1. Flutter SDK 3.22.3
+
 June 27, 2024
 1. Add maplibre platform
 2. add zenity to runtime package list
