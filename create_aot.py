@@ -174,7 +174,7 @@ def create_platform_aot(app_path: str):
 
             flutter_release_and_profile_flags = ''
             if runtime_mode != 'debug':
-                flutter_release_and_profile_flags = '--aot --tfa --target-os linux'
+                flutter_release_and_profile_flags = '--aot --tfa'
 
             flutter_app_debug_flags = ''
             flutter_app_debug_flags_extra = ''

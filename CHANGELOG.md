@@ -1,5 +1,8 @@
 # Changelog
 
+Aug 2, 2024
+1. Fix for `ERROR: FormatException: Could not find an option named "target-os"`
+
 Aug 1, 2024
 1. Flutter SDK 3.22.3
 
