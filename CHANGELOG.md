@@ -1,5 +1,11 @@
 # Changelog
 
+Aug 9, 2024
+1. Change flutter channel switch sequence
+2. Change occurences of `master` to `main`
+3. remove scripts that moved to meta-flutter tools
+4. remove unused pubspec.py
+
 Aug 2, 2024
 1. Fix for `ERROR: FormatException: Could not find an option named "target-os"`
 

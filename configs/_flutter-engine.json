@@ -17,7 +17,7 @@
         "ENGINE_ROOT": "${FLUTTER_WORKSPACE}/app/engine",
         "ENGINE_SRC_DIR_RELATIVE": "src",
         "ENGINE_SRC_DIR": "${ENGINE_ROOT}/${ENGINE_SRC_DIR_RELATIVE}",
-        "ENGINE_BUILD_FLAGS": "--runtime-mode=${RUNTIME_MODE} --embedder-for-target --enable-fontconfig --disable-desktop-embeddings --no-build-embedder-examples --enable-impeller-3d --no-lto --no-goma --no-stripped --no-enable-unittests",
+        "ENGINE_BUILD_FLAGS": "--runtime-mode=${RUNTIME_MODE} --embedder-for-target --enable-fontconfig --disable-desktop-embeddings --no-build-embedder-examples --enable-impeller-3d --no-lto --no-goma --no-rbe --no-stripped --no-enable-unittests",
         "ENGINE_BUILD_DIR": "${ENGINE_SRC_DIR}/out/host_debug",
         "GN_ARGS_FILE": "${ENGINE_BUILD_DIR}/args.gn",
         "GN_ARGS_APPEND": "",

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# SPDX-FileCopyrightText: (C) 2020-2023 Joel Winarske
+# SPDX-FileCopyrightText: (C) 2020-2024 Joel Winarske
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -204,10 +204,10 @@ def create_platform_aot(app_path: str):
             if app_aot_extra is None:
                 app_aot_extra = ''
 
-            cmd = f'{flutter_sdk}/bin/cache/dart-sdk/bin/dart \
+            cmd = f'{flutter_sdk}/bin/cache/dart-sdk/bin/dartaotruntime \
                 --disable-analytics \
                 --disable-dart-dev \
-                {flutter_sdk}/bin/cache/artifacts/engine/linux-x64/frontend_server.dart.snapshot \
+                {flutter_sdk}/bin/cache/artifacts/engine/linux-x64/frontend_server_aot.dart.snapshot \
                 --sdk-root {flutter_sdk_root_patched} \
                 --target=flutter \
                 --no-print-incremental-dependencies \
@@ -219,7 +219,7 @@ def create_platform_aot(app_path: str):
                 {flutter_release_and_profile_flags} \
                 --packages {app_path}/.dart_tool/package_config.json \
                 {flutter_app_app_dill} \
-                --depfile {app_path}/.dart_tool/flutter_build/*/kernel_snapshot.d \
+                --depfile {app_path}/.dart_tool/flutter_build/*/kernel_snapshot_program.d \
                 {flutter_source_flags} \
                 {flutter_app_debug_flags_extra} \
                 {flutter_native_assets} \

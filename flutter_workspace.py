@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# SPDX-FileCopyrightText: (C) 2020-2023 meta-flutter contributors
+# SPDX-FileCopyrightText: (C) 2020-2024 meta-flutter contributors
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -49,7 +49,6 @@ from fw_common import handle_ctrl_c
 from fw_common import make_sure_path_exists
 from fw_common import print_banner
 from fw_common import write_sha256_file
-from pubspec import Pubspec
 
 
 def main():
@@ -71,8 +70,6 @@ def main():
                         help='Set cookie-file to use.  Overrides _globals.json key/value')
     parser.add_argument('--fetch-engine', default=False,
                         action='store_true', help='Fetch Engine artifacts')
-    parser.add_argument('--version-files', default='', type=str,
-                        help='Create JSON files correlating Flutter SDK to Engine and Dart commits')
     parser.add_argument('--find-working-commit', default=False, action='store_true',
                         help='Use to finding GIT commit where flutter analyze returns true')
     parser.add_argument('--plex', default='', type=str,
@@ -85,7 +82,6 @@ def main():
 
     parser.add_argument('--stdin-file', default='', type=str,
                         help='Use for passing stdin for debugging')
-    parser.add_argument('--pubspec-path', default='', type=str, help='return pubspec.yaml info')
     parser.add_argument('--plugin-platform', default='linux', type=str, help='specify plugin platform type')
     parser.add_argument('--create-aot', default=False, action='store_true', help='Generate AOT')
     parser.add_argument('--app-path', default='', type=str, help='Specify Application path')
@@ -95,14 +91,6 @@ def main():
     if args.create_aot:
         if args.app_path == '':
             sys.exit("Must specify value for --app-path")
-
-    #
-    # pubspec parsing
-    #
-    if len(args.pubspec_path):
-        pubspec = Pubspec(args.pubspec_path, args.plugin_platform)
-        pubspec.print_plugins()
-        return
 
     #
     # Find GIT Commit where flutter analyze returns true
@@ -166,14 +154,6 @@ def main():
     if args.fetch_engine:
         print_banner("Fetching Engine Artifacts")
         get_flutter_engine_runtime(True)
-        return
-
-    #
-    # Version Files
-    #
-    if args.version_files:
-        print_banner("Generating Version files")
-        get_version_files(args.version_files)
         return
 
     #
@@ -262,7 +242,7 @@ def main():
         if 'flutter-version' in globals_:
             flutter_version = globals_.get('flutter-version')
         else:
-            flutter_version = "master"
+            flutter_version = "main"
 
     print_banner("Flutter Version: %s" % flutter_version)
     flutter_sdk_path = get_flutter_sdk(flutter_version)
@@ -272,7 +252,7 @@ def main():
     force_tool_rebuild(flutter_sdk_folder)
 
     # Enable custom devices in dev and stable
-    if flutter_version != "master":
+    if flutter_version != "main":
         patch_flutter_sdk(flutter_sdk_folder)
 
     #
@@ -293,8 +273,11 @@ def main():
     # Trigger upgrade on Channel if version is all letters
     #
     if flutter_version.isalpha():
-        cmd = ["flutter", "upgrade", flutter_version]
-        print_banner("Upgrading `%s` Channel" % flutter_version)
+        print_banner("Setting channel to `%s`" % flutter_version)
+        cmd = ['flutter', 'channel', flutter_version]
+        subprocess.check_call(cmd, cwd=flutter_sdk_path)
+        print_banner("Upgrading")
+        cmd = ['flutter', 'upgrade', '--force']
         subprocess.check_call(cmd, cwd=flutter_sdk_path)
 
     #
@@ -328,7 +311,7 @@ def main():
     #
     # Display the custom devices list
     #
-    if flutter_version == "master":
+    if flutter_version == "main":
         cmd = ['flutter', 'custom-devices', 'list']
         subprocess.check_call(cmd)
 
