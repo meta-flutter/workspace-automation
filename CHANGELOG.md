@@ -5,6 +5,7 @@ Aug 9, 2024
 2. Change occurences of `master` to `main`
 3. remove scripts that moved to meta-flutter tools
 4. remove unused pubspec.py
+5. make create_aot.py version independent
 
 Aug 2, 2024
 1. Fix for `ERROR: FormatException: Could not find an option named "target-os"`

@@ -22,6 +22,10 @@ def main():
     parser.add_argument('--app-path', default='', type=str, help='Specify Application path')
     args = parser.parse_args()
 
+    flutter_sdk_version = get_flutter_sdk_version()
+    if flutter_sdk_version:
+        print_banner(f'Creating AOT image using Flutter SDK {flutter_sdk_version}')
+
     if args.app_path == '':
         sys.exit("Must specify value for --app-path")
 
@@ -30,55 +34,38 @@ def main():
     #
     signal.signal(signal.SIGINT, handle_ctrl_c)
 
-    create_platform_aot(args.app_path)
+    create_platform_aot(args.app_path, flutter_sdk_version)
 
 
-def filter_linux_plugin_registrant(dart_file: str):
-    """ Removes unused items from the dart plugin registrant file """
+def versiontuple(v):
+    return tuple(map(int, (v.split("."))))
 
-    if not os.path.exists(dart_file):
-        return
 
-    with open(dart_file, "r") as f:
-        lines = f.readlines()
+def get_flutter_sdk_version() -> str:
+    import json
+    import subprocess
 
-    discard = False
-    with open(dart_file, "w") as f:
-        for line in lines:
-            if line.find('import') != -1 and line.find('_android') != -1:
-                continue
-            elif line.find('import') != -1 and line.find('_ios') != -1:
-                continue
-            elif line.find('import') != -1 and line.find('_windows') != -1:
-                continue
-            elif line.find('import') != -1 and line.find('_macos') != -1:
-                continue
-            elif line.find('(Platform.isAndroid)') != -1:
-                discard = True
-                continue
-            elif line.find('(Platform.isIOS)') != -1:
-                discard = True
-                continue
-            elif line.find('(Platform.isMacOS)') != -1:
-                discard = True
-                continue
-            elif line.find('(Platform.isWindows)') != -1:
-                discard = True
-                continue
-            elif line.find('(Platform.isLinux)') != -1:
-                f.write('    if (Platform.isLinux) {\n')
-                discard = False
-                continue
-            elif line == '    }\n':
-                f.write(line)
-                discard = False
-                continue
-            elif not discard:
-                f.write(line)
-                continue
-            else:
-                continue
-        f.write('    }\n  }\n}\n')
+    (retval, output) = subprocess.getstatusoutput('which flutter')
+    if retval:
+        print_banner("failed %s (cmd was which flutter)" % (retval))
+        return None
+
+    bin_path = os.path.dirname(output.rstrip())
+    flutter_version_json = os.path.join(bin_path, 'cache', 'flutter.version.json')
+
+    if not os.path.exists(flutter_version_json):
+        print_banner(f'Missing {flutter_version_json}')
+        return None
+
+    with open(os.path.join(os.path.dirname(flutter_version_json), flutter_version_json), encoding='utf-8') as f:
+        flutter_version_json = json.load(f)
+
+        if 'flutterVersion' not in flutter_version_json:
+            print_banner(f'Missing key: flutterVersion in {flutter_version_json}')
+            return None
+
+        flutter_version = flutter_version_json['flutterVersion']
+        return flutter_version
 
 
 def get_yaml_obj(filepath: str):
@@ -98,7 +85,7 @@ def get_yaml_obj(filepath: str):
         return data_loaded
 
 
-def create_platform_aot(app_path: str):
+def create_platform_aot(app_path: str, flutter_sdk_version: str):
     """ Creates a platform AOT for Release and Profile """
     print_banner(f'Creating AOT Release and Profile in {app_path}')
 
@@ -139,6 +126,11 @@ def create_platform_aot(app_path: str):
     flutter_sdk_root = os.getenv("LOCAL_ENGINE_HOST")
     if flutter_sdk_root is None:
         flutter_sdk_root = f'{flutter_sdk}/bin/cache/artifacts/engine/common'
+
+    new_build_scheme = False
+    if versiontuple(flutter_sdk_version) >= versiontuple('3.24.0'):
+        print('Using new build scheme')
+        new_build_scheme = True
 
     for runtime_mode in flutter_runtime_modes:
 
@@ -191,7 +183,6 @@ def create_platform_aot(app_path: str):
             flutter_source_flags = ''
             dart_plugin_registrant_file = f'{app_path}/.dart_tool/flutter_build/dart_plugin_registrant.dart'
             if os.path.exists(dart_plugin_registrant_file):
-                # filter_linux_plugin_registrant(dart_plugin_registrant_file)
                 flutter_source_flags = f'--source file://{dart_plugin_registrant_file}'
                 flutter_source_flags += ' --source package:flutter/src/dart_plugin_registrant.dart'
                 flutter_source_flags += f' -Dflutter.dart_plugin_registrant=file://{dart_plugin_registrant_file}'
@@ -204,10 +195,19 @@ def create_platform_aot(app_path: str):
             if app_aot_extra is None:
                 app_aot_extra = ''
 
-            cmd = f'{flutter_sdk}/bin/cache/dart-sdk/bin/dartaotruntime \
+            if not new_build_scheme:
+                dart_runtime = f'{flutter_sdk}/bin/cache/dart-sdk/bin/dart'
+                frontend_snapshot = f'{flutter_sdk}/bin/cache/artifacts/engine/linux-x64/frontend_server.dart.snapshot'
+                depfile = f'{app_path}/.dart_tool/flutter_build/*/kernel_snapshot.d'
+            else:
+                dart_runtime = f'{flutter_sdk}/bin/cache/dart-sdk/bin/dartaotruntime'
+                frontend_snapshot = f'{flutter_sdk}/bin/cache/artifacts/engine/linux-x64/frontend_server_aot.dart.snapshot'
+                depfile = f'{app_path}/.dart_tool/flutter_build/*/kernel_snapshot_program.d'
+
+            cmd = f'{dart_runtime} \
                 --disable-analytics \
                 --disable-dart-dev \
-                {flutter_sdk}/bin/cache/artifacts/engine/linux-x64/frontend_server_aot.dart.snapshot \
+                {frontend_snapshot} \
                 --sdk-root {flutter_sdk_root_patched} \
                 --target=flutter \
                 --no-print-incremental-dependencies \
@@ -219,7 +219,7 @@ def create_platform_aot(app_path: str):
                 {flutter_release_and_profile_flags} \
                 --packages {app_path}/.dart_tool/package_config.json \
                 {flutter_app_app_dill} \
-                --depfile {app_path}/.dart_tool/flutter_build/*/kernel_snapshot_program.d \
+                --depfile {depfile} \
                 {flutter_source_flags} \
                 {flutter_app_debug_flags_extra} \
                 {flutter_native_assets} \
