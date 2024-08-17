@@ -12,8 +12,8 @@
     "flutter_runtime": "debug",
     "env": {
         "CAMERA_SRC_DIR": "${FLUTTER_WORKSPACE}/app/libcamera",
-        "CAMERA_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/libcamera/build",
-        "CAMERA_MESON_ARGS": "-Dqcam=\"disabled\" -Dlc-compliance=\"disabled\" -Dcam=\"disabled\""
+        "CAMERA_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/libcamera/buildDir",
+        "CAMERA_MESON_ARGS": "-Dqcam=\"disabled\" -Dlc-compliance=\"disabled\" -Dcam=\"disabled\" -Dgstreamer=\"disabled\""
     },
     "runtime": {
         "pre-requisites": {
@@ -42,9 +42,9 @@
                 },
                 "cwd": "${CAMERA_SRC_DIR}",
                 "cmds": [
-                    "rm -rf build |true",
-                    "meson build ${CAMERA_MESON_ARGS}",
-                    "ninja -C build"
+                    "rm -rf buildDir |true",
+                    "meson setup buildDir ${CAMERA_MESON_ARGS}",
+                    "ninja -C buildDir"
                 ]
             },
             {

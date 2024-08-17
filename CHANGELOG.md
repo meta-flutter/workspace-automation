@@ -1,5 +1,10 @@
 # Changelog
 
+Aug 17, 2024
+1. maplibre - enable vulkan backend
+2. move libcamera to master
+3. add sentry-native to repos.json
+
 Aug 9, 2024
 1. Change flutter channel switch sequence
 2. Change occurences of `master` to `main`

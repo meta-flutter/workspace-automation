@@ -18,8 +18,7 @@
     },
     {
         "uri": "https://git.libcamera.org/libcamera/libcamera.git",
-        "branch": "master",
-        "rev" : "v0.3.0"
+        "branch": "master"
     },
     {
         "uri": "https://github.com/flutter/gallery.git",
@@ -75,5 +74,9 @@
     {
         "uri": "https://github.com/maplibre/maplibre-native.git",
         "branch": "main"
+    },
+    {
+        "uri": "https://github.com/getsentry/sentry-native.git",
+        "branch": "master"
     }
 ]
