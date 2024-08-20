@@ -11,9 +11,9 @@ import os
 import signal
 import sys
 
-from fw_common import handle_ctrl_c
-from fw_common import print_banner
-from fw_common import run_command
+from common import handle_ctrl_c
+from common import print_banner
+from common import run_command
 
 
 def main():

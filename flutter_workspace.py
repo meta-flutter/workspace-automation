@@ -41,14 +41,14 @@ import zipfile
 from platform import system
 
 import create_aot
-from fw_common import check_python_version
-from fw_common import compare_sha256
-from fw_common import download_https_file
-from fw_common import fetch_https_binary_file
-from fw_common import handle_ctrl_c
-from fw_common import make_sure_path_exists
-from fw_common import print_banner
-from fw_common import write_sha256_file
+from common import check_python_version
+from common import compare_sha256
+from common import download_https_file
+from common import fetch_https_binary_file
+from common import handle_ctrl_c
+from common import make_sure_path_exists
+from common import print_banner
+from common import write_sha256_file
 
 
 def main():
