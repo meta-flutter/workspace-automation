@@ -1,0 +1,112 @@
+{
+    "id": "agl-qemu-ricefish-18.0.0",
+    "load": true,
+    "supported_archs": [
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "darwin",
+        "ubuntu",
+        "fedora"
+    ],
+    "flutter_runtime": "debug",
+    "type": "qemu",
+    "env": {
+        "RELEASE_NAME": "ricefish",
+        "RELEASE_VERSION": "18.0.0",
+        "FLUTTER_VERSION": "3.19.3",
+        "QEMU_IMAGE": "agl-ivi-demo-flutter-qemux86-64.wic.vmdk",
+        "FLUTTER_DEBUG_PORT": "1234",
+        "FLUTTER_OBSERVATORY_HOST": "0.0.0.0",
+        "CONTAINER_SSH_PORT": "2222",
+        "DEVICE_HOSTNAME": "localhost",
+        "SCP_PREFIX": "scp -oStrictHostKeyChecking=no -P ${CONTAINER_SSH_PORT}",
+        "SSH_PREFIX": "ssh -oStrictHostKeyChecking=no -oBatchMode=yes -p ${CONTAINER_SSH_PORT}",
+        "FLUTTER_AUTO_EXE": "LIBCAMERA_LOG_LEVELS=*:ERROR XDG_RUNTIME_DIR=/run/user/1001/ flutter-auto --j=/tmp/${appName}/default_config.json --b=/tmp/${appName}",
+        "PING_CMD": "(echo >/dev/tcp/localhost/${CONTAINER_SSH_PORT}) &>/dev/null && echo open || echo closed",
+        "DELETE_USER_PWD": "${SSH_PREFIX} -t root@${DEVICE_HOSTNAME} passwd -d agl-driver",
+        "STOP_SERVICE": "${SSH_PREFIX} -t root@${DEVICE_HOSTNAME} systemctl stop flutter-ics-homescreen",
+        "DEBUG_ARTIFACT_PATH": "/usr/share/flutter/${FLUTTER_VERSION}/debug",
+        "CREATE_ICUDTL_SYMLINK": "${SSH_PREFIX} agl-driver@${DEVICE_HOSTNAME} ln -sf ${DEBUG_ARTIFACT_PATH}/data/icudtl.dat /tmp/${appName}/data/icudtl.dat",
+        "CREATE_ENGINE_SYMLINK": "${SSH_PREFIX} agl-driver@${DEVICE_HOSTNAME} ln -sf ${DEBUG_ARTIFACT_PATH}/lib/libflutter_engine.so /tmp/${appName}/lib/libflutter_engine.so",
+        "CREATE_BUNDLE_FOLDER": "${SSH_PREFIX} agl-driver@${DEVICE_HOSTNAME} mkdir -p /tmp/${appName}{/data/flutter_assets,/lib}",
+        "COPY_PLATFORM_ID_TO_DEVICE": "${SCP_PREFIX} -r ${PLATFORM_ID_DIR}/default_config.json agl-driver@${DEVICE_HOSTNAME}:/tmp/${appName}/",
+        "COPY_ASSETS_TO_DEVICE": "${SCP_PREFIX} -r ${localPath}/* agl-driver@${DEVICE_HOSTNAME}:/tmp/${appName}/data/flutter_assets",
+        "DELETE_APP_FOLDER": "${SSH_PREFIX} agl-driver@${DEVICE_HOSTNAME} rm -rf /tmp/${appName}"
+    },
+    "runtime": {
+        "pre-requisites": {
+            "x86_64": {
+                "ubuntu": {
+                    "cmds": [
+                        "sudo apt install -y  qemu-system-x86-64"
+                    ]
+                },
+                "fedora": {
+                    "cmds": [
+                        "sudo dnf install -y qemu"
+                    ]
+                }
+            }
+        },
+        "config": {
+            "view": [
+                {
+                    "window_type": "BG",
+                    "width": 1920,
+                    "height": 1080
+                }
+            ]
+        },
+        "artifacts": {
+            "http": {
+                "url": "https://download.automotivelinux.org/AGL/release/${RELEASE_NAME}/${RELEASE_VERSION}",
+                "artifacts": {
+                    "x86_64": [
+                        {
+                            "endpoint": "/qemux86-64/deploy/images/qemux86-64/${QEMU_IMAGE}.xz"
+                        }
+                    ]
+                }
+            }
+        },
+        "qemu": {
+            "cmd": "qemu-system-${FORMAL_MACHINE_ARCH}",
+            "x86_64": {
+                "image": "${QEMU_IMAGE}",
+                "args": "-m 2048 ${QEMU_EXTRA} -hda ${QEMU_IMAGE} -cpu kvm64 -cpu qemu64,+ssse3,+sse4.1,+sse4.2,+popcnt -vga virtio -device virtio-rng-pci -serial mon:stdio -serial null -device intel-hda -device hda-duplex -device virtio-net-pci,netdev=net0,mac=${RANDOM_MAC} -netdev user,id=net0,hostfwd=tcp::${CONTAINER_SSH_PORT}-:22,hostfwd=tcp::${FLUTTER_DEBUG_PORT}-:${FLUTTER_DEBUG_PORT}"
+            },
+            "extra": {
+                "darwin": "-smp cpus=8,sockets=1,cores=8,threads=1",
+                "ubuntu": "-bios OVMF.fd",
+                "fedora": "-bios /usr/share/edk2/ovmf/OVMF_CODE.fd"
+            }
+        },
+        "post_cmds": [
+            {
+                "cwd": "${PLATFORM_ID_DIR}",
+                "cmds": [
+                    "bash -c \"rm ${QEMU_IMAGE}|true\"",
+                    "unxz --keep ${QEMU_IMAGE}.xz"
+                ]
+            }
+        ]
+    },
+    "overwrite-existing": true,
+    "custom-device": {
+        "id": "agl-qemu-${RELEASE_NAME}",
+        "label": "AGL ${RELEASE_NAME}-${RELEASE_VERSION} QEMU Image",
+        "sdkNameAndVersion": "qemu-${RELEASE_NAME} ${RELEASE_VERSION}",
+        "platform": "linux-x64",
+        "enabled": true,
+        "ping": "bash -c \"${PING_CMD}\"",
+        "pingSuccessRegex": "open",
+        "postBuild": "bash -c \"${DELETE_USER_PWD}; ${STOP_SERVICE}\"; ",
+        "install": "bash -c \"${CREATE_BUNDLE_FOLDER} && ${COPY_PLATFORM_ID_TO_DEVICE} && ${COPY_ASSETS_TO_DEVICE} && ${CREATE_ICUDTL_SYMLINK} && ${CREATE_ENGINE_SYMLINK}\"",
+        "uninstall": "bash -c \"${DELETE_APP_FOLDER}\"",
+        "runDebug": "bash -c \"${SSH_PREFIX} agl-driver@${DEVICE_HOSTNAME} ${FLUTTER_AUTO_EXE}\"",
+        "forwardPort": null,
+        "forwardPortSuccessRegex": null,
+        "screenshot": null
+    }
+}

@@ -1605,9 +1605,13 @@ def create_platform_config_file(obj, cwd):
 
     toml_config = toml.dumps(obj)
     
-    default_config_filepath = cwd.joinpath('config.toml')
-    with open(default_config_filepath, 'w+') as f:
+    toml_default_config_filepath = cwd.joinpath('config.toml')
+    with open(toml_default_config_filepath, 'w+') as f:
         f.write(toml_config)
+
+    json_default_config_filepath = cwd.joinpath('default_config.json')
+    with open(json_default_config_filepath, 'w+') as f:
+        json.dump(obj, f, indent=2)
 
 
 def create_gclient_config_file(obj):
