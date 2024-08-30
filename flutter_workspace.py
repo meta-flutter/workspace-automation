@@ -130,6 +130,9 @@ def main():
     #
     # upgrade pip
     python = sys.executable
+    venv_dir = os.environ['HOME']+'/venv'
+    subprocess.check_call([python, '-m', 'venv', venv_dir], stdout=subprocess.DEVNULL)
+    python = venv_dir + '/bin/python'
     subprocess.check_call([python, '-m', 'pip', 'install',
                            '--upgrade', 'pip'], stdout=subprocess.DEVNULL)
 
