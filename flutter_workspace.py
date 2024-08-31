@@ -1076,13 +1076,7 @@ def get_google_flutter_engine_url():
     engine_version = get_flutter_engine_version(flutter_sdk_path)
     os.environ['FLUTTER_ENGINE_VERSION'] = engine_version
 
-    url = ''
-    if arch == 'x86_64':
-        url = 'https://storage.googleapis.com/flutter_infra_release/flutter/%s/linux-x64/linux-x64-embedder' % \
-              engine_version
-    elif arch == 'arm64':
-        url = 'https://storage.googleapis.com/flutter_infra_release/flutter/%s/linux-arm64/artifacts.zip' % \
-              engine_version
+    url = f'https://github.com/meta-flutter/flutter-engine/releases/download/linux-engine-sdk-debug-{arch}-{engine_version}/linux-engine-sdk-debug-{arch}-{engine_version}.tar.gz'
     return url, engine_version
 
 
@@ -1091,8 +1085,7 @@ def get_flutter_engine_runtime(clean_workspace):
 
     base_url, engine_version = get_google_flutter_engine_url()
 
-    _head, tail = os.path.split(base_url)
-    filename = tail + '.zip'
+    _, filename = os.path.split(base_url)
 
     cwd = get_platform_working_dir('flutter-engine')
 
@@ -1108,11 +1101,9 @@ def get_flutter_engine_runtime(clean_workspace):
         print_banner("Downloading Engine artifact")
         make_sure_path_exists(cwd_engine)
         if not download_https_file(cwd_engine, base_url, filename,
-                                   None, None, None, None, None):
+                                   None, None, None, None, None, True):
             print_banner("Engine artifact not available")
             return
-
-        write_sha256_file(cwd_engine, archive_file)
     else:
         print_banner("Skipping Engine artifact download")
 
@@ -1121,41 +1112,22 @@ def get_flutter_engine_runtime(clean_workspace):
             cmd = ["rm", "-rf", bundle_folder]
             subprocess.check_output(cmd, cwd=cwd)
 
-    lib_folder = os.path.join(bundle_folder, 'lib')
-    make_sure_path_exists(lib_folder)
+    restore_folder = os.path.join(cwd_engine, 'engine-sdk')
+    make_sure_path_exists(restore_folder)
+    subprocess.check_call(['tar', '-xzf', archive_file, '-C', restore_folder])
 
     data_folder = os.path.join(bundle_folder, 'data')
     make_sure_path_exists(data_folder)
 
-    workspace = os.environ.get('FLUTTER_WORKSPACE')
-    flutter_sdk_path = os.path.join(workspace, 'flutter')
+    icudtl_src = os.path.join(restore_folder, 'src', 'out', 'linux_debug_x64', 'engine-sdk', 'data', 'icudtl.dat')
 
-    host_type = get_host_type()
+    lib_folder = os.path.join(bundle_folder, 'lib')
+    make_sure_path_exists(lib_folder)
 
-    icudtl_source = os.path.join(
-        flutter_sdk_path,
-        "bin/cache/artifacts/engine/%s/icudtl.dat" %
-        'linux-x64'
-        if host_type == 'linux'
-        else 'darwin-x64')
+    libflutter_engine_src = os.path.join(restore_folder, 'src', 'out', 'linux_debug_x64', 'engine-sdk', 'lib', 'libflutter_engine.so')
 
-    if not os.path.exists(icudtl_source):
-        cmd = ["flutter", "doctor", "-v"]
-        subprocess.check_call(cmd, cwd=flutter_sdk_path)
-
-    icudtl_source = os.path.join(
-        flutter_sdk_path,
-        "bin/cache/artifacts/engine/%s-x64/icudtl.dat" %
-        host_type)
-
-    subprocess.check_call(["cp", icudtl_source, "%s/" % data_folder])
-
-    with zipfile.ZipFile(archive_file, "r") as zip_ref:
-        zip_ref.extractall(lib_folder)
-
-    if host_type == 'linux':
-        cmd = ["rm", "flutter_embedder.h"]
-        subprocess.check_call(cmd, cwd=lib_folder)
+    subprocess.check_call(["cp", icudtl_src, f'{data_folder}'])
+    subprocess.check_call(["cp", libflutter_engine_src, f'{lib_folder}'])
 
 
 def handle_conditionals(conditionals, cwd):

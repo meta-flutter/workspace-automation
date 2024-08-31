@@ -105,7 +105,7 @@ def get_sha256sum(file: str):
     return sha256_hash.hexdigest()
 
 
-def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1, sha256):
+def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1, sha256, redirect=False):
     download_filepath = os.path.join(cwd, file)
 
     sha256_file = os.path.join(cwd, file + '.sha256')
@@ -138,7 +138,7 @@ def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1, sha256):
 
     print("** Downloading %s via %s" % (file, url))
     res = fetch_https_binary_file(
-        url, download_filepath, False, None, cookie_file, netrc)
+        url, download_filepath, redirect, None, cookie_file, netrc)
     if not res:
         os.remove(download_filepath)
         print_banner("Failed to download %s" % file)
