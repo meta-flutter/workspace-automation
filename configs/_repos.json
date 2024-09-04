@@ -34,9 +34,9 @@
         "branch": "main"
     },
     {
-        "uri": "https://github.com/playx-flutter/playx-3d-scene.git",
+        "uri": "https://github.com/meta-flutter/playx-3d-scene.git",
         "branch": "main",
-        "rev": "46cd40546b4b06aea4fae0889926d24e441ad825"
+        "rev": "2df02e8c9f60c92626f9cb780d3e56ccbeca2748"
     },
     {
         "uri": "https://github.com/flutter/samples.git",

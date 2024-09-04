@@ -24,12 +24,12 @@
             "x86_64": {
                 "ubuntu": {
                     "cmds": [
-                        "pip3 install absl-py --user"
+                        "pip3 install absl-py"
                     ]
                 },
                 "fedora": {
                     "cmds": [
-                        "pip3 install absl-py --user"
+                        "pip3 install absl-py"
                     ]
                 }
             }
@@ -55,15 +55,6 @@
                 "cmds": [
                   "cmake ${FILAMENT_SRC_DIR} ${FILAMENT_CMAKE_ARGS}",
                   "make install -j"
-                ]
-            },
-            {
-                "cwd": "${PLAYX_3D_SCENE_SRC_DIR}",
-                "cmds": [
-                    "git reset --hard",
-                    "git apply ${PATCH_FOLDER}/sourcya-playx-3d-scene/0001-ivi-homescreen-support.patch",
-                    "${FILAMENT_STAGING_DIR}/bin/matc --api vulkan -o example/assets/materials/textured_pbr.filamat ${FILAMENT_SRC_DIR}/samples/materials/groundShadow.mat",
-                    "${FILAMENT_STAGING_DIR}/bin/matc --api vulkan -o example/assets/materials/lit.filamat          ${FILAMENT_SRC_DIR}/android/samples/sample-hello-camera/src/main/materials/lit.mat"
                 ]
             }
         ]

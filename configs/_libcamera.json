@@ -21,15 +21,13 @@
                 "ubuntu": {
                     "cmds": [
                         "sudo apt install -y libjpeg-dev libevent-dev",
-                        "pip3 install jinja2 ply --user",
-                        "sudo pip3 install meson"
+                        "pip3 install jinja2 ply pyyaml meson"
                     ]
                 },
                 "fedora": {
                     "cmds": [
                         "sudo dnf install -y libjpeg-devel libevent-devel",
-                        "pip3 install jinja2 ply --user",
-                        "sudo pip3 install meson"
+                        "pip3 install jinja2 ply pyyaml meson"
                     ]
                 }
             }
