@@ -142,9 +142,9 @@ git clone https://github.com/meta-flutter/workspace_automation.git
 
 Wipes workspace before creating
 
-#### --config=<file or folder>
+#### --config=<folder>
 
-Pass configuration JSON file, or folder path.
+Pass configuration folder path.
 
 
 #### --flutter-version=x.x.x

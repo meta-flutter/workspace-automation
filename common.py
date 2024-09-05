@@ -38,7 +38,7 @@ def run_command(cmd: str, cwd: str) -> str:
     import subprocess
 
     # replace all consecutive whitespace characters (tabs, newlines etc.) with a single space
-    cmd = re.sub('\s{2,}', ' ', cmd)
+    cmd = re.sub('\\s{2,}', ' ', cmd)
 
     print('Running [%s] in %s' % (cmd, cwd))
     (retval, output) = subprocess.getstatusoutput(f'cd {cwd} && {cmd}')

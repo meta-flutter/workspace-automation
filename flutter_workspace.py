@@ -118,6 +118,8 @@ def main():
     else:
         workspace = os.getcwd()
 
+    config_folder = os.path.join(workspace, '.config')
+
     print_banner("Setting up Flutter Workspace in: %s" % workspace)
 
     #
@@ -126,12 +128,16 @@ def main():
     install_minimum_runtime_deps()
 
     #
-    # Install required modules
+    # Virtual Python Setup
     #
-    # upgrade pip
-    python = sys.executable
-    subprocess.check_call([python, '-m', 'pip', 'install',
-                           '--upgrade', 'pip'], stdout=subprocess.DEVNULL)
+    venv_dir = os.path.join(config_folder, 'venv')
+    subprocess.check_call([sys.executable, '-m', 'venv', venv_dir], stdout=subprocess.DEVNULL)
+    os.environ['PATH'] = '%s:%s' % (os.path.join(venv_dir, 'bin'), os.environ.get('PATH'))
+
+    #
+    # Install required python modules
+    #
+    subprocess.check_call(['pip3', 'install', 'pycurl', 'toml', 'python-dotenv'], stdout=subprocess.DEVNULL)
 
     #
     # Control+C handler
@@ -171,7 +177,6 @@ def main():
     app_folder = os.path.join(workspace, 'app')
     flutter_sdk_folder = os.path.join(workspace, 'flutter')
 
-    config_folder = os.path.join(workspace, '.config')
     vscode_folder = os.path.join(workspace, '.vscode')
 
     clean_workspace = False
@@ -316,11 +321,12 @@ def main():
         subprocess.check_call(cmd)
 
     #
-    # Recursively change ownership to $SUDO_USER
+    # Recursively change ownership to logged in user
     #
-    user = os.environ.get('SUDO_USER')
+    user = get_process_stdout('logname').split('\n')
+    cmd = ['sudo', 'chown', '-R', f'{user[0]}:{user[0]}', '.']
+
     flutter_workspace = os.environ.get('FLUTTER_WORKSPACE')
-    cmd = ['sudo', 'chown', '-R', f'{user}:{user}', '.']
     subprocess.check_call(cmd, cwd=flutter_workspace)
 
     #
@@ -1030,7 +1036,6 @@ def get_process_stdout(cmd):
     for line in process.stdout:
         ret += str(line)
     process.wait()
-    print(ret)
     return ret
 
 
@@ -1915,16 +1920,14 @@ def install_minimum_runtime_deps():
         if os_release_id == 'ubuntu':
             cmd = ['sudo', 'apt', 'update', '-y']
             subprocess.check_output(cmd)
-            packages = 'git git-lfs curl libcurl4-openssl-dev libssl-dev libgtk-3-dev ' \
-                       'python3-dotenv python3-pycurl python3-toml python3-pip'.split(' ')
+            packages = 'git git-lfs curl libcurl4-openssl-dev libssl-dev libgtk-3-dev'.split(' ')
             for package in packages:
                 ubuntu_install_pkg_if_not_installed(package)
 
         elif os_release_id == 'fedora':
             cmd = ['sudo', 'dnf', '-y', 'update']
             subprocess.check_output(cmd)
-            packages = 'dnf-plugins-core git git-lfs curl libcurl-devel openssl-devel ' \
-                       'gtk3-devel python3-dotenv python3-pycurl python3-toml python3-pip'.split(' ')
+            packages = 'dnf-plugins-core git git-lfs curl libcurl-devel openssl-devel gtk3-devel'.split(' ')
             for package in packages:
                 fedora_install_pkg_if_not_installed(package)
 
