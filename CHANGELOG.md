@@ -1,5 +1,8 @@
 # Changelog
 
+Sept 7, 2024
+1. Flutter SDK 3.24.2
+
 Sept 4, 2024
 1. Python virtual env by default.  This means python3-venv is now a hard requirement.
 2. for post chown use logname; resolves sudo su and not invoking with sudo
