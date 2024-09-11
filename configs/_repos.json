@@ -14,7 +14,7 @@
     {
         "uri": "https://github.com/google/filament.git",
         "branch": "release",
-        "rev" : "v1.52.3"
+        "rev" : "v1.54.3"
     },
     {
         "uri": "https://git.libcamera.org/libcamera/libcamera.git",
