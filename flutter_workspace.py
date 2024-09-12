@@ -131,13 +131,18 @@ def main():
     # Virtual Python Setup
     #
     venv_dir = os.path.join(config_folder, 'venv')
-    subprocess.check_call([sys.executable, '-m', 'venv', venv_dir], stdout=subprocess.DEVNULL)
-    os.environ['PATH'] = '%s:%s' % (os.path.join(venv_dir, 'bin'), os.environ.get('PATH'))
+    subprocess.run([sys.executable, '-m', 'venv', venv_dir])
+
+    os.environ['PATH'] = f'%s:%s' % (os.path.join(venv_dir, 'bin'), os.environ.get('PATH'))
 
     #
     # Install required python modules
     #
-    subprocess.check_call(['pip3', 'install', 'pycurl', 'toml', 'python-dotenv'], stdout=subprocess.DEVNULL)
+    subprocess.run(['pip3', 'install', 'pycurl', 'toml', 'python-dotenv'])
+
+    subprocess.run(['which', 'python3'])
+    subprocess.run(['pip3', 'list'])
+
 
     #
     # Control+C handler
@@ -269,6 +274,7 @@ def main():
                                            'pub_cache')
     os.environ['XDG_CONFIG_HOME'] = os.path.join(
         os.environ.get('FLUTTER_WORKSPACE'), '.config', 'flutter')
+    os.environ['FLUTTER_GIT_URL'] = 'https://github.com/flutter/flutter.git'
 
     print("PATH=%s" % os.environ.get('PATH'))
     print("PUB_CACHE=%s" % os.environ.get('PUB_CACHE'))
@@ -600,6 +606,9 @@ def get_workspace_repos(base_folder, config):
         for _future in concurrent.futures.as_completed(futures):
             subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
 
+        concurrent.futures.wait(futures, timeout=None, return_when=concurrent.futures.ALL_COMPLETED)
+
+
     print_banner("Repos Cloned")
 
     # reset sudo timeout
@@ -922,12 +931,9 @@ def configure_flutter_sdk():
     with open(settings_file, "w+") as outfile:
         json.dump(settings, outfile, indent=2)
 
-    cmd = ['flutter', 'config', '--no-analytics']
-    subprocess.check_call(cmd)
-    cmd = ['dart', '--disable-analytics']
-    subprocess.check_call(cmd)
-    cmd = ['flutter', 'doctor']
-    subprocess.check_call(cmd)
+    subprocess.run(['flutter', 'config', '--no-analytics'])
+    subprocess.run(['dart', '--disable-analytics'])
+    subprocess.run(['flutter', 'doctor', '-v'])
 
 
 def force_tool_rebuild(flutter_sdk_folder):
@@ -1246,6 +1252,8 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
                 _res = future.result()
                 subprocess.check_call(
                     ['sudo', '-v'], stdout=subprocess.DEVNULL)
+                
+            concurrent.futures.wait(futures, timeout=None, return_when=concurrent.futures.ALL_COMPLETED)
 
 
 def handle_commands_obj(cmd_list, cwd):

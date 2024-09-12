@@ -201,6 +201,12 @@ def fetch_https_progress(download_t, download_d, _upload_t, _upload_d):
 
 def fetch_https_binary_file(url, filename, redirect, headers, cookie_file, netrc, connect_timeout) -> bool:
     """Fetches binary file via HTTPS"""
+    import subprocess
+    print('download https file')
+    print(os.environ['PATH'])
+    subprocess.run(['pip3', 'list'])
+    subprocess.run(['which', 'python3'])
+
     import pycurl
     import time
 
