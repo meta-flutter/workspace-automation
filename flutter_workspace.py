@@ -345,9 +345,9 @@ def clear_folder(dir_):
 def get_workspace_config(path):
     """ Returns workspace config """
 
-    if os.path.isdir(path):
+    data = {'globals': None, 'repos': None, 'platforms': []}
 
-        data = {'globals': None, 'repos': None, 'platforms': []}
+    if os.path.isdir(path):
 
         import glob
         for filename in sorted(glob.glob(os.path.join(path, '*.json'))):
