@@ -16,30 +16,24 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-12]
+        os: [ubuntu-20.04, ubuntu-22.04]
         # macos-10.15, macos-11, macos-12, ubuntu-18.04, ubuntu-22.04
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       - name: Setup workspace
         run: |
-          FLUTTER_WORKSPACE=`pwd`/workspace
-          mkdir -p $FLUTTER_WORKSPACE && pushd $FLUTTER_WORKSPACE
-          sudo ../flutter_workspace.py --config=`pwd`/../configs --plex="agl-qemu-master agl-qemu-octopus"
-          pwd
+          sudo ./flutter_workspace.py
 
       - name: Source Environment
         shell: bash
         working-directory: workspace
         run: |
-          pwd
-          SETUP_ENV = $(find -iname setup_env.sh)
-          cat $SETUP_ENV
-          source cat $SETUP_ENV
+          source ./setup_env.sh
           flutter doctor -v
           dart --version
