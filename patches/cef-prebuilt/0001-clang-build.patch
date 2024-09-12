@@ -1,0 +1,117 @@
+From 157e0243a997ebde75b6ffca342e0f151698ee15 Mon Sep 17 00:00:00 2001
+From: Joel Winarske <joel.winarske@toyotaconnected.com>
+Date: Thu, 12 Sep 2024 07:50:46 -0700
+Subject: [PATCH] clang build
+
+Signed-off-by: Joel Winarske <joel.winarske@toyotaconnected.com>
+---
+ CMakeLists.txt                              |  2 +-
+ include/capi/cef_base_capi.h                | 22 +++++++++++++++++----
+ include/internal/cef_types_wrappers.h       |  2 +-
+ include/wrapper/cef_helpers.h               |  2 ++
+ libcef_dll/wrapper/cef_byte_read_handler.cc |  2 +-
+ libcef_dll/wrapper/cef_zip_archive.cc       |  2 +-
+ 6 files changed, 24 insertions(+), 8 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 27cc398..165fb4b 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -156,7 +156,7 @@ set_property(GLOBAL PROPERTY OS_FOLDERS ON)
+ #            distribution and your project.
+ # A. Comment in these lines:
+ #
+-set(CEF_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
++#set(CEF_ROOT ".")
+ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CEF_ROOT}/cmake")
+ 
+ # Example 2: The binary distribution is in a separate directory from your
+diff --git a/include/capi/cef_base_capi.h b/include/capi/cef_base_capi.h
+index dbd0b9f..28712b6 100644
+--- a/include/capi/cef_base_capi.h
++++ b/include/capi/cef_base_capi.h
+@@ -94,11 +94,25 @@ typedef struct _cef_base_scoped_t {
+ 
+ // Check that the structure |s|, which is defined with a size_t member at the
+ // top, is large enough to contain the specified member |f|.
+-#define CEF_MEMBER_EXISTS(s, f) \
+-  ((intptr_t) &                 \
+-   ((s)->f) - (intptr_t)(s) + sizeof((s)->f) <= *reinterpret_cast<size_t*>(s))
++inline bool MemberExists(const void* s,
++                         size_t member_offset,
++                         size_t member_size) {
++  return member_offset + member_size <= *reinterpret_cast<const size_t*>(s);
++}
++
++inline bool MemberMissing(const void* s,
++                          size_t member_offset,
++                          size_t member_size,
++                          bool member_present) {
++  return !MemberExists(s, member_offset, member_size) || !member_present;
++}
+ 
+-#define CEF_MEMBER_MISSING(s, f) (!CEF_MEMBER_EXISTS(s, f) || !((s)->f))
++#define CEF_MEMBER_EXISTS(s, f)                                          \
++  MemberExists((s), offsetof(std::remove_pointer<decltype(s)>::type, f), \
++               sizeof((s)->f))
++#define CEF_MEMBER_MISSING(s, f)                                          \
++  MemberMissing((s), offsetof(std::remove_pointer<decltype(s)>::type, f), \
++                sizeof((s)->f), (s)->f)
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/include/internal/cef_types_wrappers.h b/include/internal/cef_types_wrappers.h
+index 80812d1..d6bd9c4 100644
+--- a/include/internal/cef_types_wrappers.h
++++ b/include/internal/cef_types_wrappers.h
+@@ -224,7 +224,7 @@ class CefRange : public cef_range_t {
+                     (std::numeric_limits<uint32_t>::max)());
+   }
+ 
+-  void Set(int from_val, int to_val) { from = from_val, to = to_val; }
++  void Set(int from_val, int to_val) { from = static_cast<uint32_t>(from_val), to = static_cast<uint32_t>(to_val); }
+ };
+ 
+ inline bool operator==(const CefRange& a, const CefRange& b) {
+diff --git a/include/wrapper/cef_helpers.h b/include/wrapper/cef_helpers.h
+index 3804880..d326130 100644
+--- a/include/wrapper/cef_helpers.h
++++ b/include/wrapper/cef_helpers.h
+@@ -131,6 +131,8 @@ struct CefDeleteOnRendererThread : public CefDeleteOnThread<TID_RENDERER> {};
+ #define IMPLEMENT_REFCOUNTING_DELETE_ON_IOT(ClassName) \
+   IMPLEMENT_REFCOUNTING_EX(ClassName, CefDeleteOnIOThread)
+ 
++#pragma clang diagnostic ignored "-Wsign-conversion"
++
+ ///
+ /// Helper class to manage a scoped copy of |argv|.
+ ///
+diff --git a/libcef_dll/wrapper/cef_byte_read_handler.cc b/libcef_dll/wrapper/cef_byte_read_handler.cc
+index fb1da91..95ddca4 100644
+--- a/libcef_dll/wrapper/cef_byte_read_handler.cc
++++ b/libcef_dll/wrapper/cef_byte_read_handler.cc
+@@ -11,7 +11,7 @@
+ CefByteReadHandler::CefByteReadHandler(const unsigned char* bytes,
+                                        size_t size,
+                                        CefRefPtr<CefBaseRefCounted> source)
+-    : bytes_(bytes), size_(size), source_(source) {}
++    : bytes_(bytes), size_(static_cast<int64_t>(size)), source_(source) {}
+ 
+ size_t CefByteReadHandler::Read(void* ptr, size_t size, size_t n) {
+   base::AutoLock lock_scope(lock_);
+diff --git a/libcef_dll/wrapper/cef_zip_archive.cc b/libcef_dll/wrapper/cef_zip_archive.cc
+index aa2ad8a..818d28d 100644
+--- a/libcef_dll/wrapper/cef_zip_archive.cc
++++ b/libcef_dll/wrapper/cef_zip_archive.cc
+@@ -119,7 +119,7 @@ size_t CefZipArchive::Load(CefRefPtr<CefStreamReader> stream,
+ 
+     // Read the file contents.
+     do {
+-      offset += reader->ReadFile(data + offset, size - offset);
++      offset += static_cast<size_t>(reader->ReadFile(data + offset, size - offset));
+     } while (offset < size && !reader->Eof());
+ 
+     DCHECK(offset == size);
+-- 
+2.25.1
+
