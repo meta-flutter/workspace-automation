@@ -557,31 +557,15 @@ def get_repo(base_folder, uri, branch, rev):
 
     git_folder = os.path.join(base_folder, repo_name)
 
-    git_folder_git = os.path.join(base_folder, repo_name, '.git')
-
-    is_exist = os.path.exists(git_folder_git)
+    is_exist = os.path.exists(git_folder)
     if is_exist:
+        cmd = ['rm', '-rf', git_folder]
 
-        cmd = ['git', 'reset', '--hard']
-        subprocess.check_call(cmd, cwd=git_folder)
-
-        cmd = ['git', 'fetch', '--all']
-        subprocess.check_call(cmd, cwd=git_folder)
-
-        cmd = ['git', 'checkout', branch]
-        subprocess.check_call(cmd, cwd=git_folder)
-
-        cmd = ['git', 'pull']
-        subprocess.check_call(cmd, cwd=git_folder)
-
-    else:
-
-        cmd = ['git', 'clone', uri, '-b', branch, repo_name]
-        subprocess.check_call(cmd, cwd=base_folder)
+    cmd = ['git', 'clone', uri, '-b', branch, repo_name]
+    subprocess.check_call(cmd, cwd=base_folder)
 
     if rev:
-
-        cmd = ['git', 'reset', '--hard', rev]
+        cmd = ['git', 'checkout', rev]
         subprocess.check_call(cmd, cwd=git_folder)
 
     # get lfs
@@ -1921,14 +1905,14 @@ def install_minimum_runtime_deps():
         if os_release_id == 'ubuntu':
             cmd = ['sudo', 'apt', 'update', '-y']
             subprocess.check_output(cmd)
-            packages = 'git git-lfs curl libcurl4-openssl-dev libssl-dev libgtk-3-dev'.split(' ')
+            packages = 'git git-lfs curl libcurl4-openssl-dev libssl-dev libgtk-3-dev python3.8-venv'.split(' ')
             for package in packages:
                 ubuntu_install_pkg_if_not_installed(package)
 
         elif os_release_id == 'fedora':
             cmd = ['sudo', 'dnf', '-y', 'update']
             subprocess.check_output(cmd)
-            packages = 'dnf-plugins-core git git-lfs curl libcurl-devel openssl-devel gtk3-devel'.split(' ')
+            packages = 'dnf-plugins-core git git-lfs curl libcurl-devel openssl-devel gtk3-devel python3-virtualenv'.split(' ')
             for package in packages:
                 fedora_install_pkg_if_not_installed(package)
 
