@@ -1,0 +1,70 @@
+{
+    "id": "cef-prebuilt",
+    "load": false,
+    "supported_archs": [
+        "x86_64",
+        "arm64"
+    ],
+    "supported_host_types": [
+        "ubuntu",
+        "fedora"
+    ],
+    "type": "generic",
+    "flutter_runtime": "debug",
+    "env": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/cef-prebuilt",
+        "ARCHIVE_FILE": "cef_binary_128.4.9%2Bg9840ad9%2Bchromium-128.0.6613.120_linux64_minimal",
+        "ARCHIVE_FOLDER": "cef_binary_128.4.9+g9840ad9+chromium-128.0.6613.120_linux64_minimal",
+        "THIRD_PARTY_ROOT": "${FLUTTER_WORKSPACE}/app/ivi-homescreen-plugins/plugins/webview_flutter_view/third_party",
+        "CEF_ROOT": "${THIRD_PARTY_ROOT}/${ARCHIVE_FOLDER}"
+    },
+    "runtime": {
+        "artifacts": {
+            "http": {
+                "url": "https://cef-builds.spotifycdn.com",
+                "artifacts": {
+                    "x86_64": [
+                        {
+                            "endpoint": "/${ARCHIVE_FILE}.tar.bz2",
+                            "sha1": "0dc513e8c3c0e9798a76fcbc863c50b93d790461"
+                        }
+                    ],
+                    "arm64": [
+                        {
+                            "endpoint": "/cef_binary_128.4.9%2Bg9840ad9%2Bchromium-128.0.6613.120_linuxarm64_minimal.tar.bz2",
+                            "sha1": "b06357fd02c31eafafffae99ccb4f8cdcdda667c"
+                        }
+                    ]
+                }
+            }
+        },
+        "post_cmds": [
+            {
+                "cwd": "${THIRD_PARTY_ROOT}",
+                "cmds": [
+                    "tar xvjf ${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}.tar.bz2 -C ."
+                ]
+            },
+            {
+                "cwd": "${CEF_ROOT}",
+                "cmds": [
+                    "rm Release/libEGL.so",
+                    "rm Release/libGLESv2.so",
+                    "rm Release/libvk_swiftshader.so",
+                    "rm Release/libvulkan.so.1",
+                    "git init",
+                    "git lfs install",
+                    "git lfs track chrome-sandbox",
+                    "git lfs track *.bin",
+                    "git lfs track *.so",
+                    "git add .",
+                    "git commit -s -m \"Initial commit\"", 
+                    "git apply ${PATCH_FOLDER}/0001-clang-build.patch",
+                    "rm -rf .git",
+                    "rm .gitattributes"
+                ]
+            }
+        ]
+    }
+}

@@ -1244,16 +1244,17 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
                 local_url = artifact.get('url')
                 if local_url is None:
                     local_url = url
+
                 base_url = local_url + artifact['endpoint']
                 base_url = os.path.expandvars(base_url)
                 filename = get_filename_from_url(base_url)
 
-                print(base_url)
-                print(filename)
+                print(f'url: {base_url}')
+                print(f'filename: {filename}')
 
                 futures.append(executor.submit(download_https_file, cwd, base_url, filename, cookie_file,
                                                netrc, artifact.get('md5'), artifact.get('sha1'),
-                                               artifact.get('sha256')))
+                                               artifact.get('sha256'), True))
                 subprocess.check_call(
                     ['sudo', '-v'], stdout=subprocess.DEVNULL)
 

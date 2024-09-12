@@ -105,7 +105,7 @@ def get_sha256sum(file: str):
     return sha256_hash.hexdigest()
 
 
-def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1, sha256, redirect=False):
+def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1, sha256, redirect=False, connect_timeout=None):
     download_filepath = os.path.join(cwd, file)
 
     sha256_file = os.path.join(cwd, file + '.sha256')
@@ -138,7 +138,7 @@ def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1, sha256, r
 
     print("** Downloading %s via %s" % (file, url))
     res = fetch_https_binary_file(
-        url, download_filepath, redirect, None, cookie_file, netrc)
+        url, download_filepath, redirect, None, cookie_file, netrc, connect_timeout)
     if not res:
         os.remove(download_filepath)
         print_banner("Failed to download %s" % file)
@@ -199,7 +199,7 @@ def fetch_https_progress(download_t, download_d, _upload_t, _upload_d):
     stream.flush()
 
 
-def fetch_https_binary_file(url, filename, redirect, headers, cookie_file, netrc) -> bool:
+def fetch_https_binary_file(url, filename, redirect, headers, cookie_file, netrc, connect_timeout) -> bool:
     """Fetches binary file via HTTPS"""
     import pycurl
     import time
@@ -210,7 +210,8 @@ def fetch_https_binary_file(url, filename, redirect, headers, cookie_file, netrc
 
     c = pycurl.Curl()
     c.setopt(pycurl.URL, url)
-    c.setopt(pycurl.CONNECTTIMEOUT, 30)
+    if connect_timeout is not None:
+        c.setopt(pycurl.CONNECTTIMEOUT, connect_timeout)
     c.setopt(pycurl.NOSIGNAL, 1)
     c.setopt(pycurl.NOPROGRESS, False)
     c.setopt(pycurl.XFERINFOFUNCTION, fetch_https_progress)
@@ -242,6 +243,7 @@ def fetch_https_binary_file(url, filename, redirect, headers, cookie_file, netrc
 
         except pycurl.error:
             retries_left -= 1
+            print('curl retry')
             time.sleep(delay_between_retries)
 
     status = c.getinfo(pycurl.HTTP_CODE)
@@ -254,7 +256,7 @@ def fetch_https_binary_file(url, filename, redirect, headers, cookie_file, netrc
         return False
     if not status == 200:
         print_banner("Download Status: %d" % status)
-        return False
+        sys.exit('Download Failed')
 
     return success
 
