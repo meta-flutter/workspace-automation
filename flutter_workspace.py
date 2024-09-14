@@ -40,7 +40,6 @@ import time
 import zipfile
 from platform import system
 
-import create_aot
 from common import check_python_version
 from common import compare_sha256
 from common import download_https_file
@@ -48,7 +47,9 @@ from common import fetch_https_binary_file
 from common import handle_ctrl_c
 from common import make_sure_path_exists
 from common import print_banner
-from common import write_sha256_file
+
+from create_aot import get_flutter_sdk_version
+from create_aot import create_platform_aot
 
 
 def main():
@@ -85,12 +86,20 @@ def main():
     parser.add_argument('--plugin-platform', default='linux', type=str, help='specify plugin platform type')
     parser.add_argument('--create-aot', default=False, action='store_true', help='Generate AOT')
     parser.add_argument('--app-path', default='', type=str, help='Specify Application path')
+    parser.add_argument('--arch', default=get_flutter_arch(), type=str, help='specify flutter architecture')
 
     args = parser.parse_args()
 
+    #
+    # Generate Release/Profile AOT
+    #
     if args.create_aot:
         if args.app_path == '':
             sys.exit("Must specify value for --app-path")
+
+        set_gen_snapshot('release', args.arch)
+        create_platform_aot(args.app_path, get_flutter_sdk_version())
+        return
 
     #
     # Find GIT Commit where flutter analyze returns true
@@ -159,7 +168,7 @@ def main():
     #
     if args.fetch_engine:
         print_banner("Fetching Engine Artifacts")
-        get_flutter_engine_runtime(True)
+        get_flutter_engine_runtime(True, args.arch)
         return
 
     #
@@ -203,16 +212,6 @@ def main():
         clear_folder(flutter_sdk_folder)
 
         clear_folder(vscode_folder)
-
-    #
-    # Generate Release/Profile AOT
-    #
-    if args.create_aot:
-        if args.app_path != '':
-            create_aot.create_platform_aot(args.app_path)
-        else:
-            sys.exit("Must specify value for --app-path")
-        return
 
     #
     # Fast Boot
@@ -293,7 +292,7 @@ def main():
     #
     # Flutter Engine Runtime
     #
-    get_flutter_engine_runtime(clean_workspace)
+    get_flutter_engine_runtime(clean_workspace, args.arch)
 
     #
     # Create environmental setup script
@@ -1054,25 +1053,58 @@ def get_host_machine_arch():
     return platform.machine()
 
 
-def get_google_flutter_engine_url():
+def get_flutter_engine_commit():
     workspace = os.environ.get('FLUTTER_WORKSPACE')
     if not workspace:
         sys.exit("FLUTTER_WORKSPACE not set")
 
     flutter_sdk_path = os.path.join(workspace, 'flutter')
-    arch = get_host_machine_arch()
 
     engine_version = get_flutter_engine_version(flutter_sdk_path)
     os.environ['FLUTTER_ENGINE_VERSION'] = engine_version
-
-    url = f'https://github.com/meta-flutter/flutter-engine/releases/download/linux-engine-sdk-debug-{arch}-{engine_version}/linux-engine-sdk-debug-{arch}-{engine_version}.tar.gz'
-    return url, engine_version
+    return engine_version
 
 
-def get_flutter_engine_runtime(clean_workspace):
+def get_flutter_arch():
+    host_arch = get_host_machine_arch()
+    if host_arch == 'x86_64':
+        return 'x64'
+    elif host_arch == 'arm64':
+        return 'arm64'
+
+
+def set_gen_snapshot(runtime, arch):
+    engine_sdk = f'engine-sdk-{runtime}-{arch}'
+    linux_runtime = f'linux_{runtime}_x64'
+    commit = get_flutter_engine_commit()
+    platform_path = get_platform_working_dir('flutter-engine')
+
+    engine_sdk_root = os.path.join(platform_path, commit, engine_sdk, 'src', 'out', linux_runtime, 'engine-sdk')
+
+    gen_snapshot = os.path.join(engine_sdk_root, 'bin', 'gen_snapshot')
+    if not os.path.exists:
+        get_flutter_engine_artifacts(True, runtime)
+
+    if not os.path.exists:
+        sys.exit('engine-sdk error')
+
+    os.environ['GEN_SNAPSHOT'] = gen_snapshot
+
+
+def get_engine_sdk_url(runtime, arch):
+    commit = get_flutter_engine_commit()
+    if arch == 'x64':
+        arch = 'x86_64'
+    elif arch == 'arm':
+        arch = 'armv7hf'
+    url = f'https://github.com/meta-flutter/flutter-engine/releases/download/linux-engine-sdk-{runtime}-{arch}-{commit}/linux-engine-sdk-{runtime}-{arch}-{commit}.tar.gz'
+    return url, commit
+
+
+def get_flutter_engine_artifacts(clean_workspace, runtime, arch):
     """Downloads Flutter Engine Runtime"""
 
-    base_url, engine_version = get_google_flutter_engine_url()
+    base_url, engine_version = get_engine_sdk_url(runtime, arch)
 
     _, filename = os.path.split(base_url)
 
@@ -1083,7 +1115,7 @@ def get_flutter_engine_runtime(clean_workspace):
     archive_file = os.path.join(cwd_engine, filename)
     sha256_file = os.path.join(cwd_engine, filename + '.sha256')
 
-    bundle_folder = os.path.join(cwd, 'bundle')
+    bundle_folder = os.path.join(cwd, f'bundle-{runtime}-{arch}')
     os.environ['BUNDLE_FOLDER'] = bundle_folder
 
     if not compare_sha256(archive_file, sha256_file):
@@ -1096,27 +1128,32 @@ def get_flutter_engine_runtime(clean_workspace):
     else:
         print_banner("Skipping Engine artifact download")
 
-    if clean_workspace:
-        if os.path.exists(bundle_folder):
-            cmd = ["rm", "-rf", bundle_folder]
-            subprocess.check_output(cmd, cwd=cwd)
-
-    restore_folder = os.path.join(cwd_engine, 'engine-sdk')
+    restore_folder = os.path.join(cwd_engine, f'engine-sdk-{runtime}-{arch}')
     make_sure_path_exists(restore_folder)
     subprocess.check_call(['tar', '-xzf', archive_file, '-C', restore_folder])
+
+    if clean_workspace:
+        if os.path.exists(bundle_folder):
+            subprocess.check_output(["rm", "-rf", bundle_folder], cwd=cwd)
 
     data_folder = os.path.join(bundle_folder, 'data')
     make_sure_path_exists(data_folder)
 
-    icudtl_src = os.path.join(restore_folder, 'src', 'out', 'linux_debug_x64', 'engine-sdk', 'data', 'icudtl.dat')
+    icudtl_src = os.path.join(restore_folder, 'src', 'out', f'linux_{runtime}_{arch}', 'engine-sdk', 'data', 'icudtl.dat')
 
     lib_folder = os.path.join(bundle_folder, 'lib')
     make_sure_path_exists(lib_folder)
 
-    libflutter_engine_src = os.path.join(restore_folder, 'src', 'out', 'linux_debug_x64', 'engine-sdk', 'lib', 'libflutter_engine.so')
+    libflutter_engine_src = os.path.join(restore_folder, 'src', 'out', f'linux_{runtime}_{arch}', 'engine-sdk', 'lib', 'libflutter_engine.so')
 
     subprocess.check_call(["cp", icudtl_src, f'{data_folder}'])
     subprocess.check_call(["cp", libflutter_engine_src, f'{lib_folder}'])
+
+
+def get_flutter_engine_runtime(clean_workspace, arch):
+    get_flutter_engine_artifacts(clean_workspace, 'release', arch)
+    get_flutter_engine_artifacts(clean_workspace, 'profile', arch)
+    get_flutter_engine_artifacts(clean_workspace, 'debug', arch)
 
 
 def handle_conditionals(conditionals, cwd):
@@ -1555,7 +1592,7 @@ def get_platform_working_dir(platform_id):
     cwd = workspace.joinpath('.config', 'flutter_workspace', platform_id)
     os.environ["PLATFORM_ID_DIR_RELATIVE"] = '.' + platform_id
     os.environ["PLATFORM_ID_DIR"] = str(cwd)
-    print("Working Directory: %s" % cwd)
+    print(f'Working Directory: {cwd}')
     make_sure_path_exists(cwd)
     return cwd
 
