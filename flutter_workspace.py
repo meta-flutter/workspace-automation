@@ -144,11 +144,6 @@ def main():
     os.environ['PATH'] = '%s:%s' % (os.path.join(venv_dir, 'bin'), os.environ.get('PATH'))
 
     #
-    # Install required python modules
-    #
-    subprocess.check_call(['pip3', 'install', 'pycurl', 'toml', 'python-dotenv'], stdout=subprocess.DEVNULL)
-
-    #
     # Control+C handler
     #
     signal.signal(signal.SIGINT, handle_ctrl_c)
@@ -1942,14 +1937,14 @@ def install_minimum_runtime_deps():
         if os_release_id == 'ubuntu':
             cmd = ['sudo', 'apt', 'update', '-y']
             subprocess.check_output(cmd)
-            packages = 'git git-lfs curl libcurl4-openssl-dev libssl-dev libgtk-3-dev python3.8-venv'.split(' ')
+            packages = 'git git-lfs curl libcurl4-openssl-dev libssl-dev libgtk-3-dev python3.8-venv python3-pycurl python3-toml python3-dotenv'.split(' ')
             for package in packages:
                 ubuntu_install_pkg_if_not_installed(package)
 
         elif os_release_id == 'fedora':
             cmd = ['sudo', 'dnf', '-y', 'update']
             subprocess.check_output(cmd)
-            packages = 'dnf-plugins-core git git-lfs curl libcurl-devel openssl-devel gtk3-devel python3-virtualenv'.split(' ')
+            packages = 'dnf-plugins-core git git-lfs curl libcurl-devel openssl-devel gtk3-devel python3-virtualenv python3-pycurl python3-toml python3-dotenv'.split(' ')
             for package in packages:
                 fedora_install_pkg_if_not_installed(package)
 
