@@ -1,6 +1,6 @@
 {
     "id": "cef-prebuilt",
-    "load": false,
+    "load": true,
     "supported_archs": [
         "x86_64",
         "arm64"
@@ -43,7 +43,8 @@
             {
                 "cwd": "${THIRD_PARTY_ROOT}",
                 "cmds": [
-                    "tar xvjf ${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}.tar.bz2 -C ."
+                    "rm -rf ${CEF_ROOT} |true",
+                    "tar xjf ${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}.tar.bz2 -C ."
                 ]
             },
             {
@@ -54,6 +55,7 @@
                     "rm Release/libvk_swiftshader.so",
                     "rm Release/libvulkan.so.1",
                     "git init",
+                    "git config --add safe.directory .",
                     "git lfs install",
                     "git lfs track chrome-sandbox",
                     "git lfs track *.bin",

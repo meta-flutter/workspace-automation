@@ -40,7 +40,7 @@
                 },
                 "cwd": "${CAMERA_SRC_DIR}",
                 "cmds": [
-                    "rm -rf buildDir |true",
+                    "sudo rm -rf buildDir |true",
                     "meson setup buildDir ${CAMERA_MESON_ARGS}",
                     "ninja -C buildDir"
                 ]

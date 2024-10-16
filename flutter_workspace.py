@@ -132,6 +132,12 @@ def main():
     print_banner("Setting up Flutter Workspace in: %s" % workspace)
 
     #
+    # Recursively change ownership to logged in user
+    #
+    user = get_process_stdout('logname').split('\n')
+    cmd = ['sudo', 'chown', '-R', f'{user[0]}:{user[0]}', workspace]
+
+    #
     # Install minimum package
     #
     install_minimum_runtime_deps()

@@ -1,5 +1,10 @@
 # Changelog
 
+Oct 16, 2024
+1. Flutter SDK 3.24.3
+2. add sudo rm -rf to cleanup failed runs
+3. flutter_workspace.py: chown -R logname at start; helps with failed runs
+
 Sept 7, 2024
 1. Flutter SDK 3.24.2
 
