@@ -1,6 +1,6 @@
 {
     "id": "cef-prebuilt",
-    "load": true,
+    "load": false,
     "supported_archs": [
         "x86_64",
         "arm64"
