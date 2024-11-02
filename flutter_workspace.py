@@ -566,6 +566,9 @@ def get_repo(base_folder, uri, branch, rev):
         cmd = ['git', 'fetch', '--all']
         subprocess.check_call(cmd, cwd=git_folder)
 
+        cmd = ['git', 'pull']
+        subprocess.check_call(cmd, cwd=git_folder)
+
     else:
         cmd = ['rm -rf', git_folder]
         subprocess.run(cmd, cwd=base_folder)

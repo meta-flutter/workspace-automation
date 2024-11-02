@@ -1,5 +1,13 @@
 # Changelog
 
+Oct Nov 2, 2024
+1. add missing git pull in get_repos
+
+Oct Nov 1, 2024
+1. update repos
+2. rework get_repo
+3. flutter 3.24.4
+
 Oct 16, 2024
 1. Flutter SDK 3.24.3
 2. add sudo rm -rf to cleanup failed runs
