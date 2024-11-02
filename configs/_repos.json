@@ -21,9 +21,12 @@
         "branch": "master"
     },
     {
-        "uri": "https://github.com/flutter/gallery.git",
-        "branch": "main",
-        "pubspec_path": "gallery"
+        "uri": "https://github.com/firebase/firebase-cpp-sdk.git",
+        "rev": "v12.4.0"
+    },
+    {
+        "uri": "https://github.com/firebase/FirebaseUI-Flutter",
+        "branch": "main"
     },
     {
         "uri": "https://github.com/flutter/packages.git",
@@ -35,8 +38,7 @@
     },
     {
         "uri": "https://github.com/meta-flutter/playx-3d-scene.git",
-        "branch": "main",
-        "rev": "2df02e8c9f60c92626f9cb780d3e56ccbeca2748"
+        "branch": "main"
     },
     {
         "uri": "https://github.com/flutter/samples.git",
@@ -45,7 +47,6 @@
     {
         "uri": "https://github.com/flutter/games.git",
         "branch": "main",
-        "rev": "acd048d2b5654421e1dbf41355aa5647233c9e24",
         "pubspec_path": "games/templates/endless_runner"
     },
     {
