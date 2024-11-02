@@ -557,15 +557,27 @@ def get_repo(base_folder, uri, branch, rev):
 
     git_folder = os.path.join(base_folder, repo_name)
 
-    is_exist = os.path.exists(git_folder)
-    if is_exist:
-        cmd = ['rm', '-rf', git_folder]
+    git_hidden_folder = os.path.join(git_folder, '.git')
 
-    cmd = ['git', 'clone', uri, '-b', branch, repo_name]
-    subprocess.check_call(cmd, cwd=base_folder)
+    if os.path.exists(git_hidden_folder):
+        cmd = ['git', 'reset', '--hard']
+        subprocess.check_call(cmd, cwd=git_folder)
+
+        cmd = ['git', 'fetch', '--all']
+        subprocess.check_call(cmd, cwd=git_folder)
+
+    else:
+        cmd = ['rm -rf', git_folder]
+        subprocess.run(cmd, cwd=base_folder)
+
+        cmd = ['git', 'clone', uri, '-b', branch, repo_name]
+        subprocess.check_call(cmd, cwd=base_folder)
 
     if rev:
         cmd = ['git', 'checkout', rev]
+        subprocess.check_call(cmd, cwd=git_folder)
+    else:
+        cmd = ['git', 'checkout', branch]
         subprocess.check_call(cmd, cwd=git_folder)
 
     # get lfs
