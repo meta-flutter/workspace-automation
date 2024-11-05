@@ -555,45 +555,60 @@ def get_repo(base_folder, uri, branch, rev):
     repo_name = repo_name.split(".")
     repo_name = repo_name[0]
 
-    git_folder = os.path.join(base_folder, repo_name)
+    print_banner(f'Fetching: {repo_name}')
 
+    git_folder = os.path.join(base_folder, repo_name)
     git_hidden_folder = os.path.join(git_folder, '.git')
 
+    # print_banner(f'Checking if file exists: {git_hidden_folder}')
     if os.path.exists(git_hidden_folder):
+        # print_banner(f'git reset --hard: {repo_name}')
         cmd = ['git', 'reset', '--hard']
         subprocess.check_call(cmd, cwd=git_folder)
 
+        # print_banner(f'git fetch --all: {repo_name}')
         cmd = ['git', 'fetch', '--all']
         subprocess.check_call(cmd, cwd=git_folder)
 
-        cmd = ['git', 'pull']
+        # print_banner(f'git pull: {repo_name}')
+        cmd = ['git', 'pull', 'origin', branch]
         subprocess.check_call(cmd, cwd=git_folder)
-
     else:
-        cmd = ['rm -rf', git_folder]
-        subprocess.run(cmd, cwd=base_folder)
+        # print_banner(f'Checking if folder exists: {git_folder}')
+        if (os.path.exists(git_folder)):
+            # print_banner(f'rm -rf {git_folder} ||true')
+            subprocess.run(['rm','-rf', git_folder, '||','true'], cwd=base_folder)
 
+        # print_banner(f'git clone {uri} -b {branch} {repo_name}')
         cmd = ['git', 'clone', uri, '-b', branch, repo_name]
         subprocess.check_call(cmd, cwd=base_folder)
 
     if rev:
+        # print_banner(f'git checkout {rev}')
         cmd = ['git', 'checkout', rev]
         subprocess.check_call(cmd, cwd=git_folder)
     else:
+        # print_banner(f'git checkout {branch}')
         cmd = ['git', 'checkout', branch]
         subprocess.check_call(cmd, cwd=git_folder)
 
     # get lfs
     git_lfs_file = os.path.join(base_folder, repo_name, '.gitattributes')
+    # print_banner(f'Checking if folder exists: {git_lfs_file}')
     if os.path.exists(git_lfs_file):
+        # print_banner(f'Fetching LFS: {repo_name}')
         cmd = ['git', 'lfs', 'fetch', '--all']
         subprocess.check_call(cmd, cwd=git_folder)
 
     # get all submodules
     git_submodule_file = os.path.join(base_folder, repo_name, '.gitmodules')
+    # print_banner(f'Checking if folder exists: {git_submodule_file}')
     if os.path.exists(git_submodule_file):
+        # print_banner(f'Fetching submodules: {repo_name}')
         cmd = ['git', 'submodule', 'update', '--init', '--recursive']
         subprocess.check_call(cmd, cwd=git_folder)
+
+    print_banner(f'Fetched: {repo_name}')
 
 
 def get_workspace_repos(base_folder, config):
