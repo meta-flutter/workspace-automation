@@ -39,12 +39,14 @@
             "sudo apt install lsb-release wget software-properties-common gnupg apt-file",
             "sudo apt update",
             "sudo apt install -y libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libxkbcommon-dev ninja-build",
-            "sudo apt install -y build-essential libtool libsecret-1-dev libsdl2-dev libjpeg-dev zenity",
+            "sudo apt install -y build-essential libtool libsecret-1-dev libsdl2-dev libjpeg-dev zenity flatpak libflatpak-dev gnome-software-plugin-flatpak",
             "sudo apt install -y libllvm-ocaml-dev llvm llvm-dev llvm-runtime clang clang-tools libclang-dev libclang1 clang-format clangd clang-tidy lldb lld libc++-dev libc++abi-dev libunwind-dev libc++1 libc++abi1",
             "sudo apt autoremove -y",
             "sudo apt clean -y",
             "cmake --version",
-            "apt-file search cmake"
+            "apt-file search cmake",
+            "sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
+            "flatpak remotes"
           ]
         },
         "fedora": {
