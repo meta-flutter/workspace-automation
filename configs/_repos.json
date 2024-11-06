@@ -79,5 +79,9 @@
     {
         "uri": "https://github.com/getsentry/sentry-native.git",
         "branch": "master"
+    },
+    {
+        "uri": "https://github.com/meta-flutter/flatpak_flutter",
+        "branch": "main"
     }
 ]
