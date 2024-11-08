@@ -33,14 +33,6 @@
         "branch": "main"
     },
     {
-        "uri": "https://github.com/meta-flutter/video_player_linux",
-        "branch": "main"
-    },
-    {
-        "uri": "https://github.com/meta-flutter/playx-3d-scene.git",
-        "branch": "main"
-    },
-    {
         "uri": "https://github.com/flutter/samples.git",
         "branch": "main"
     },
@@ -79,10 +71,6 @@
     {
         "uri": "https://github.com/getsentry/sentry-native.git",
         "branch": "master"
-    },
-    {
-        "uri": "https://github.com/meta-flutter/flatpak_flutter",
-        "branch": "main"    
     },
     {
         "uri": "https://github.com/flutter-webrtc/flutter-webrtc.git",
