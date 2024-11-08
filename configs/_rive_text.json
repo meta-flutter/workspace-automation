@@ -1,0 +1,35 @@
+{
+    "id": "rive-text",
+    "load": true,
+    "supported_archs": [
+        "x86_64",
+        "arm64"
+    ],
+    "supported_host_types": [
+        "ubuntu",
+        "fedora"
+    ],
+    "type": "generic",
+    "flutter_runtime": "debug",
+    "env": {
+        "RIVE_TEXT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/rive-common",
+        "RIVE_TEXT_BUILD_DIR": "${RIVE_TEXT_SRC_DIR}/cmake-build-release",
+        "RIVE_TEXT_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Release"
+    },
+    "runtime": {
+        "post_cmds": [
+            {
+                "env": {
+                    "CC": "/usr/bin/clang",
+                    "CXX": "/usr/bin/clang++"
+                  },
+                  "cwd": "${RIVE_TEXT_BUILD_DIR}",
+                  "cmds": [
+                    "rm -rf * ||true",
+                    "cmake ${RIVE_TEXT_SRC_DIR} ${RIVE_TEXT_CMAKE_ARGS}",
+                    "make -j"
+                  ]
+            }
+        ]
+    }
+}
