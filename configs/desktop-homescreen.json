@@ -39,8 +39,8 @@
   },
   "runtime": {
     "config": {
-      "global": {"cursor_theme": "DMZ-White"},
-      "view": {"width": 800, "height": 600}
+      "global": {"cursor_theme": "DMZ-White", "app_id": "homescreen"},
+      "view": {"width": 1920, "height": 1080}
     },
     "pre-requisites": {
       "x86_64": {
