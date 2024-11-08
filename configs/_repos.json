@@ -82,6 +82,35 @@
     },
     {
         "uri": "https://github.com/meta-flutter/flatpak_flutter",
+        "branch": "main"    
+    },
+    {
+        "uri": "https://github.com/flutter-webrtc/flutter-webrtc.git",
         "branch": "main"
+    },
+    {
+        "uri": "https://github.com/flutter-webrtc/flutter-webrtc-demo.git",
+        "branch": "master"
+    },
+    {
+        "uri": "https://github.com/flutter-webrtc/flutter-webrtc-server.git",
+        "branch": "master"
+    },
+    {
+        "uri": "https://github.com/flutter-webrtc/dart-sip-ua",
+        "branch": "main"
+    },
+    {
+        "uri": "https://github.com/meta-flutter/rive-common.git",
+        "branch": "main"
+    },
+    {
+        "uri": "https://github.com/rive-app/rive-flutter.git",
+        "branch": "master",
+        "rev": "0.8.4"
+    },
+    {
+        "uri": "https://github.com/DavBfr/dart_pdf.git",
+        "branch": "master"
     }
 ]

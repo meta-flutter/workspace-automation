@@ -1,0 +1,84 @@
+{
+    "id": "pdfium",
+    "load": false,
+    "supported_archs": [
+        "x86_64",
+        "arm64"
+    ],
+    "supported_host_types": [
+        "fedora"
+    ],
+    "type": "generic",
+    "flutter_runtime": "debug",
+    "env": {
+        "RUNTIME_MODE": "debug",
+        "DEPOT_TOOLS": "${FLUTTER_WORKSPACE}/app/depot_tools",
+        "PDFIUM_ROOT": "${FLUTTER_WORKSPACE}/app/pdfium",
+        "PDFIUM_SRC_DIR_RELATIVE": "pdfium",
+        "PDFIUM_SRC_DIR": "${PDFIUM_ROOT}/${PDFIUM_SRC_DIR_RELATIVE}",
+        "GN_ARGS": "is_debug=false pdf_is_standalone=true is_component_build=false treat_warnings_as_errors=false is_clang=true clang_use_chrome_plugins=false use_custom_libcxx=true libcxx_is_shared=false target_os=\\\"linux\\\" target_cpu=\\\"x64\\\"",
+        "PDFIUM_BUILD_DIR": "${PDFIUM_SRC_DIR}/out/Linux-Release",
+        "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/pdfium",
+        "VPYTHON_VIRTUALENV_ROOT": "${PDFIUM_ROOT}/.vpython-root"
+    },
+    "runtime": {
+        "gclient_config": {
+            "path": "${PDFIUM_ROOT}",
+            "name": "${PDFIUM_SRC_DIR_RELATIVE}",
+            "url": "https://pdfium.googlesource.com/pdfium.git@2b675cf15ab4b68bf1ed4e0511ba2479e11f1605",
+            "deps_file"   : "DEPS",
+            "managed": false,
+            "custom_deps": {},
+            "custom_vars": {"checkout_configuration": "small"}
+        },
+        "pre-requisites": {
+            "x86_64": {
+                "fedora": {
+                    "cmds": [
+                        "sudo dnf install -y nasm"
+                    ]
+                }
+            }
+        },
+        "post_cmds": [
+            {
+                "env": {
+                    "PATH": "${DEPOT_TOOLS}:$PATH",
+                    "VPYTHON_VIRTUALENV_ROOT": "${VPYTHON_VIRTUALENV_ROOT}"
+                },
+                "cwd": "${PDFIUM_ROOT}",
+                "cmds": [
+                    "mkdir -p ${VPYTHON_VIRTUALENV_ROOT}",
+                    "gclient sync -D -R -v"
+                ]
+            },
+            {
+                "env": {
+                    "PATH": "${DEPOT_TOOLS}:$PATH",
+                    "VPYTHON_VIRTUALENV_ROOT": "${VPYTHON_VIRTUALENV_ROOT}",
+                    "PKG_CONFIG_PATH": "/usr/lib64/pkgconfig",
+                    "CC": "/usr/bin/clang",
+                    "CXX": "/usr/bin/clang++"
+                },
+                "cwd": "${PDFIUM_SRC_DIR}",
+                "cmds": [
+                    "git reset --hard",
+                    "git apply ${PATCH_FOLDER}/public_headers.patch",
+                    "git apply ${PATCH_FOLDER}/shared_library.patch",
+                    "git apply ${PATCH_FOLDER}/v8_init.patch",
+                    "gn gen \"${PDFIUM_BUILD_DIR}\" --args=\"${GN_ARGS}\""
+                ]
+            },
+            {
+                "env": {
+                    "PATH": "${DEPOT_TOOLS}:$PATH",
+                    "VPYTHON_VIRTUALENV_ROOT": "${VPYTHON_VIRTUALENV_ROOT}"
+                },
+                "cwd": "${PDFIUM_SRC_DIR}",
+                "cmds": [
+                    "ninja -C ${PDFIUM_BUILD_DIR} pdfium"
+                ]
+            }
+        ]
+    }
+}
