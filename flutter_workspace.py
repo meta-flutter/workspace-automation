@@ -87,6 +87,7 @@ def main():
     parser.add_argument('--create-aot', default=False, action='store_true', help='Generate AOT')
     parser.add_argument('--app-path', default='', type=str, help='Specify Application path')
     parser.add_argument('--arch', default=get_flutter_arch(), type=str, help='specify flutter architecture')
+    parser.add_argument('--copy-dconf-user', default=False, action='store_true', help='copy $HOME/.confi/dconf/user to $FLUTTER_WORKSPACE')
 
     args = parser.parse_args()
 
@@ -99,6 +100,13 @@ def main():
 
         set_gen_snapshot('release', args.arch)
         create_platform_aot(args.app_path, get_flutter_sdk_version())
+        return
+
+    #
+    # Copy dconf user to workspace
+    #
+    if args.copy_dconf_user:
+        copy_dconf_user()
         return
 
     #
@@ -340,6 +348,24 @@ def clear_folder(dir_):
     import shutil
     if os.path.exists(dir_):
         shutil.rmtree(dir_)
+
+
+def copy_dconf_user():
+    """ Copies $HOME/.config/dconf/user to workspace """
+    import shutil
+    from pathlib import Path
+
+    workspace = Path(os.environ.get('FLUTTER_WORKSPACE'))
+    dconf_dst = workspace.joinpath('.config', 'flutter', 'dconf')
+    make_sure_path_exists(dconf_dst)
+
+    workspace = Path(os.environ.get('FLUTTER_WORKSPACE'))
+    dconf_user_src = os.path.join(os.environ.get('HOME'), '.config', 'dconf', 'user')
+    dconf_user_dst = workspace.joinpath('.config', 'flutter', 'dconf', 'user')
+
+    print(f'Copying {dconf_user_src} to {dconf_user_dst}')
+    shutil.copy(dconf_user_src, dconf_user_dst)
+    print_banner('Copied')
 
 
 def get_workspace_config(path):
