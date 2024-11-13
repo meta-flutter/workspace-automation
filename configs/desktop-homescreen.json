@@ -13,7 +13,7 @@
   "env": {
     "HOMESCREEN_SRC_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen",
     "HOMESCREEN_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen/build",
-    "PLUGINS_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen-plugins",
+    "PLUGINS_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen-plugins/plugins",
     "PLUGIN_RIVE": "-DBUILD_PLUGIN_RIVE_TEXT=ON",
     "RIVE_TEXT_LIB_DIR": "${FLUTTER_WORKSPACE}/app/rive-common/cmake-build-release",
     "FILAMENT_INCLUDE_DIR": "${FLUTTER_WORKSPACE}/app/filament/cmake-build-release/staging/release/include",
