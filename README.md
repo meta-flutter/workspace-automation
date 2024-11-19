@@ -17,15 +17,6 @@ Example use:
 
 Expects to be run from an active FLUTTER_WORKSPACE.  Meaning you need to source you environment first.
 
-### create_recipes.py
-
-creates a Yocto recipe for every pubspec.yaml found in a path folder.  It will recursively iterate all subfolders.
-
-Example use:
-    
-    ./create_recipes.py --path app/packages/ --license LICENSE --license_type BSD3-Clause --author "Google" --out ./tmp
-
-
 #### Environmental variables used by script:
 
 * GEN_SNAPSHOT - (Required) Set GEN_SNAPSHOT to location of executable gen_snapshot
@@ -43,34 +34,6 @@ Example use:
 * APP_GEN_SNAPSHOT_AOT_FILENAME - Defaults to 'libapp.so.{runtime_mode}'
 
 * FLUTTER_PREBUILD_CMD
-
-### roll_meta_flutter.py
-
-Updates all Flutter App recipes in meta-flutter using json as data source.  The default data source is configs/flutter-apps.json
-
-Example use
-
-    ./roll_meta_flutter.py --path `pwd`/tmp
-
-Default pubspec.yaml filter tokens
-
-    _android/pubspec.yaml
-    _ios/pubspec.yaml
-    _linux/pubspec.yaml
-    _macos/pubspec.yaml
-    _platform_interface/pubspec.yaml
-    _web/pubspec.yaml
-    _windows/pubspec.yaml
-
-Default recipe filename filter tokens
-
-    -apple_
-    -avfoundation_
-    -darwin_
-    -linux_
-    -web_
-
-_Note: Exclude filters are added to json as "exclude" string array.  The value to populate exclude filter is the `FLUTTER_APPLICATION_PATH` value.  An empty string is valid._
 
 ### flutter_workspace.py
 
