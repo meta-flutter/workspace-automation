@@ -1,7 +1,7 @@
-From 97fd693d50312f684c209262de99383c0347f00c Mon Sep 17 00:00:00 2001
+From bd205f96b6db118fe090f1658d006601ffb82250 Mon Sep 17 00:00:00 2001
 From: Joel Winarske <joel.winarske@gmail.com>
-Date: Wed, 12 Jun 2024 06:47:04 -0700
-Subject: [PATCH 4/5] move include contents to include filament
+Date: Fri, 22 Nov 2024 17:20:39 -0800
+Subject: [PATCH 3/4] move include contents to include filament
 
 Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
 ---
@@ -9,7 +9,6 @@ Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
  filament/backend/CMakeLists.txt                  | 2 +-
  libs/camutils/CMakeLists.txt                     | 2 +-
  libs/filabridge/CMakeLists.txt                   | 2 +-
- libs/filaflat/CMakeLists.txt                     | 2 +-
  libs/filamat/CMakeLists.txt                      | 2 +-
  libs/filameshio/CMakeLists.txt                   | 2 +-
  libs/geometry/CMakeLists.txt                     | 2 +-
@@ -19,7 +18,6 @@ Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
  libs/image/CMakeLists.txt                        | 2 +-
  libs/imageio/CMakeLists.txt                      | 2 +-
  libs/ktxreader/CMakeLists.txt                    | 2 +-
- libs/matdbg/CMakeLists.txt                       | 2 +-
  libs/math/CMakeLists.txt                         | 2 +-
  libs/mathio/CMakeLists.txt                       | 2 +-
  libs/uberz/CMakeLists.txt                        | 2 +-
@@ -32,13 +30,13 @@ Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
  third_party/robin-map/tnt/CMakeLists.txt         | 2 +-
  third_party/stb/tnt/CMakeLists.txt               | 2 +-
  third_party/tinyexr/tnt/CMakeLists.txt           | 2 +-
- 27 files changed, 31 insertions(+), 31 deletions(-)
+ 25 files changed, 29 insertions(+), 29 deletions(-)
 
 diff --git a/filament/CMakeLists.txt b/filament/CMakeLists.txt
-index 796acedb7..f9453335f 100644
+index 4fe1c6040..39baa099c 100644
 --- a/filament/CMakeLists.txt
 +++ b/filament/CMakeLists.txt
-@@ -614,7 +614,7 @@ target_link_libraries(${TARGET} PRIVATE
+@@ -632,7 +632,7 @@ target_link_libraries(${TARGET} PRIVATE
  # ==================================================================================================
  set(INSTALL_TYPE ARCHIVE)
  install(TARGETS ${TARGET} ${INSTALL_TYPE} DESTINATION lib/${DIST_DIR})
@@ -48,10 +46,10 @@ index 796acedb7..f9453335f 100644
  install(FILES "../LICENSE" DESTINATION .)
  
 diff --git a/filament/backend/CMakeLists.txt b/filament/backend/CMakeLists.txt
-index 378f45aed..0cfbc6f82 100644
+index 66f7b275e..dd8699421 100644
 --- a/filament/backend/CMakeLists.txt
 +++ b/filament/backend/CMakeLists.txt
-@@ -399,4 +399,4 @@ target_link_libraries(${TARGET} PRIVATE
+@@ -427,4 +427,4 @@ target_link_libraries(${TARGET} PRIVATE
  set(INSTALL_TYPE ARCHIVE)
  install(TARGETS ${TARGET} ${INSTALL_TYPE} DESTINATION lib/${DIST_DIR})
  install(TARGETS vkshaders ${INSTALL_TYPE} DESTINATION lib/${DIST_DIR})
@@ -71,32 +69,21 @@ index 541261c1a..013cbce09 100644
  # ==================================================================================================
  # Tests
 diff --git a/libs/filabridge/CMakeLists.txt b/libs/filabridge/CMakeLists.txt
-index ffcd1ce23..27ed9e33b 100644
+index 6840ce536..9627713f7 100644
 --- a/libs/filabridge/CMakeLists.txt
 +++ b/libs/filabridge/CMakeLists.txt
-@@ -31,5 +31,5 @@ target_link_libraries(${TARGET} backend_headers)
+@@ -32,5 +32,5 @@ target_link_libraries(${TARGET} backend_headers)
  # ==================================================================================================
  # Installation
  # ==================================================================================================
 -install(DIRECTORY ${PUBLIC_HDR_DIR}/filament DESTINATION include)
 +install(DIRECTORY ${PUBLIC_HDR_DIR}/filament DESTINATION include/filament)
  install(TARGETS ${TARGET} ARCHIVE DESTINATION lib/${DIST_DIR})
-diff --git a/libs/filaflat/CMakeLists.txt b/libs/filaflat/CMakeLists.txt
-index 0ebf53e06..5fff8201b 100644
---- a/libs/filaflat/CMakeLists.txt
-+++ b/libs/filaflat/CMakeLists.txt
-@@ -34,5 +34,5 @@ endif()
- # Installation
- # ==================================================================================================
- # We do not need filaflat headers in the install directory
--# install(DIRECTORY ${PUBLIC_HDR_DIR}/filaflat DESTINATION include)
-+# install(DIRECTORY ${PUBLIC_HDR_DIR}/filaflat DESTINATION include/filament)
- install(TARGETS ${TARGET} ARCHIVE DESTINATION lib/${DIST_DIR})
 diff --git a/libs/filamat/CMakeLists.txt b/libs/filamat/CMakeLists.txt
-index 2fc20d7e9..41c1f6c20 100644
+index c74ad631f..d7be743cf 100644
 --- a/libs/filamat/CMakeLists.txt
 +++ b/libs/filamat/CMakeLists.txt
-@@ -140,7 +140,7 @@ combine_static_libs(filamat "${FILAMAT_COMBINED_OUTPUT}" "${FILAMAT_DEPS}")
+@@ -139,7 +139,7 @@ combine_static_libs(filamat "${FILAMAT_COMBINED_OUTPUT}" "${FILAMAT_DEPS}")
  
  set(FILAMAT_LIB_NAME ${CMAKE_STATIC_LIBRARY_PREFIX}filamat${CMAKE_STATIC_LIBRARY_SUFFIX})
  install(FILES "${FILAMAT_COMBINED_OUTPUT}" DESTINATION lib/${DIST_DIR} RENAME ${FILAMAT_LIB_NAME})
@@ -132,10 +119,10 @@ index a7e8f398e..5a5bb88ec 100644
  set(COMBINED_DEPS
      ${TARGET}
 diff --git a/libs/gltfio/CMakeLists.txt b/libs/gltfio/CMakeLists.txt
-index c066cc229..a383410c0 100644
+index 373df1f8a..de289cfb4 100644
 --- a/libs/gltfio/CMakeLists.txt
 +++ b/libs/gltfio/CMakeLists.txt
-@@ -257,5 +257,5 @@ endif()
+@@ -265,5 +265,5 @@ endif()
  # ==================================================================================================
  
  install(TARGETS gltfio_core uberarchive ARCHIVE DESTINATION lib/${DIST_DIR})
@@ -177,15 +164,17 @@ index 351d39548..3ac6ff402 100644
  # ==================================================================================================
  # Tests
 diff --git a/libs/imageio/CMakeLists.txt b/libs/imageio/CMakeLists.txt
-index 69dc695c4..8711a78fa 100644
+index 9eb92fc7a..264c5ac9b 100644
 --- a/libs/imageio/CMakeLists.txt
 +++ b/libs/imageio/CMakeLists.txt
-@@ -49,4 +49,4 @@ endif ()
+@@ -49,4 +49,4 @@ endif()
  # Installation
  # ==================================================================================================
  install(TARGETS ${TARGET} ARCHIVE DESTINATION lib/${DIST_DIR})
 -install(DIRECTORY ${PUBLIC_HDR_DIR}/imageio DESTINATION include)
+\ No newline at end of file
 +install(DIRECTORY ${PUBLIC_HDR_DIR}/imageio DESTINATION include/filament)
+\ No newline at end of file
 diff --git a/libs/ktxreader/CMakeLists.txt b/libs/ktxreader/CMakeLists.txt
 index a9d5714e0..039ee6a3d 100644
 --- a/libs/ktxreader/CMakeLists.txt
@@ -199,16 +188,6 @@ index a9d5714e0..039ee6a3d 100644
  
  # ==================================================================================================
  # Tests
-diff --git a/libs/matdbg/CMakeLists.txt b/libs/matdbg/CMakeLists.txt
-index e58058548..47b516c9e 100644
---- a/libs/matdbg/CMakeLists.txt
-+++ b/libs/matdbg/CMakeLists.txt
-@@ -122,4 +122,4 @@ combine_static_libs(matdbg "${MATDBG_COMBINED_OUTPUT}" "${MATDBG_DEPS}")
- set(MATDBG_LIB_NAME ${CMAKE_STATIC_LIBRARY_PREFIX}matdbg${CMAKE_STATIC_LIBRARY_SUFFIX})
- install(FILES "${MATDBG_COMBINED_OUTPUT}" DESTINATION lib/${DIST_DIR} RENAME ${MATDBG_LIB_NAME})
- # We do not need matdbg headers in the install directory
--# install(DIRECTORY ${PUBLIC_HDR_DIR}/matdbg DESTINATION include)
-+# install(DIRECTORY ${PUBLIC_HDR_DIR}/matdbg DESTINATION include/filament)
 diff --git a/libs/math/CMakeLists.txt b/libs/math/CMakeLists.txt
 index 838aa2d53..4256d6607 100644
 --- a/libs/math/CMakeLists.txt
@@ -338,7 +317,7 @@ index 300da5248..ef5ef82d6 100644
 -install(FILES ${PUBLIC_HDRS} DESTINATION include/${TARGET})
 +install(FILES ${PUBLIC_HDRS} DESTINATION include/filament/${TARGET})
 diff --git a/third_party/stb/tnt/CMakeLists.txt b/third_party/stb/tnt/CMakeLists.txt
-index 563a2604d..946aa9264 100644
+index 293dd486f..b3f65fbba 100644
 --- a/third_party/stb/tnt/CMakeLists.txt
 +++ b/third_party/stb/tnt/CMakeLists.txt
 @@ -15,4 +15,4 @@ target_include_directories(${TARGET} PUBLIC ${PUBLIC_HDR_DIR})
@@ -346,18 +325,21 @@ index 563a2604d..946aa9264 100644
  
  install(TARGETS stb ARCHIVE DESTINATION lib/${DIST_DIR})
 -install(FILES ${PUBLIC_HDRS} DESTINATION include)
+\ No newline at end of file
 +install(FILES ${PUBLIC_HDRS} DESTINATION include/filament)
+\ No newline at end of file
 diff --git a/third_party/tinyexr/tnt/CMakeLists.txt b/third_party/tinyexr/tnt/CMakeLists.txt
-index ffe7cdfe1..6ae9c7787 100644
+index 1e2602d0d..6a65119c4 100644
 --- a/third_party/tinyexr/tnt/CMakeLists.txt
 +++ b/third_party/tinyexr/tnt/CMakeLists.txt
-@@ -22,5 +22,5 @@ target_include_directories (${TARGET} PUBLIC ${PUBLIC_HDR_DIR})
- target_link_libraries(${TARGET} LINK_PUBLIC z)
- set_target_properties(${TARGET} PROPERTIES FOLDER ThirdParty)
- 
+@@ -25,5 +25,5 @@ set_target_properties(${TARGET} PROPERTIES FOLDER ThirdParty)
+ # ==================================================================================================
+ # Install
+ # ==================================================================================================
 -install(FILES ${PUBLIC_HDRS} DESTINATION include)
 +install(FILES ${PUBLIC_HDRS} DESTINATION include/filament)
  install(TARGETS ${TARGET} ARCHIVE DESTINATION lib/${DIST_DIR})
+\ No newline at end of file
 -- 
-2.45.1
+2.25.1
 

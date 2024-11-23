@@ -26,7 +26,7 @@
     {
         "uri": "https://github.com/google/filament.git",
         "branch": "release",
-        "rev": "v1.54.3"
+        "rev": "v1.56.1"
     },
     {
         "uri": "https://git.libcamera.org/libcamera/libcamera.git",
@@ -34,6 +34,7 @@
     },
     {
         "uri": "https://github.com/firebase/firebase-cpp-sdk.git",
+        "branch": "main",
         "rev": "v12.4.0"
     },
     {
