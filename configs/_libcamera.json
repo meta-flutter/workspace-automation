@@ -40,21 +40,15 @@
                 },
                 "cwd": "${CAMERA_SRC_DIR}",
                 "cmds": [
-                    "sudo rm -rf buildDir |true",
-                    "meson setup buildDir ${CAMERA_MESON_ARGS}",
-                    "ninja -C buildDir"
+                    "bash -c \"sudo rm -rf ${CAMERA_BUILD_DIR}/* | true\"",
+                    "meson setup buildDir ${CAMERA_MESON_ARGS}"
                 ]
             },
             {
-                "env": {
-                    "CC": "/usr/bin/clang",
-                    "CXX": "/usr/bin/clang++"
-                },
                 "cwd": "${CAMERA_BUILD_DIR}",
                 "cmds": [
-                    "rm -rf out|true",
-                    "mkdir -p out",
-                    "sudo ninja -C . install"
+                    "ninja -C ${CAMERA_BUILD_DIR} -j8",
+                    "sudo ninja -C ${CAMERA_BUILD_DIR} install"
                 ]
             }
         ]

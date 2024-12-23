@@ -2,10 +2,10 @@
     "id": "pdfium",
     "load": false,
     "supported_archs": [
-        "x86_64",
-        "arm64"
+        "x86_64"
     ],
     "supported_host_types": [
+        "ubuntu",
         "fedora"
     ],
     "type": "generic",
@@ -37,10 +37,20 @@
                     "cmds": [
                         "sudo dnf install -y nasm"
                     ]
+                },
+                "ubuntu": {
+                    "cmds": [
+                        "sudo apt install -y nasm"
+                    ]
                 }
             }
         },
         "post_cmds": [
+            {
+                "cmds": [
+                    "mkdir -p ${PDFIUM_ROOT}"
+                ]
+            },
             {
                 "env": {
                     "PATH": "${DEPOT_TOOLS}:$PATH",
@@ -76,7 +86,7 @@
                 },
                 "cwd": "${PDFIUM_SRC_DIR}",
                 "cmds": [
-                    "ninja -C ${PDFIUM_BUILD_DIR} pdfium"
+                    "ninja -C ${PDFIUM_BUILD_DIR} pdfium -j8"
                 ]
             }
         ]

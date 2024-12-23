@@ -11,11 +11,11 @@
     "type": "generic",
     "flutter_runtime": "debug",
     "env": {
-        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_BUILD_TYPE": "Release",
         "FIREBASE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk",
-        "FIREBASE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk/cmake-build-debug",
-        "FIREBASE_STAGING_DIR": "${FIREBASE_BUILD_DIR}/staging/debug",
-        "FIREBASE_CMAKE_ARGS": "-DFIREBASE_USE_BORINGSSL=YES -DFIREBASE_LINUX_USE_CXX11_ABI=ON -DCMAKE_CXX_FLAGS=-stdlib=libc++ -DCMAKE_STAGING_PREFIX=${FIREBASE_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+        "FIREBASE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk/cmake-build-release",
+        "FIREBASE_STAGING_DIR": "${FIREBASE_BUILD_DIR}/staging/release",
+        "FIREBASE_CMAKE_ARGS": "-DFIREBASE_USE_BORINGSSL=ON -DFIREBASE_LINUX_USE_CXX11_ABI=ON -DCMAKE_STAGING_PREFIX=${FIREBASE_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
     },
     "runtime": {
         "pre-requisites": {
@@ -47,8 +47,9 @@
                 "cwd": "${FIREBASE_BUILD_DIR}",
                 "cmds": [
                   "go version",
+                  "bash -c \"rm -rf ${FIREBASE_BUILD_DIR}/* | true\"",
                   "cmake ${FIREBASE_SRC_DIR} ${FIREBASE_CMAKE_ARGS}",
-                  "make -j"
+                  "make -j 8"
                 ]
             }
         ]

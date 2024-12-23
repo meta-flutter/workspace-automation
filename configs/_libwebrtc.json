@@ -1,9 +1,9 @@
 {
     "id": "libwebrtc",
-    "load": true,
+    "load": false,
     "supported_archs": [
-        "x86_64",
-        "arm64"
+        "arm64",
+        "x86_64"
     ],
     "supported_host_types": [
         "ubuntu",
@@ -65,7 +65,7 @@
                 },
                 "cwd": "${LIBWEBRTC_SRC_DIR}",
                 "cmds": [
-                    "ninja -C ${LIBWEBRTC_BUILD_DIR} libwebrtc"
+                    "ninja -C ${LIBWEBRTC_BUILD_DIR} libwebrtc -j20"
                 ]
             }
         ]

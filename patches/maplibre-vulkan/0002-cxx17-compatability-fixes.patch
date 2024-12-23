@@ -1,0 +1,85 @@
+From c31a44147230d710818f8a19e17e5626e10c2800 Mon Sep 17 00:00:00 2001
+From: Joel Winarske <joel.winarske@toyotaconnected.com>
+Date: Mon, 23 Dec 2024 10:30:19 -0800
+Subject: [PATCH] c++17 compatability fixes
+
+Upstream-Status: Inappropriate
+
+Signed-off-by: Joel Winarske <joel.winarske@toyotaconnected.com>
+---
+ include/mbgl/gfx/shader_group.hpp   |  4 +++-
+ src/mbgl/layout/symbol_instance.hpp | 12 +++++-------
+ src/mbgl/util/string.cpp            |  4 +++-
+ 3 files changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/include/mbgl/gfx/shader_group.hpp b/include/mbgl/gfx/shader_group.hpp
+index 6b99628f00..58d4161b76 100644
+--- a/include/mbgl/gfx/shader_group.hpp
++++ b/include/mbgl/gfx/shader_group.hpp
+@@ -161,7 +161,9 @@ protected:
+     using PropertyHashType = std::uint64_t;
+ 
+     std::string getShaderName(const std::string_view& name, const PropertyHashType key) {
+-        return (std::ostringstream() << name << '#' << std::hex << key).str();
++        std::ostringstream oss;
++        oss << name << '#' << std::hex << key;
++        return oss.str();
+     }
+ 
+     /// Generate a map key for the specified combination of properties
+diff --git a/src/mbgl/layout/symbol_instance.hpp b/src/mbgl/layout/symbol_instance.hpp
+index 1520ebff98..14183fc7dd 100644
+--- a/src/mbgl/layout/symbol_instance.hpp
++++ b/src/mbgl/layout/symbol_instance.hpp
+@@ -6,7 +6,9 @@
+ #include <mbgl/style/layers/symbol_layer_properties.hpp>
+ #include <mbgl/util/bitmask_operations.hpp>
+ 
++#ifdef __cpp_lib_source_location
+ #include <source_location>
++#endif
+ 
+ #if !defined(MLN_SYMBOL_GUARDS)
+ #define MLN_SYMBOL_GUARDS 1
+@@ -20,8 +22,9 @@
+ 
+ // A temporary shim for partial C++20 support
+ #if MLN_SYMBOL_GUARDS
+-#if defined(__clang__)
+-#if __cplusplus <= 201703L || !__has_builtin(__builtin_source_location)
++#if __cpp_lib_source_location
++#define SYM_GUARD_LOC std::source_location::current()
++#else
+ namespace std {
+ struct source_location {
+     const char* fileName_;
+@@ -38,11 +41,6 @@ struct source_location {
+     std::source_location {               \
+         __FILE__, __FUNCTION__, __LINE__ \
+     }
+-#else
+-#define SYM_GUARD_LOC std::source_location::current()
+-#endif
+-#else
+-#define SYM_GUARD_LOC std::source_location::current()
+ #endif
+ #else
+ #define SYM_GUARD_LOC \
+diff --git a/src/mbgl/util/string.cpp b/src/mbgl/util/string.cpp
+index 5969826e38..bad694216c 100644
+--- a/src/mbgl/util/string.cpp
++++ b/src/mbgl/util/string.cpp
+@@ -38,7 +38,9 @@ std::string toString(uint64_t t) {
+ }
+ 
+ std::string toString(const std::thread::id& t) {
+-    return ((std::stringstream{}) << t).str();
++    std::stringstream ss;
++    ss << t;
++    return ss.str();
+ }
+ 
+ std::string toString(double t, bool decimal) {
+-- 
+2.25.1
+

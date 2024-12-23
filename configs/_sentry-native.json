@@ -2,11 +2,12 @@
     "id": "sentry-native",
     "load": false,
     "supported_archs": [
+        "arm64",
         "x86_64"
     ],
     "supported_host_types": [
-        "ubuntu",
-        "fedora"
+        "fedora",
+        "ubuntu"
     ],
     "type": "generic",
     "flutter_runtime": "debug",
@@ -20,24 +21,28 @@
     "runtime": {
         "pre-requisites": {
             "x86_64": {
-                "ubuntu": {
-                    "cmds": [
-                        "sudo apt-get install libunwind-dev"
-                    ]
-                },
                 "fedora": {
                     "cmds": [
                         "sudo dnf install libunwind-devel"
+                    ]
+                },
+                "ubuntu": {
+                    "cmds": [
+                        "sudo apt-get install libunwind-dev"
                     ]
                 }
             }
         },
         "post_cmds": [
             {
+                "env": {
+                    "CC": "/usr/bin/clang",
+                    "CXX": "/usr/bin/clang++"
+                },
                 "cwd": "${SENTRY_NATIVE_BUILD_DIR}",
                 "cmds": [
-                  "cmake ${SENTRY_NATIVE_SRC_DIR} ${SENTRY_NATIVE_CMAKE_ARGS}",
-                  "make install -j"
+                    "cmake ${SENTRY_NATIVE_SRC_DIR} ${SENTRY_NATIVE_CMAKE_ARGS}",
+                    "make -j"
                 ]
             }
         ]

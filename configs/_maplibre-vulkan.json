@@ -1,0 +1,69 @@
+{
+    "id": "maplibre-vulkan",
+    "load": false,
+    "supported_archs": [
+        "arm64",
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "ubuntu",
+        "fedora"
+    ],
+    "type": "generic",
+    "flutter_runtime": "debug",
+    "env": {
+        "MAPLIBRE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native",
+        "MAPLIBRE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native/cmake-build-release",
+        "MAPLIBRE_CMAKE_ARGS": "-DBUILD_SHARED_LIBS=OFF -DMLN_WITH_WERROR=OFF -DMLN_WITH_VULKAN=ON -DMLN_DRAWABLE_RENDERER=ON -DMLN_LEGACY_RENDERER=OFF -DMLN_WITH_EGL=OFF -DMLN_WITH_OPENGL=OFF",
+        "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/maplibre-vulkan"
+    },
+    "runtime": {
+        "pre-requisites": {
+            "arm64": {
+                "ubuntu": {
+                    "cmds": [
+                        "sudo apt install -y libwebp-dev libuv1-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libicu-dev libglfw3-dev"
+                    ]
+                },
+                "fedora": {
+                    "cmds": [
+                        "sudo dnf install -y libwebp-devel libuv-devel libcurl-devel libjpeg-devel libpng-devel libicu-devel glfw-devel"
+                    ]
+                }
+            },
+            "x86_64": {
+                "ubuntu": {
+                    "cmds": [
+                        "sudo apt install -y libwebp-dev libuv1-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libicu-dev libglfw3-dev"
+                    ]
+                },
+                "fedora": {
+                    "cmds": [
+                        "sudo dnf install -y libwebp-devel libuv-devel libcurl-devel libjpeg-devel libpng-devel libicu-devel glfw-devel"
+                    ]
+                }
+            }
+        },
+        "post_cmds": [
+            {
+                "cwd": "${MAPLIBRE_SRC_DIR}",
+                "cmds": [
+                    "git apply ${PATCH_FOLDER}/0001-platform-linux-wayland-vulkan.patch",
+                    "git apply ${PATCH_FOLDER}/0002-cxx17-compatability-fixes.patch"
+                ]
+            },
+            {
+                "env": {
+                    "CC": "/usr/bin/clang",
+                    "CXX": "/usr/bin/clang++"
+                },
+                "cwd": "${MAPLIBRE_BUILD_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${MAPLIBRE_BUILD_DIR}/* | true\"",
+                    "cmake ${MAPLIBRE_SRC_DIR} ${MAPLIBRE_CMAKE_ARGS}",
+                    "make -j8"
+                ]
+            }
+        ]
+    }
+}

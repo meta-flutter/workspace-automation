@@ -1,13 +1,13 @@
 {
     "id": "rive-text",
-    "load": true,
+    "load": false,
     "supported_archs": [
-        "x86_64",
-        "arm64"
+        "arm64",
+        "x86_64"
     ],
     "supported_host_types": [
-        "ubuntu",
-        "fedora"
+        "fedora",
+        "ubuntu"
     ],
     "type": "generic",
     "flutter_runtime": "debug",
@@ -22,13 +22,13 @@
                 "env": {
                     "CC": "/usr/bin/clang",
                     "CXX": "/usr/bin/clang++"
-                  },
-                  "cwd": "${RIVE_TEXT_BUILD_DIR}",
-                  "cmds": [
-                    "rm -rf * ||true",
+                },
+                "cwd": "${RIVE_TEXT_BUILD_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${RIVE_TEXT_BUILD_DIR}/* | true\"",
                     "cmake ${RIVE_TEXT_SRC_DIR} ${RIVE_TEXT_CMAKE_ARGS}",
                     "make -j"
-                  ]
+                ]
             }
         ]
     }

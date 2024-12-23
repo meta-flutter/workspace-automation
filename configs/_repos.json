@@ -30,7 +30,8 @@
     },
     {
         "uri": "https://git.libcamera.org/libcamera/libcamera.git",
-        "branch": "master"
+        "branch": "master",
+        "rev": "v0.3.2"
     },
     {
         "uri": "https://github.com/firebase/firebase-cpp-sdk.git",
