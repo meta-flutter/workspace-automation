@@ -573,7 +573,7 @@ def get_repo(base_folder, uri, branch, rev):
         print("repo entry needs a 'uri' key.  Skipping")
         return
     if not branch:
-        print("repo entry needs a 'branch' key.  Skipping")
+        print(f'{uri} entry needs a "branch" key.  Skipping')
         return
 
     # get repo folder name
@@ -1999,7 +1999,7 @@ def install_minimum_runtime_deps():
         if os_release_id == 'ubuntu':
             cmd = ['sudo', 'apt', 'update', '-y']
             subprocess.check_output(cmd)
-            packages = 'git git-lfs curl libcurl4-openssl-dev libssl-dev libgtk-3-dev python3.8-venv python3-pycurl python3-toml python3-dotenv'.split(' ')
+            packages = 'git git-lfs curl libcurl4-openssl-dev libssl-dev libgtk-3-dev python3-venv python3-pycurl python3-toml python3-dotenv'.split(' ')
             for package in packages:
                 ubuntu_install_pkg_if_not_installed(package)
 

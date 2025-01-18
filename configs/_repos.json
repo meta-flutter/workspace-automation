@@ -31,7 +31,7 @@
     {
         "uri": "https://git.libcamera.org/libcamera/libcamera.git",
         "branch": "master",
-        "rev": "v0.3.2"
+        "rev": "v0.4.0"
     },
     {
         "uri": "https://github.com/firebase/firebase-cpp-sdk.git",
@@ -111,6 +111,10 @@
     },
     {
         "uri": "https://github.com/DavBfr/dart_pdf.git",
+        "branch": "master"
+    },
+    {
+        "uri": "https://github.com/digitalpomegranate/virtual_keyboard",
         "branch": "master"
     }
 ]

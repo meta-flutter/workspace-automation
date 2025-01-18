@@ -12,14 +12,23 @@ on:
 
 jobs:
 
-  workspace-automation:
+  workspace-automation-ubuntu-focal:
 
-    strategy:
-      matrix:
-        os: [ubuntu-22.04, ubuntu-24.04]
-        # macos-10.15, macos-11, macos-12, ubuntu-18.04, ubuntu-22.04, ubuntu-24.04
+    runs-on: [self-hosted, linux]
 
-    runs-on: ${{ matrix.os }}
+    container:
+      image: ghcr.io/meta-flutter/meta-flutter/ubuntu-20-user:main
+      options:
+        --log-driver=none
+        --user 1001:1001
+        --userns keep-id:uid=1001,gid=1001
+        --security-opt label=disable
+        --pids-limit=-1
+        --storage-opt overlay.mount_program=/usr/bin/fuse-overlayfs
+        --storage-opt overlay.mountopt=nodev,metacopy=on,noxattrs=1
+        -v /home/runner/.ssh:/home/dev/.ssh:ro
+        -v /mnt/raid10/github-ci/download:/home/dev/dl:Z
+        -v /mnt/raid10/github-ci/sstate/yocto/master-linux-dummy:/home/dev/sstate:Z
 
     steps:
       - uses: actions/checkout@v4
@@ -28,7 +37,85 @@ jobs:
 
       - name: Setup workspace
         run: |
-          sudo ./flutter_workspace.py
+          mkdir -p /home/dev/workspace && cd /home/dev/workspace
+          export FLUTTER_WORKSPACE=/home/dev/workspace
+          /__w/workspace-automation/workspace-automation/flutter_workspace.py --config=/__w/workspace-automation/workspace-automation/configs
+
+      - name: Source Environment
+        shell: bash
+        working-directory: workspace
+        run: |
+          source ./setup_env.sh
+          flutter doctor -v
+          dart --version
+
+
+  workspace-automation-ubuntu-jammy:
+
+    runs-on: [self-hosted, linux]
+
+    container:
+      image: ghcr.io/meta-flutter/meta-flutter/ubuntu-22-user:main
+      options:
+        --log-driver=none
+        --user 1001:1001
+        --userns keep-id:uid=1001,gid=1001
+        --security-opt label=disable
+        --pids-limit=-1
+        --storage-opt overlay.mount_program=/usr/bin/fuse-overlayfs
+        --storage-opt overlay.mountopt=nodev,metacopy=on,noxattrs=1
+        -v /home/runner/.ssh:/home/dev/.ssh:ro
+        -v /mnt/raid10/github-ci/download:/home/dev/dl:Z
+        -v /mnt/raid10/github-ci/sstate/yocto/master-linux-dummy:/home/dev/sstate:Z
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup workspace
+        run: |
+          mkdir -p /home/dev/workspace && cd /home/dev/workspace
+          export FLUTTER_WORKSPACE=/home/dev/workspace
+          /__w/workspace-automation/workspace-automation/flutter_workspace.py --config=/__w/workspace-automation/workspace-automation/configs
+
+      - name: Source Environment
+        shell: bash
+        working-directory: workspace
+        run: |
+          source ./setup_env.sh
+          flutter doctor -v
+          dart --version
+
+
+  workspace-automation-ubuntu-noble:
+
+    runs-on: [self-hosted, linux]
+
+    container:
+      image: ghcr.io/meta-flutter/meta-flutter/ubuntu-24-user:main
+      options:
+        --log-driver=none
+        --user 1001:1001
+        --userns keep-id:uid=1001,gid=1001
+        --security-opt label=disable
+        --pids-limit=-1
+        --storage-opt overlay.mount_program=/usr/bin/fuse-overlayfs
+        --storage-opt overlay.mountopt=nodev,metacopy=on,noxattrs=1
+        -v /home/runner/.ssh:/home/dev/.ssh:ro
+        -v /mnt/raid10/github-ci/download:/home/dev/dl:Z
+        -v /mnt/raid10/github-ci/sstate/yocto/master-linux-dummy:/home/dev/sstate:Z
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup workspace
+        run: |
+          mkdir -p /home/dev/workspace && cd /home/dev/workspace
+          export FLUTTER_WORKSPACE=/home/dev/workspace
+          /__w/workspace-automation/workspace-automation/flutter_workspace.py --config=/__w/workspace-automation/workspace-automation/configs
 
       - name: Source Environment
         shell: bash
