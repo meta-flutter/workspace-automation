@@ -9,8 +9,7 @@
         "ubuntu",
         "fedora"
     ],
-    "type": "generic",
-    "flutter_runtime": "debug",
+    "type": "dependency",
     "env": {
         "CMAKE_BUILD_TYPE": "Release",
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/cef-prebuilt",

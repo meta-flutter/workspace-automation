@@ -8,13 +8,19 @@
         "ubuntu",
         "fedora"
     ],
-    "type": "generic",
-    "flutter_runtime": "debug",
+    "type": "dependency",
     "env": {
         "CAMERA_SRC_DIR": "${FLUTTER_WORKSPACE}/app/libcamera",
         "CAMERA_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/libcamera/buildDir",
         "CAMERA_MESON_ARGS": "-Dqcam=\"disabled\" -Dlc-compliance=\"disabled\" -Dcam=\"disabled\" -Dgstreamer=\"disabled\""
     },
+    "src": [
+        {
+            "uri": "https://git.libcamera.org/libcamera/libcamera.git",
+            "branch": "master",
+            "rev": "v0.4.0"
+        }
+    ],
     "runtime": {
         "pre-requisites": {
             "x86_64": {

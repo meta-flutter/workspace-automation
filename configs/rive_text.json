@@ -1,6 +1,6 @@
 {
     "id": "rive-text",
-    "load": false,
+    "load": true,
     "supported_archs": [
         "arm64",
         "x86_64"
@@ -9,13 +9,23 @@
         "fedora",
         "ubuntu"
     ],
-    "type": "generic",
-    "flutter_runtime": "debug",
+    "type": "dependency",
     "env": {
         "RIVE_TEXT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/rive-common",
         "RIVE_TEXT_BUILD_DIR": "${RIVE_TEXT_SRC_DIR}/cmake-build-release",
         "RIVE_TEXT_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Release"
     },
+    "src": [
+        {
+            "uri": "https://github.com/meta-flutter/rive-common.git",
+            "branch": "main"
+        },
+        {
+            "uri": "https://github.com/rive-app/rive-flutter.git",
+            "branch": "master",
+            "rev": "0.8.4"
+        }
+    ],
     "runtime": {
         "post_cmds": [
             {

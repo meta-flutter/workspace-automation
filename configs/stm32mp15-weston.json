@@ -10,7 +10,6 @@
         "fedora",
         "ubuntu"
     ],
-    "flutter_runtime": "debug",
     "type": "remote",
     "env": {
         "DEVICE_HOSTNAME": "stm32mp15-disco.local",

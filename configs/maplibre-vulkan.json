@@ -9,14 +9,19 @@
         "ubuntu",
         "fedora"
     ],
-    "type": "generic",
-    "flutter_runtime": "debug",
+    "type": "dependency",
     "env": {
         "MAPLIBRE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native",
         "MAPLIBRE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native/cmake-build-release",
         "MAPLIBRE_CMAKE_ARGS": "-DBUILD_SHARED_LIBS=OFF -DMLN_WITH_WERROR=OFF -DMLN_WITH_VULKAN=ON -DMLN_DRAWABLE_RENDERER=ON -DMLN_LEGACY_RENDERER=OFF -DMLN_WITH_EGL=OFF -DMLN_WITH_OPENGL=OFF",
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/maplibre-vulkan"
     },
+    "src": [
+        {
+            "uri": "https://github.com/maplibre/maplibre-native.git",
+            "branch": "main"
+        }
+    ],
     "runtime": {
         "pre-requisites": {
             "arm64": {

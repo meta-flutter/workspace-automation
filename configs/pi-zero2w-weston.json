@@ -10,7 +10,6 @@
         "fedora",
         "ubuntu"
     ],
-    "flutter_runtime": "debug",
     "type": "remote",
     "env": {
         "DEVICE_HOSTNAME": "raspberrypi0-2w-64.local",

@@ -10,7 +10,6 @@
         "ubuntu",
         "fedora"
     ],
-    "flutter_runtime": "debug",
     "type": "qemu",
     "env": {
         "RELEASE_NAME": "octopus",

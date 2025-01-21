@@ -9,8 +9,7 @@
         "ubuntu",
         "fedora"
     ],
-    "type": "generic",
-    "flutter_runtime": "debug",
+    "type": "dependency",
     "env": {
         "RUNTIME_MODE": "debug",
         "DEPOT_TOOLS": "${FLUTTER_WORKSPACE}/app/depot_tools",

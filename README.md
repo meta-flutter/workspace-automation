@@ -92,6 +92,12 @@ flutter_workspace_config.json contains the following components
 * platform definition
 
 
+### Platform configuration environmental variables
+
+* `FLUTTER_WORKSPACE_<config id>)_LOAD=[ON,OFF]`
+  This environmental variable is generated for each platform config.  The initial value is determined by the platform config `load` key value.  It will be overriden to `OFF` via the `--plex=` command line option.
+
+
 ### Installation
 
 ```
@@ -124,7 +130,24 @@ Pass folder for storing dart and engine json files.
 
 #### --plex="..."
 
-Platform Load Exceptions.  Pass platform-id values.  Space is delimiter
+Platform Load Exceptions.  Pass platform-id values.  Select multiple platform ids by seperating with `,`.
+
+e.g. `--plex=filament,firebase-cpp-sdk`
+
+This option also has the impact of forcing the environmental variable `FLUTTER_WORKSPACE_<platfor id>)_LOAD=OFF`.  This variable can be used reliably in a configuration type other than `dependency`.
+
+#### --enable="..."
+
+Enable Platform Configuration(s).  Pass platform-id values.  Select multiple platform ids by seperating with `,`.
+
+e.g. `--enable=firebase-cpp-sdk`
+
+This option also has the impact of forcing the environmental variable `FLUTTER_WORKSPACE_<platfor id>)_LOAD=ON`.  This variable can be used reliably in a configuration type other than `dependency`.
+
+#### --disable="..."
+
+Alias to --plex.  See `--plex` description
+
 
 #### --stdin-file
 

@@ -8,8 +8,7 @@
         "ubuntu",
         "fedora"
     ],
-    "type": "generic",
-    "flutter_runtime": "debug",
+    "type": "dependency",
     "env": {
         "RUNTIME_MODE": "debug",
         "DEPOT_TOOLS": "${FLUTTER_WORKSPACE}/app/depot_tools",
@@ -21,6 +20,12 @@
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/pdfium",
         "VPYTHON_VIRTUALENV_ROOT": "${PDFIUM_ROOT}/.vpython-root"
     },
+    "src": [
+        {
+            "uri": "https://github.com/DavBfr/dart_pdf.git",
+            "branch": "master"
+        }
+    ],
     "runtime": {
         "gclient_config": {
             "path": "${PDFIUM_ROOT}",

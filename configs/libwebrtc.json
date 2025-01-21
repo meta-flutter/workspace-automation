@@ -9,8 +9,7 @@
         "ubuntu",
         "fedora"
     ],
-    "type": "generic",
-    "flutter_runtime": "debug",
+    "type": "dependency",
     "env": {
         "RUNTIME_MODE": "debug",
         "DEPOT_TOOLS": "${FLUTTER_WORKSPACE}/app/depot_tools",
@@ -22,6 +21,24 @@
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/libwebrtc",
         "VPYTHON_VIRTUALENV_ROOT": "${LIBWEBRTC_ROOT}/.vpython-root"
     },
+    "src": [
+        {
+            "uri": "https://github.com/flutter-webrtc/flutter-webrtc.git",
+            "branch": "main"
+        },
+        {
+            "uri": "https://github.com/flutter-webrtc/flutter-webrtc-demo.git",
+            "branch": "master"
+        },
+        {
+            "uri": "https://github.com/flutter-webrtc/flutter-webrtc-server.git",
+            "branch": "master"
+        },
+        {
+            "uri": "https://github.com/flutter-webrtc/dart-sip-ua",
+            "branch": "main"
+        }
+    ],
     "runtime": {
         "gclient_config": {
             "path": "${LIBWEBRTC_ROOT}",

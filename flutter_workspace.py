@@ -73,16 +73,14 @@ def main():
                         action='store_true', help='Fetch Engine artifacts')
     parser.add_argument('--find-working-commit', default=False, action='store_true',
                         help='Use to finding GIT commit where flutter analyze returns true')
-    parser.add_argument('--plex', default='', type=str,
-                        help='Platform Load Excludes')
-    parser.add_argument('--fastboot', default='', type=str,
-                        help='Update the selected platform using fastboot')
-    parser.add_argument('--mask-rom', default='', type=str,
-                        help='Update the selected platform using Mask ROM')
+    parser.add_argument('--plex', default='', type=str, help='Platform Load Excludes')
+    parser.add_argument('--enable', default='', type=str, help='Platform Load Enable Override')
+    parser.add_argument('--disable', default='', type=str, help='Platform Load Disable Override')
+    parser.add_argument('--fastboot', default='', type=str, help='Update the selected platform using fastboot')
+    parser.add_argument('--mask-rom', default='', type=str, help='Update the selected platform using Mask ROM')
     parser.add_argument('--device-id', default='', type=str, help='device id for flashing')
 
-    parser.add_argument('--stdin-file', default='', type=str,
-                        help='Use for passing stdin for debugging')
+    parser.add_argument('--stdin-file', default='', type=str, help='Use for passing stdin for debugging')
     parser.add_argument('--plugin-platform', default='linux', type=str, help='specify plugin platform type')
     parser.add_argument('--create-aot', default=False, action='store_true', help='Generate AOT')
     parser.add_argument('--app-path', default='', type=str, help='Specify Application path')
@@ -184,6 +182,7 @@ def main():
     # Workspace Configuration
     #
     config = get_workspace_config(args.config)
+
     globals_ = config.get('globals')
 
     platforms = config.get('platforms')
@@ -319,7 +318,7 @@ def main():
     if args.cookie_file:
         cookie_file = args.cookie_file
 
-    setup_platforms(platforms, github_token, cookie_file, args.plex)
+    setup_platforms(platforms, github_token, cookie_file, args.plex, args.enable, args.disable, app_folder)
 
     #
     # Display the custom devices list
@@ -378,18 +377,19 @@ def get_workspace_config(path):
         import glob
         for filename in sorted(glob.glob(os.path.join(path, '*.json'))):
 
-            with open(os.path.join(os.getcwd(), filename), 'r') as f:
+            filepath = os.path.join(os.getcwd(), filename)
+            with open(filepath, 'r') as f:
 
                 _head, tail = os.path.split(filename)
 
-                if tail == '_repos.json':
+                if tail == 'repos.json':
                     try:
                         data['repos'] = json.load(f)
                     except json.decoder.JSONDecodeError:
                         print("Invalid JSON in %s" % f)
                         exit(1)
 
-                elif tail == '_globals.json':
+                elif tail == 'globals.json':
                     try:
                         data['globals'] = json.load(f)
                     except json.decoder.JSONDecodeError:
@@ -397,11 +397,9 @@ def get_workspace_config(path):
                         exit(1)
 
                 else:
+                    print_banner(f'Loading: {filepath}')
                     try:
                         platform_ = json.load(f)
-                        if 'load' in platform_:
-                            if not platform_['load']:
-                                continue
                         data['platforms'].append(platform_)
                     except json.decoder.JSONDecodeError:
                         print("Invalid JSON in %s" % f)
@@ -442,6 +440,11 @@ def validate_platform_config(platform_):
                 print_banner("Missing 'runtime' key in platform config")
                 return False
 
+        elif platform_['type'] == 'dependency':
+            if 'runtime' not in platform_:
+                print_banner("Missing 'runtime' key in platform config")
+                return False
+
         elif platform_['type'] == 'qemu':
             if 'runtime' not in platform_:
                 print_banner("Missing 'runtime' key in platform config")
@@ -463,10 +466,6 @@ def validate_platform_config(platform_):
             if 'runtime' not in platform_:
                 print_banner("Missing 'runtime' key in platform config")
                 return False
-            if 'flutter_runtime' not in platform_:
-                print_banner(
-                    "Missing 'flutter_runtime' key in platform config")
-                return False
             if 'custom-device' not in platform_:
                 print_banner("Missing 'custom-device' key in platform config")
                 return False
@@ -479,10 +478,6 @@ def validate_platform_config(platform_):
             if 'runtime' not in platform_:
                 print_banner("Missing 'runtime' key in platform config")
                 return False
-            if 'flutter_runtime' not in platform_:
-                print_banner(
-                    "Missing 'flutter_runtime' key in platform config")
-                return False
             if 'custom-device' not in platform_:
                 print_banner("Missing 'custom-device' key in platform config")
                 return False
@@ -494,10 +489,6 @@ def validate_platform_config(platform_):
         elif platform_['type'] == 'remote':
             if 'runtime' not in platform_:
                 print_banner("Missing 'runtime' key in platform config")
-                return False
-            if 'flutter_runtime' not in platform_:
-                print_banner(
-                    "Missing 'flutter_runtime' key in platform config")
                 return False
             if 'custom-device' not in platform_:
                 print_banner("Missing 'custom-device' key in platform config")
@@ -673,6 +664,28 @@ def get_platform_ids(platforms: dict) -> list:
     for platform_ in platforms:
         res.append(platform_['id'])
     return res
+
+
+def get_platform_src(src: dict, base_folder: str):
+    if src is None:
+        return
+    
+    import concurrent.futures
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = []
+        for repo in src:
+            futures.append(executor.submit(get_repo, base_folder=base_folder, uri=repo.get(
+                'uri'), branch=repo.get('branch'), rev=repo.get('rev')))
+            subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+
+        for _future in concurrent.futures.as_completed(futures):
+            subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+
+    print_banner("Source Repos Cloned")
+
+    # reset sudo timeout
+    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
 
 
 def get_flutter_settings_folder():
@@ -889,7 +902,7 @@ def add_flutter_custom_device(device_config, flutter_runtime):
     return
 
 
-def add_flutter_custom_device_ex(custom_device, _flutter_runtime):
+def add_flutter_custom_device_ex(custom_device):
     """ Add a single Flutter custom device from json string """
 
     if not validate_custom_device_config(custom_device):
@@ -952,7 +965,7 @@ def handle_custom_devices(platform_):
                     remove_flutter_custom_devices_id(id_)
 
     add_flutter_custom_device_ex(
-        platform_['custom-device'], platform_['flutter_runtime'])
+        platform_['custom-device'])
 
 
 def configure_flutter_sdk():
@@ -1627,7 +1640,7 @@ def handle_dotenv(dotenv_files):
         dotenv_path = Path(os.path.join(flutter_workspace, dotenv_file))
         if dotenv_path.exists:
             load_dotenv(dotenv_path=dotenv_path, verbose=True, override=True)
-            print("Loaded: %s" % dotenv_path)
+            print(f'Loaded: {dotenv_path}')
 
 
 def handle_env(env_variables, local_env):
@@ -1637,10 +1650,10 @@ def handle_env(env_variables, local_env):
     for k, v in env_variables.items():
         if local_env:
             local_env[k] = os.path.expandvars(v)
-            print("local: %s = %s" % (k, local_env[k]))
+            print(f'local: {k} = {local_env[k]}')
         else:
             os.environ[k] = os.path.expandvars(v)
-            # print("global: %s = %s" % (k, os.environ[k]))
+            # print(f'global: {k} = {os.environ[k]}')
 
 
 def get_platform_working_dir(platform_id):
@@ -1703,13 +1716,30 @@ def is_host_type_supported(host_types):
     return True
 
 
-def setup_platform(platform_, git_token, cookie_file, plex):
+def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app_folder):
     """ Sets up platform """
 
-    if platform_['id'] in plex:
-        print_banner("PLEX - %s" % platform_['id'])
+    # setup environmental variable to use in later occuring CMake configs
+    if 'load' in platform_ and 'id' in platform_:
+        id = platform_['id']
+        id_conv = id.replace('-','_')
+        id_upper = id_conv.upper()
+        if id in disable or id in plex:
+            value = "OFF"
+        elif id in enable or platform_['load']:
+            value = "ON"
+        else:
+            value = "OFF"
+        key = f'FLUTTER_WORKSPACE_{id_upper}_LOAD'
+        print_banner(f'Setting {key}={value}')
+        os.environ[key] = value
+
+    if not platform_['load'] or platform_['id'] in plex:
+        print_banner("Skipping - %s" % platform_['id'])
         return
 
+    get_platform_src(platform_['src'], app_folder)
+    
     # if platform_['type'] == 'docker':
     runtime = platform_['runtime']
 
@@ -1734,6 +1764,7 @@ def setup_platform(platform_, git_token, cookie_file, plex):
 
     handle_dotenv(platform_.get('dotenv'))
     handle_env(platform_.get('env'), None)
+
     create_platform_config_file(runtime.get('config'), cwd)
     create_gclient_config_file(runtime.get('gclient_config'))
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
@@ -1747,21 +1778,53 @@ def setup_platform(platform_, git_token, cookie_file, plex):
     handle_conditionals(runtime.get('conditionals'), cwd)
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
     handle_qemu_obj(runtime.get('qemu'), cwd, platform_[
-        'id'], platform_['flutter_runtime'])
+        'id'], 'debug')
     subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
     handle_commands_obj(runtime.get('post_cmds'), cwd)
 
     handle_custom_devices(platform_)
 
 
-def setup_platforms(platforms, git_token, cookie_file, plex):
+def get_dependencies(platforms):
+    """Returns a list of dependencies from the platforms."""
+    dependencies = []
+    for platform in platforms:
+        if platform['type'] == 'dependency':
+            dependencies.append(platform)
+    return dependencies
+
+
+def get_not_dependencies(platforms):
+    """Returns a list of platforms that are not dependencies."""
+    not_dependencies = []
+    for platform in platforms:
+        if platform['type'] != 'dependency':
+            not_dependencies.append(platform)
+    return not_dependencies
+
+
+def setup_platforms(platforms, git_token, cookie_file, plex, enable, disable, app_folder):
     """ Sets up each occurring platform defined """
 
     if plex:
-        plex = plex.split(" ")
+        plex = plex.split(',')
 
-    for platform_ in platforms:
-        setup_platform(platform_, git_token, cookie_file, plex)
+    if enable:
+        enable = enable.split(',')
+
+    if disable:
+        disable = disable.split(',')
+
+    # iterate over dependencies first
+    for dependency in get_dependencies(platforms):
+        setup_platform(dependency, git_token, cookie_file, plex, enable, disable, app_folder)
+
+        # reset sudo timeout
+        subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+
+    # iterate over non-dependencies
+    for platform_ in get_not_dependencies(platforms):
+        setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app_folder)
 
         # reset sudo timeout
         subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
