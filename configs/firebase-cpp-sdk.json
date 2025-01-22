@@ -20,7 +20,11 @@
         {
             "uri": "https://github.com/firebase/firebase-cpp-sdk.git",
             "branch": "main",
-            "rev": "v12.4.0"
+            "rev": "v12.5.0"
+        },
+        {
+            "uri": "https://github.com/firebase/flutterfire.git",
+            "branch": "main"
         },
         {
             "uri": "https://github.com/firebase/FirebaseUI-Flutter",
