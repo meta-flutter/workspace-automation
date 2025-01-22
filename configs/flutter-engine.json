@@ -22,6 +22,7 @@
         "GN_ARGS_APPEND": "",
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/flutter-engine"
     },
+    "src": [],
     "runtime": {
         "gclient_config": {
             "path": "${ENGINE_ROOT}",

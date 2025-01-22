@@ -44,7 +44,7 @@
             "path": "${LIBWEBRTC_ROOT}",
             "name": "${LIBWEBRTC_SRC_DIR_RELATIVE}",
             "url": "https://github.com/webrtc-sdk/webrtc.git@m125_release",
-            "deps_file"   : "DEPS",
+            "deps_file": "DEPS",
             "managed": false,
             "custom_deps": {},
             "custom_vars": {}

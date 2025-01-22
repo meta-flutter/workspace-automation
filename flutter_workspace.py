@@ -666,7 +666,7 @@ def get_platform_ids(platforms: dict) -> list:
     return res
 
 
-def get_platform_src(src: dict, base_folder: str):
+def get_platform_src(src, base_folder: str):
     if src is None:
         return
     
@@ -1734,11 +1734,11 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app
         print_banner(f'Setting {key}={value}')
         os.environ[key] = value
 
-    if not platform_['load'] or platform_['id'] in plex:
-        print_banner("Skipping - %s" % platform_['id'])
-        return
-
-    get_platform_src(platform_['src'], app_folder)
+        if value == "OFF":
+            print_banner("Skipping - %s" % platform_['id'])
+            return
+        
+    get_platform_src(platform_.get('src', None), app_folder)
     
     # if platform_['type'] == 'docker':
     runtime = platform_['runtime']
