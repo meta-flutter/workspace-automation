@@ -4,10 +4,6 @@
         "branch": "main"
     },
     {
-        "uri": "https://github.com/toyota-connected/tcna-packages",
-        "branch": "main"
-    },
-    {
         "uri": "https://github.com/flutter/packages.git",
         "branch": "main"
     },

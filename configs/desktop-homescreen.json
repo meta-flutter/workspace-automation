@@ -52,6 +52,10 @@
       "branch": "v2.0"
     },
     {
+      "uri": "https://github.com/toyota-connected/tcna-packages",
+      "branch": "main"
+    },
+    {
       "uri": "https://github.com/mogol/flutter_secure_storage.git",
       "branch": "develop",
       "pubspec_path": "flutter_secure_storage/flutter_secure_storage/example"
