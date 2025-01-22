@@ -52,6 +52,23 @@ from create_aot import get_flutter_sdk_version
 from create_aot import create_platform_aot
 
 
+def get_host_machine_arch():
+    return platform.machine()
+
+
+def get_flutter_arch():
+    host_arch = get_host_machine_arch()
+    if host_arch == 'x86_64':
+        return 'x64'
+    elif host_arch == 'arm64':
+        return 'arm64'
+    elif host_arch == 'aarch64':
+        return 'arm64'
+    else:
+        print_banner(f'Unkown host arch: {host_arch}')
+        exit(1)
+
+
 def main():
     # check python version
     check_python_version()
@@ -84,7 +101,6 @@ def main():
     parser.add_argument('--plugin-platform', default='linux', type=str, help='specify plugin platform type')
     parser.add_argument('--create-aot', default=False, action='store_true', help='Generate AOT')
     parser.add_argument('--app-path', default='', type=str, help='Specify Application path')
-    parser.add_argument('--arch', default=get_flutter_arch(), type=str, help='specify flutter architecture')
     parser.add_argument('--copy-dconf-user', default=False, action='store_true', help='copy $HOME/.confi/dconf/user to $FLUTTER_WORKSPACE')
 
     args = parser.parse_args()
@@ -96,7 +112,7 @@ def main():
         if args.app_path == '':
             sys.exit("Must specify value for --app-path")
 
-        set_gen_snapshot('release', args.arch)
+        set_gen_snapshot('release', get_flutter_arch())
         create_platform_aot(args.app_path, get_flutter_sdk_version())
         return
 
@@ -142,6 +158,7 @@ def main():
     #
     user = get_process_stdout('logname').split('\n')
     cmd = ['sudo', 'chown', '-R', f'{user[0]}:{user[0]}', workspace]
+    subprocess.check_call(cmd, stdout=subprocess.DEVNULL)
 
     #
     # Install minimum package
@@ -175,7 +192,7 @@ def main():
     #
     if args.fetch_engine:
         print_banner("Fetching Engine Artifacts")
-        get_flutter_engine_runtime(True, args.arch)
+        get_flutter_engine_runtime(True, get_flutter_arch())
         return
 
     #
@@ -300,7 +317,7 @@ def main():
     #
     # Flutter Engine Runtime
     #
-    get_flutter_engine_runtime(clean_workspace, args.arch)
+    get_flutter_engine_runtime(clean_workspace, get_flutter_arch())
 
     #
     # Create environmental setup script
@@ -380,7 +397,7 @@ def get_workspace_config(path):
             filepath = os.path.join(os.getcwd(), filename)
             with open(filepath, 'r') as f:
 
-                _head, tail = os.path.split(filename)
+                _, tail = os.path.split(filename)
 
                 if tail == 'repos.json':
                     try:
@@ -593,8 +610,10 @@ def get_repo(base_folder, uri, branch, rev):
     else:
         # print_banner(f'Checking if folder exists: {git_folder}')
         if (os.path.exists(git_folder)):
-            # print_banner(f'rm -rf {git_folder} ||true')
-            subprocess.run(['rm','-rf', git_folder, '||','true'], cwd=base_folder)
+            try:
+                subprocess.run(['rm', '-rf', git_folder], cwd=base_folder, check=True)
+            except subprocess.CalledProcessError:
+                pass
 
         # print_banner(f'git clone {uri} -b {branch} {repo_name}')
         cmd = ['git', 'clone', uri, '-b', branch, repo_name]
@@ -644,7 +663,7 @@ def get_workspace_repos(base_folder, config):
                 'uri'), branch=repo.get('branch'), rev=repo.get('rev')))
             subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
 
-        for _future in concurrent.futures.as_completed(futures):
+        for _ in concurrent.futures.as_completed(futures):
             subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
 
     print_banner("Repos Cloned")
@@ -679,7 +698,8 @@ def get_platform_src(src, base_folder: str):
                 'uri'), branch=repo.get('branch'), rev=repo.get('rev')))
             subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
 
-        for _future in concurrent.futures.as_completed(futures):
+        for future in concurrent.futures.as_completed(futures):
+            future.result()  # Get result to propagate any exceptions
             subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
 
     print_banner("Source Repos Cloned")
@@ -875,10 +895,9 @@ def add_flutter_custom_device(device_config, flutter_runtime):
         f = open(custom_devices_file, "r")
         try:
             obj = json.load(f)
-        except json.decoder.JSONDecodeError:
-            print_banner("Invalid JSON in %s" %
-                         custom_devices_file)  # in case json is invalid
-            exit(1)
+        except json.decoder.JSONDecodeError as e:
+            print_banner(f"Invalid JSON in {custom_devices_file}: {str(e)}")
+            sys.exit(1)
         f.close()
 
         id_ = device_config['id']
@@ -1094,13 +1113,16 @@ def get_process_stdout(cmd):
 
 def get_freedesktop_os_release() -> dict:
     """ Read /etc/os-release into dictionary """
+    if not os.path.exists("/etc/os-release"):
+        return {}
 
     with open("/etc/os-release") as f:
         d = {}
         for line in f:
             line = line.strip()
-            k, v = line.rstrip().split("=")
-            d[k] = v.strip('"')
+            if "=" in line:  # Only process lines containing "="
+                k, v = line.rstrip().split("=", 1)  # Split on first "=" only
+                d[k] = v.strip('"')
         return d
 
 
@@ -1119,10 +1141,6 @@ def get_host_type() -> str:
     return system().lower().rstrip()
 
 
-def get_host_machine_arch():
-    return platform.machine()
-
-
 def get_flutter_engine_commit():
     workspace = os.environ.get('FLUTTER_WORKSPACE')
     if not workspace:
@@ -1135,14 +1153,6 @@ def get_flutter_engine_commit():
     return engine_version
 
 
-def get_flutter_arch():
-    host_arch = get_host_machine_arch()
-    if host_arch == 'x86_64':
-        return 'x64'
-    elif host_arch == 'arm64':
-        return 'arm64'
-
-
 def set_gen_snapshot(runtime, arch):
     engine_sdk = f'engine-sdk-{runtime}-{arch}'
     linux_runtime = f'linux_{runtime}_x64'
@@ -1152,10 +1162,10 @@ def set_gen_snapshot(runtime, arch):
     engine_sdk_root = os.path.join(platform_path, commit, engine_sdk, 'src', 'out', linux_runtime, 'engine-sdk')
 
     gen_snapshot = os.path.join(engine_sdk_root, 'bin', 'gen_snapshot')
-    if not os.path.exists:
-        get_flutter_engine_artifacts(True, runtime)
+    if not os.path.exists(gen_snapshot):
+        get_flutter_engine_artifacts(True, runtime, arch)
 
-    if not os.path.exists:
+    if not os.path.exists(gen_snapshot):
         sys.exit('engine-sdk error')
 
     os.environ['GEN_SNAPSHOT'] = gen_snapshot
@@ -1350,7 +1360,7 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
                     ['sudo', '-v'], stdout=subprocess.DEVNULL)
 
             for future in concurrent.futures.as_completed(futures):
-                _res = future.result()
+                future.result()
                 subprocess.check_call(
                     ['sudo', '-v'], stdout=subprocess.DEVNULL)
 
@@ -1425,8 +1435,7 @@ def docker_compose_stop(docker_compose_yml_dir):
     subprocess.check_call(["docker-compose", "stop"],
                           cwd=docker_compose_yml_dir)
 
-
-def handle_docker_obj(obj, _host_machine_arch, cwd):
+def handle_docker_obj(obj, _, cwd):
     if not obj:
         return
 
@@ -1439,7 +1448,7 @@ def handle_docker_obj(obj, _host_machine_arch, cwd):
     docker_compose_yml_dir = obj.get('docker-compose-yml-dir')
     if docker_compose_yml_dir:
         docker_compose_yml_abs = os.path.join(flutter_workspace, docker_compose_yml_dir)
-        if Path(docker_compose_yml_abs).exists:
+        if Path(docker_compose_yml_abs).exists():
             docker_compose_stop(docker_compose_yml_abs)
 
     handle_commands(obj.get('post_cmds'), cwd)
@@ -1480,10 +1489,13 @@ def handle_qemu_obj(qemu: dict, cwd: os.path, platform_id: str, flutter_runtime:
 
     host_machine_arch = get_host_machine_arch()
 
-    if not qemu.get(host_machine_arch):
-        sys.exit("Configuration not specified for this host machine architecture")
+    qemu_arch_config = qemu.get(host_machine_arch)
+    if not qemu_arch_config:
+        print_banner(f"QEMU configuration not specified for architecture: {host_machine_arch}")
+        return
     if not qemu.get('cmd'):
-        sys.exit("Command not specified")
+        print_banner("QEMU command not specified")
+        return
 
     if qemu.get('extra'):
         extra = ''
@@ -1516,7 +1528,7 @@ def handle_qemu_obj(qemu: dict, cwd: os.path, platform_id: str, flutter_runtime:
     image = qemu[host_machine_arch]['image']
     image = os.path.expandvars(image)
 
-    artifacts_dir = os.environ['ARTIFACTS_DIR']
+    artifacts_dir = os.environ.get('ARTIFACTS_DIR')
     if not artifacts_dir:
         os.environ['QEMU_IMAGE'] = os.path.join(cwd, image)
     else:
@@ -1542,13 +1554,18 @@ def handle_qemu_obj(qemu: dict, cwd: os.path, platform_id: str, flutter_runtime:
         with open(apple_script_file, 'w+') as f:
             f.write(format(env_qemu_applescript % (cmd, args)))
 
+    # Use SSH port from qemu config or environment, with a default value of 2222
+    container_ssh_port = qemu.get('ssh_port') or os.environ.get('CONTAINER_SSH_PORT', "2222")
+    # Store the SSH port in environment for other components to use
+    os.environ['CONTAINER_SSH_PORT'] = container_ssh_port
+    
     env_script = os.path.join(flutter_workspace, 'setup_env.sh')
     with open(env_script, 'a') as f:
         f.write(env_qemu % (
             platform_id,
             platform_id,
-            os.environ['CONTAINER_SSH_PORT'],
-            os.environ['CONTAINER_SSH_PORT'],
+            container_ssh_port,
+            container_ssh_port,
             terminal_cmd))
 
 
@@ -1589,7 +1606,7 @@ def handle_github_obj(obj, cwd, token):
 
                     filename = "%s.zip" % name
                     downloaded_file = get_github_artifact(token, url, filename)
-                    if downloaded_file is None:
+                    if downloaded_file is None or downloaded_file == '':
                         print_banner("Failed to download %s" % filename)
                         continue
 
@@ -1669,12 +1686,16 @@ def get_platform_working_dir(platform_id):
 
 def create_platform_config_file(obj, cwd):
     import toml
+    from pathlib import Path
     if obj is None:
         return
 
     toml_config = toml.dumps(obj)
     
+    cwd = Path(cwd)
     default_config_filepath = cwd.joinpath('config.toml')
+    if not default_config_filepath.exists():
+        make_sure_path_exists(default_config_filepath.parent)
     with open(default_config_filepath, 'w+') as f:
         f.write(toml_config)
 
@@ -2062,14 +2083,14 @@ def install_minimum_runtime_deps():
         if os_release_id == 'ubuntu':
             cmd = ['sudo', 'apt', 'update', '-y']
             subprocess.check_output(cmd)
-            packages = 'git git-lfs curl libcurl4-openssl-dev libssl-dev libgtk-3-dev python3.8-venv python3-pycurl python3-toml python3-dotenv'.split(' ')
+            packages = 'git git-lfs curl python3-pip libcurl4-openssl-dev libssl-dev libgtk-3-dev python3.8-venv python3-pycurl python3-toml python3-dotenv python3-pip python3-dev build-essential libcurl4-openssl-dev'.split(' ')
             for package in packages:
                 ubuntu_install_pkg_if_not_installed(package)
 
         elif os_release_id == 'fedora':
             cmd = ['sudo', 'dnf', '-y', 'update']
             subprocess.check_output(cmd)
-            packages = 'dnf-plugins-core git git-lfs curl libcurl-devel openssl-devel gtk3-devel python3-virtualenv python3-pycurl python3-toml python3-dotenv'.split(' ')
+            packages = 'dnf-plugins-core git git-lfs curl python3-pip libcurl-devel openssl-devel gtk3-devel python3-virtualenv python3-pycurl python3-toml python3-dotenv python3-devel gcc libcurl-devel'.split(' ')
             for package in packages:
                 fedora_install_pkg_if_not_installed(package)
 
@@ -2305,10 +2326,8 @@ def flash_fastboot(platform_id: str, device_id: str, platforms: dict):
             validate_fastboot_req(device_id, platform_)
             break
 
-
-def flash_mask_rom(platform_id: str, _id: str, platforms: dict):
+def flash_mask_rom(platform_id: str, _: str, platforms: dict):
     print_banner("Flash with Mask ROM")
-
     if not platform_id:
         print('platform_id is None')
         return
