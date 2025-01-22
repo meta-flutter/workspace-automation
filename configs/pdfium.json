@@ -31,10 +31,12 @@
             "path": "${PDFIUM_ROOT}",
             "name": "${PDFIUM_SRC_DIR_RELATIVE}",
             "url": "https://pdfium.googlesource.com/pdfium.git@2b675cf15ab4b68bf1ed4e0511ba2479e11f1605",
-            "deps_file"   : "DEPS",
+            "deps_file": "DEPS",
             "managed": false,
             "custom_deps": {},
-            "custom_vars": {"checkout_configuration": "small"}
+            "custom_vars": {
+                "checkout_configuration": "small"
+            }
         },
         "pre-requisites": {
             "x86_64": {

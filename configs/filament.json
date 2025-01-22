@@ -20,15 +20,15 @@
     },
     "src": [
         {
-        "uri": "https://github.com/google/filament.git",
-        "branch": "release",
-        "rev": "v1.54.3"
-    },
-    {
-        "uri": "https://github.com/meta-flutter/playx-3d-scene.git",
-        "branch": "main"
-      }
-    ],  
+            "uri": "https://github.com/google/filament.git",
+            "branch": "release",
+            "rev": "v1.54.3"
+        },
+        {
+            "uri": "https://github.com/meta-flutter/playx-3d-scene.git",
+            "branch": "main"
+        }
+    ],
     "runtime": {
         "pre-requisites": {
             "x86_64": {
@@ -82,8 +82,8 @@
                 },
                 "cwd": "${FILAMENT_BUILD_DIR}",
                 "cmds": [
-                  "cmake ${FILAMENT_SRC_DIR} ${FILAMENT_CMAKE_ARGS}",
-                  "make install -j"
+                    "cmake ${FILAMENT_SRC_DIR} ${FILAMENT_CMAKE_ARGS}",
+                    "make install -j"
                 ]
             }
         ]

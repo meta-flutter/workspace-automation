@@ -48,8 +48,8 @@
       "branch": "v2.0"
     },
     {
-        "uri": "https://github.com/toyota-connected/ivi-homescreen-plugins.git",
-        "branch": "v2.0"
+      "uri": "https://github.com/toyota-connected/ivi-homescreen-plugins.git",
+      "branch": "v2.0"
     },
     {
       "uri": "https://github.com/mogol/flutter_secure_storage.git",
@@ -72,8 +72,14 @@
   ],
   "runtime": {
     "config": {
-      "global": {"cursor_theme": "DMZ-White", "app_id": "homescreen"},
-      "view": {"width": 1024, "height": 768}
+      "global": {
+        "cursor_theme": "DMZ-White",
+        "app_id": "homescreen"
+      },
+      "view": {
+        "width": 1024,
+        "height": 768
+      }
     },
     "pre-requisites": {
       "x86_64": {

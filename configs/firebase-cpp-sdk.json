@@ -19,6 +19,7 @@
     "src": [
         {
             "uri": "https://github.com/firebase/firebase-cpp-sdk.git",
+            "branch": "main",
             "rev": "v12.4.0"
         },
         {
@@ -50,7 +51,7 @@
             {
                 "cwd": "${FIREBASE_SRC_DIR}",
                 "cmds": [
-                    "git reset --hard v12.4.0",
+                    "git reset --hard",
                     "git apply ${FLUTTER_WORKSPACE}/patches/firebase-cpp-sdk/0001-Disable-unknown-compiler-options.patch"
                 ]
             },

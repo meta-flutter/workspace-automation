@@ -1,8 +1,13 @@
 {
     "id": "docker-compose",
     "load": false,
-    "supported_archs": ["x86_64"],
-    "supported_host_types": ["ubuntu","fedora"],
+    "supported_archs": [
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "ubuntu",
+        "fedora"
+    ],
     "type": "dependency",
     "env": {
         "DOCKER_COMPOSE_VER": "1.25.0"
