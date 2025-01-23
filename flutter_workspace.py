@@ -53,16 +53,20 @@ from create_aot import create_platform_aot
 
 
 def get_host_machine_arch():
+    os.environ['HOST_ARCH'] = platform.machine()
     return platform.machine()
 
 
 def get_flutter_arch():
     host_arch = get_host_machine_arch()
     if host_arch == 'x86_64':
+        os.environ['HOST_ARCH_GOOGLE'] = 'x64'
         return 'x64'
     elif host_arch == 'arm64':
+        os.environ['HOST_ARCH_GOOGLE'] = 'arm64'
         return 'arm64'
     elif host_arch == 'aarch64':
+        os.environ['HOST_ARCH_GOOGLE'] = 'aarch64'
         return 'arm64'
     else:
         print_banner(f'Unkown host arch: {host_arch}')
@@ -1136,6 +1140,10 @@ def get_freedesktop_os_release_id() -> str:
     return get_freedesktop_os_release().get('ID').rstrip()
 
 
+def get_freedesktop_os_release_version_id() -> str:
+    """Returns OS Release VERSION_ID value"""
+    return get_freedesktop_os_release().get('VERSION_ID').rstrip()
+
 def get_host_type() -> str:
     """Returns host system"""
     return system().lower().rstrip()
@@ -1272,6 +1280,10 @@ def handle_pre_requisites(obj, cwd):
             distro = host_specific_pre_requisites[host_type]
             handle_conditionals(distro.get('conditionals'), cwd)
             handle_commands(distro.get('cmds'), cwd)
+            host_os_version_id = get_freedesktop_os_release_version_id()
+            if host_os_version_id in distro:
+                os_version = distro[host_os_version_id]
+                handle_commands(os_version, cwd)
         else:
             print('handle_pre_requisites: Not supported')
 
@@ -1765,7 +1777,7 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app
     runtime = platform_['runtime']
 
     # skip if architecture not supported
-    host_machine_arch = get_flutter_arch()
+    host_machine_arch = get_host_machine_arch()
     if host_machine_arch not in platform_['supported_archs']:
         print_banner("\"%s\" not supported on this machine" % platform_['id'])
         return

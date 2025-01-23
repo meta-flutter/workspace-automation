@@ -2,8 +2,9 @@
     "id": "rive-text",
     "load": true,
     "supported_archs": [
+        "aarch64",
         "arm64",
-        "x64"
+        "x86_64"
     ],
     "supported_host_types": [
         "fedora",

@@ -2,8 +2,9 @@
     "id": "maplibre-vulkan",
     "load": false,
     "supported_archs": [
+        "aarch64",
         "arm64",
-        "x64"
+        "x86_64"
     ],
     "supported_host_types": [
         "ubuntu",
@@ -31,7 +32,7 @@
                     ]
                 }
             },
-            "x64": {
+            "x86_64": {
                 "ubuntu": {
                     "cmds": [
                         "sudo apt install -y libwebp-dev libuv1-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libicu-dev libglfw3-dev"

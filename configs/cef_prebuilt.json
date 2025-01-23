@@ -2,8 +2,8 @@
     "id": "cef-prebuilt",
     "load": false,
     "supported_archs": [
-        "arm64",
-        "x64"
+        "aarch64",
+        "x86_64"
     ],
     "supported_host_types": [
         "ubuntu",
@@ -29,7 +29,7 @@
                             "sha1": "0dc513e8c3c0e9798a76fcbc863c50b93d790461"
                         }
                     ],
-                    "arm64": [
+                    "aarch64": [
                         {
                             "endpoint": "/cef_binary_128.4.9%2Bg9840ad9%2Bchromium-128.0.6613.120_linuxarm64_minimal.tar.bz2",
                             "sha1": "b06357fd02c31eafafffae99ccb4f8cdcdda667c"

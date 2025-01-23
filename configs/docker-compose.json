@@ -2,8 +2,8 @@
     "id": "docker-compose",
     "load": false,
     "supported_archs": [
-        "arm64",
-        "x64"
+        "aarch64",
+        "x86_64"
     ],
     "supported_host_types": [
         "ubuntu",
@@ -15,7 +15,7 @@
     },
     "runtime": {
         "pre-requisites": {
-            "x64": {
+            "x86_64": {
                 "ubuntu": {
                     "conditionals": [
                         {
