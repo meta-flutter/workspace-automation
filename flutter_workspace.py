@@ -1818,6 +1818,79 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app
     handle_custom_devices(platform_)
 
 
+def get_clang_version():
+    try:
+        result = subprocess.run(['clang', '--version'], capture_output=True, text=True, check=True)
+        version_line = result.stdout.splitlines()[0]
+        version = version_line.split()[2]
+        return version
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred: {e}")
+        return None
+
+
+def find_llvm_config(version):
+    import glob
+    pattern = f"/usr/bin/llvm-config-{version}*"
+    matches = glob.glob(pattern)
+    return matches
+
+
+def get_llvm_version(llvm_config):
+    try:
+        result = subprocess.run([llvm_config, '--version'], capture_output=True, text=True, check=True)
+        version = result.stdout.strip()
+        return version
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred: {e}")
+        return None
+
+
+def get_llvm_cmakedir(llvm_config):
+    try:
+        result = subprocess.run([llvm_config, '--cmakedir'], capture_output=True, text=True, check=True)
+        cmake_dir = result.stdout.strip()
+        return cmake_dir
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred: {e}")
+        return None
+
+
+def get_llvm_prefix(llvm_config):
+    try:
+        result = subprocess.run([llvm_config, '--prefix'], capture_output=True, text=True, check=True)
+        prefix_path = result.stdout.strip()
+        return prefix_path
+    except subprocess.CalledProcessError as e:
+        print(f"Error occurred: {e}")
+        return None
+
+
+def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, app_folder):
+    setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app_folder)
+    clang_version = get_clang_version()
+    if clang_version:
+        print(f"Clang version: {clang_version}")
+        llvm_configs = find_llvm_config(clang_version)
+        if llvm_configs:
+            print(f"Found llvm-config files: {llvm_configs}")
+            os.environ['CC'] = get_llvm_prefix(llvm_configs[0]) + '/bin/clang'
+            os.environ['CXX'] = get_llvm_prefix(llvm_configs[0]) + '/bin/clang++'
+        else:
+            print(f"No llvm-config files found for version {version}.")
+    else:
+        print("Failed to determine Clang version.")
+    # TODO set CXX and CC environment variables
+
+def get_toolchains(platforms):
+    """Returns a list of toolchains from the platforms."""
+    toolchains = []
+    for platform in platforms:
+        if platform['type'] == 'toolchain':
+            toolchains.append(platform)
+    return toolchains
+
+
 def get_dependencies(platforms):
     """Returns a list of dependencies from the platforms."""
     dependencies = []
@@ -1847,6 +1920,9 @@ def setup_platforms(platforms, git_token, cookie_file, plex, enable, disable, ap
 
     if disable:
         disable = disable.split(',')
+
+    for toolchain in get_toolchains(platforms):
+        setup_toolchain(toolchain, git_token, cookie_file, plex, enable, disable, app_folder)
 
     # iterate over dependencies first
     for dependency in get_dependencies(platforms):

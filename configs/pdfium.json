@@ -74,9 +74,7 @@
                 "env": {
                     "PATH": "${DEPOT_TOOLS}:$PATH",
                     "VPYTHON_VIRTUALENV_ROOT": "${VPYTHON_VIRTUALENV_ROOT}",
-                    "PKG_CONFIG_PATH": "/usr/lib64/pkgconfig",
-                    "CC": "/usr/bin/clang",
-                    "CXX": "/usr/bin/clang++"
+                    "PKG_CONFIG_PATH": "/usr/lib64/pkgconfig"
                 },
                 "cwd": "${PDFIUM_SRC_DIR}",
                 "cmds": [

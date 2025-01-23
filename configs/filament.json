@@ -97,10 +97,6 @@
                 ]
             },
             {
-                "env": {
-                    "CC": "/usr/bin/clang",
-                    "CXX": "/usr/bin/clang++"
-                },
                 "cwd": "${FILAMENT_BUILD_DIR}",
                 "cmds": [
                     "cmake ${FILAMENT_SRC_DIR} ${FILAMENT_CMAKE_ARGS}",

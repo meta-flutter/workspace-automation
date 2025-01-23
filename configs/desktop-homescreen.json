@@ -142,10 +142,6 @@
   },
   "post_cmds": [
     {
-      "env": {
-        "CC": "/usr/lib/llvm-18/bin/clang",
-        "CXX": "/usr/lib/llvm-18/bin/clang++"
-      },
       "cwd": "${HOMESCREEN_BUILD_DIR}",
       "cmds": [
         "cmake -GNinja ${HOMESCREEN_SRC_DIR} ${HOMESCREEN_CMAKE_ARGS}",

@@ -1,5 +1,5 @@
 {
-  "id": "clang",
+  "id": "clang-stable",
   "load": true,
   "supported_archs": [
     "aarch64",
@@ -10,7 +10,7 @@
     "ubuntu",
     "fedora"
   ],
-  "type": "dependency",
+  "type": "toolchain",
   "runtime": {
     "pre-requisites": {
       "aarch64": {
@@ -23,10 +23,10 @@
             "sudo apt upgrade -y",
             "sudo apt install -y libxkbcommon-dev libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libsecret-1-dev libsdl2-dev libjpeg-dev zenity",
             "sudo apt install -y build-essential libtool ninja-build",
-            "find /usr -name llvm-config*",
-            "$(find /usr -name llvm-config*) --version",
-            "$(find /usr -name llvm-config*) --prefix",
-            "$(find /usr -name llvm-config*) --cmakedir",
+            "bash -C \"$(find /usr -name llvm-config*)\"",
+            "bash -C \"$(find /usr -name llvm-config*)\" --version",
+            "bash -C \"$(find /usr -name llvm-config*)\" --prefix",
+            "bash -C \"$(find /usr -name llvm-config*)\" --cmakedir",
             "sudo apt install -y flatpak libflatpak-dev gnome-software-plugin-flatpak",
             "sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
             "flatpak remotes"
@@ -61,10 +61,10 @@
             "sudo apt upgrade -y",
             "sudo apt install -y libxkbcommon-dev libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libsecret-1-dev libsdl2-dev libjpeg-dev zenity",
             "sudo apt install -y build-essential libtool ninja-build",
-            "find /usr -name llvm-config*",
-            "$(find /usr -name llvm-config*) --version",
-            "$(find /usr -name llvm-config*) --prefix",
-            "$(find /usr -name llvm-config*) --cmakedir",
+            "bash -C \"$(find /usr -name llvm-config*)\"",
+            "bash -C \"$(find /usr -name llvm-config*)\" --version",
+            "bash -C \"$(find /usr -name llvm-config*)\" --prefix",
+            "bash -C \"$(find /usr -name llvm-config*)\" --cmakedir",            
             "sudo apt install -y flatpak libflatpak-dev gnome-software-plugin-flatpak",
             "sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
             "flatpak remotes"
