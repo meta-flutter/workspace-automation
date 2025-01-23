@@ -466,6 +466,11 @@ def validate_platform_config(platform_):
                 print_banner("Missing 'runtime' key in platform config")
                 return False
 
+        elif platform_['type'] == 'toolchain':
+            if 'runtime' not in platform_:
+                print_banner("Missing 'runtime' key in platform config")
+                return False
+
         elif platform_['type'] == 'qemu':
             if 'runtime' not in platform_:
                 print_banner("Missing 'runtime' key in platform config")
@@ -1286,6 +1291,7 @@ def handle_pre_requisites(obj, cwd):
                 handle_commands(os_version, cwd)
         else:
             print('handle_pre_requisites: Not supported')
+            exit(1)
 
 
 def get_filename_from_url(url):
@@ -1836,6 +1842,11 @@ def find_llvm_config(version):
     return matches
 
 
+def separate_version(version):
+    major, minor, patch = version.split('.')
+    return int(major), int(minor), int(patch)
+
+
 def get_llvm_version(llvm_config):
     try:
         result = subprocess.run([llvm_config, '--version'], capture_output=True, text=True, check=True)
@@ -1867,20 +1878,35 @@ def get_llvm_prefix(llvm_config):
 
 
 def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, app_folder):
+    platform_['type'] = 'dependency'
     setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app_folder)
-    clang_version = get_clang_version()
-    if clang_version:
-        print(f"Clang version: {clang_version}")
-        llvm_configs = find_llvm_config(clang_version)
-        if llvm_configs:
-            print(f"Found llvm-config files: {llvm_configs}")
-            os.environ['CC'] = get_llvm_prefix(llvm_configs[0]) + '/bin/clang'
-            os.environ['CXX'] = get_llvm_prefix(llvm_configs[0]) + '/bin/clang++'
+    if not 'toolchain' in platform_:
+        print_banner("Toolchain key not specified")
+        return
+    
+    if (platform_['toolchain'] == 'clang'):
+        clang_version = get_clang_version()
+        if clang_version:
+            print(f"Clang version: {clang_version}")
+            major_version, _, _ = separate_version(clang_version)
+            llvm_configs = find_llvm_config(major_version)
+            if llvm_configs:
+                print(f"Found llvm-config files: {llvm_configs}")
+                print(f"LLVM_CONFIG: {llvm_configs[0]}")
+                os.environ['LLVM_CONFIG'] = llvm_configs[0]
+                llvm_prefix = get_llvm_prefix(llvm_configs[0])
+                print(f"LLVM_PREFIX: {llvm_prefix}")
+                os.environ['CC'] = llvm_prefix + '/bin/clang'
+                os.environ['CXX'] = llvm_prefix + '/bin/clang++'
+                print(f"CC: {os.environ['CC']}")
+                print(f"CXX: {os.environ['CXX']}")
+            else:
+                print(f"No llvm-config files found for version {clang_version}.  Missing llvm runtime package")
         else:
-            print(f"No llvm-config files found for version {version}.")
+            print("Failed to determine Clang version.")
     else:
-        print("Failed to determine Clang version.")
-    # TODO set CXX and CC environment variables
+        print_banner("Toolchain not supported")
+
 
 def get_toolchains(platforms):
     """Returns a list of toolchains from the platforms."""
