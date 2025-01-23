@@ -24,19 +24,14 @@
     ],
     "runtime": {
         "pre-requisites": {
-            "arm64": {
+            "aarch64": {
                 "ubuntu": {
                     "cmds": [
                         "sudo apt install -y libwebp-dev libuv1-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libicu-dev libglfw3-dev"
                     ]
-                },
-                "fedora": {
-                    "cmds": [
-                        "sudo dnf install -y libwebp-devel libuv-devel libcurl-devel libjpeg-devel libpng-devel libicu-devel glfw-devel"
-                    ]
                 }
             },
-            "x86_64": {
+            "x64": {
                 "ubuntu": {
                     "cmds": [
                         "sudo apt install -y libwebp-dev libuv1-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libicu-dev libglfw3-dev"

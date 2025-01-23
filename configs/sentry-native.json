@@ -25,7 +25,7 @@
     ],
     "runtime": {
         "pre-requisites": {
-            "x86_64": {
+            "x64": {
                 "fedora": {
                     "cmds": [
                         "sudo dnf install libunwind-devel"

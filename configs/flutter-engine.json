@@ -39,19 +39,14 @@
             "safesync_url": ""
         },
         "pre-requisites": {
-            "arm64": {
+            "aarch64": {
                 "ubuntu": {
                     "cmds": [
                         "sudo apt install pkg-config libfreetype-dev git"
                     ]
-                },
-                "fedora": {
-                    "cmds": [
-                        "sudo dnf install pkg-config freetype-devel git"
-                    ]
                 }
             },
-            "x86_64": {
+            "x64": {
                 "ubuntu": {
                     "cmds": [
                         "sudo apt install pkg-config libfreetype-dev git"

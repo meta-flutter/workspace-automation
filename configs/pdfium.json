@@ -39,7 +39,8 @@
             }
         },
         "pre-requisites": {
-            "x86_64": {
+            "x64": {
+                "darwin": {},
                 "fedora": {
                     "cmds": [
                         "sudo dnf install -y nasm"

@@ -15,7 +15,7 @@
     },
     "runtime": {
         "pre-requisites": {
-            "x86_64": {
+            "x64": {
                 "ubuntu": {
                     "conditionals": [
                         {

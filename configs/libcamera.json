@@ -24,7 +24,15 @@
     ],
     "runtime": {
         "pre-requisites": {
-            "x86_64": {
+            "aarch64": {
+                "ubuntu": {
+                    "cmds": [
+                        "sudo apt install -y libjpeg-dev libevent-dev",
+                        "pip3 install jinja2 ply pyyaml meson"
+                    ]
+                }
+            },
+            "x64": {
                 "ubuntu": {
                     "cmds": [
                         "sudo apt install -y libjpeg-dev libevent-dev",
