@@ -12,9 +12,10 @@
     ],
     "type": "dependency",
     "env": {
+        "PATH": "${PATH}:${FLUTTER_WORKSPACE}/app/depot_tools",
         "MAPLIBRE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native",
         "MAPLIBRE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native/cmake-build-release",
-        "MAPLIBRE_CMAKE_ARGS": "-DBUILD_SHARED_LIBS=OFF -DMLN_WITH_WERROR=OFF -DMLN_WITH_VULKAN=ON -DMLN_DRAWABLE_RENDERER=ON -DMLN_LEGACY_RENDERER=OFF -DMLN_WITH_EGL=OFF -DMLN_WITH_OPENGL=OFF",
+        "MAPLIBRE_CMAKE_ARGS": "-GNinja -DBUILD_SHARED_LIBS=OFF -DMLN_WITH_WERROR=OFF -DMLN_WITH_VULKAN=ON -DMLN_DRAWABLE_RENDERER=ON -DMLN_LEGACY_RENDERER=OFF -DMLN_WITH_EGL=OFF -DMLN_WITH_OPENGL=OFF",
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/maplibre-vulkan"
     },
     "src": [
@@ -49,16 +50,18 @@
             {
                 "cwd": "${MAPLIBRE_SRC_DIR}",
                 "cmds": [
-                    "git apply ${PATCH_FOLDER}/0001-platform-linux-wayland-vulkan.patch",
-                    "git apply ${PATCH_FOLDER}/0002-cxx17-compatability-fixes.patch"
+                    "git apply ${PATCH_FOLDER}/0001-platform-linux-wayland-vulkan.patch"
                 ]
             },
             {
+                "env": {
+                    "PATH": "${DEPOT_TOOLS}:$PATH:${FLUTTER_WORKSPACE}/app/depot_tools"
+                },
                 "cwd": "${MAPLIBRE_BUILD_DIR}",
                 "cmds": [
-                    "bash -c \"rm -rf ${MAPLIBRE_BUILD_DIR}/* | true\"",
+                    "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
                     "cmake ${MAPLIBRE_SRC_DIR} ${MAPLIBRE_CMAKE_ARGS}",
-                    "make -j8"
+                    "autoninja"
                 ]
             }
         ]

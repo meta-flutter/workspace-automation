@@ -12,9 +12,10 @@
     ],
     "type": "dependency",
     "env": {
+        "PATH": "${PATH}:${FLUTTER_WORKSPACE}/app/depot_tools",
         "RIVE_TEXT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/rive-common",
         "RIVE_TEXT_BUILD_DIR": "${RIVE_TEXT_SRC_DIR}/cmake-build-release",
-        "RIVE_TEXT_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Release"
+        "RIVE_TEXT_CMAKE_ARGS": "-GNinja -D CMAKE_BUILD_TYPE=MinSizeRel"
     },
     "src": [
         {
@@ -32,9 +33,9 @@
             {
                 "cwd": "${RIVE_TEXT_BUILD_DIR}",
                 "cmds": [
-                    "bash -c \"rm -rf ${RIVE_TEXT_BUILD_DIR}/* | true\"",
+                    "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
                     "cmake ${RIVE_TEXT_SRC_DIR} ${RIVE_TEXT_CMAKE_ARGS}",
-                    "make -j"
+                    "autoninja"
                 ]
             }
         ]

@@ -26,14 +26,10 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Setup workspace
+      - name: Setup workspace and test
         run: |
           sudo ./flutter_workspace.py
-
-      - name: Source Environment
-        shell: bash
-        working-directory: workspace
-        run: |
+          source ./setup_env.sh
           source ./setup_env.sh
           flutter doctor -v
           dart --version

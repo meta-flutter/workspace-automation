@@ -12,6 +12,7 @@
     ],
     "type": "dependency",
     "env": {
+        "PATH": "${PATH}:${FLUTTER_WORKSPACE}/app/depot_tools",
         "RUNTIME_MODE": "debug",
         "DEPOT_TOOLS": "${FLUTTER_WORKSPACE}/app/depot_tools",
         "ENGINE_ROOT": "${FLUTTER_WORKSPACE}/app/engine",
@@ -62,32 +63,23 @@
         },
         "post_cmds": [
             {
-                "env": {
-                    "PATH": "${DEPOT_TOOLS}:$PATH"
-                },
                 "cwd": "${ENGINE_ROOT}",
                 "cmds": [
                     "gclient sync -D -R --revision ${FLUTTER_ENGINE_VERSION} -v"
                 ]
             },
             {
-                "env": {
-                    "PATH": "${DEPOT_TOOLS}:$PATH"
-                },
                 "cwd": "${ENGINE_SRC_DIR}/flutter",
                 "cmds": [
                     "git reset --hard"
                 ]
             },
             {
-                "env": {
-                    "PATH": "${DEPOT_TOOLS}:$PATH"
-                },
                 "cwd": "${ENGINE_SRC_DIR}",
                 "cmds": [
                     "./flutter/tools/gn ${ENGINE_BUILD_FLAGS}",
                     "echo ${GN_ARGS_APPEND} >> ${GN_ARGS_FILE}",
-                    "ninja -C ${ENGINE_BUILD_DIR}"
+                    "autoninja -C ${ENGINE_BUILD_DIR}"
                 ]
             },
             {

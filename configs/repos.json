@@ -23,21 +23,5 @@
     {
         "uri": "https://github.com/Baseflow/flutter-geolocator.git",
         "branch": "main"
-    },
-    {
-        "uri": "https://gitlab.com/acs-wayland/wayland.git",
-        "branch": "amd-acs-main"
-    },
-    {
-        "uri": "https://gitlab.com/acs-wayland/wayland-protocols.git",
-        "branch": "amd-acs-main"
-    },
-    {
-        "uri": "https://gitlab.com/acs-wayland/weston.git",
-        "branch": "amd-acs-main"
-    },
-    {
-        "uri": "https://github.com/nxp-imx/weston-imx",
-        "branch": "weston-imx-12.0.3"
     }
 ]

@@ -1,0 +1,95 @@
+{
+    "id": "amd-acs",
+    "load": false,
+    "supported_archs": [
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "fedora",
+        "ubuntu"
+    ],
+    "type": "dependency",
+    "env": {
+        "INSTALL_PREFIX": "${FLUTTER_WORKSPACE}/app/amdgpu/",
+        "AMD_ACS_WAYLAND_SRC_DIR": "${FLUTTER_WORKSPACE}/app/wayland",
+        "AMD_ACS_WAYLAND_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/wayland/buildDir",
+        "AMD_ACS_WAYLAND_MESON_ARGS": "",
+        "AMD_ACS_WAYLAND_PROTOCOLS_SRC_DIR": "${FLUTTER_WORKSPACE}/app/wayland-protocols",
+        "AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/wayland-protocols/buildDir",
+        "AMD_ACS_WAYLAND_PROTOCOLS_MESON_ARGS": "",
+        "AMD_ACS_WESTON_SRC_DIR": "${FLUTTER_WORKSPACE}/app/weston",
+        "AMD_ACS_WESTON_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/weston/buildDir",
+        "AMD_ACS_WESTON_MESON_ARGS": "-Dbackend-rdp=false -Dbackend-drm-screencast-vaapi=false -Dbackend-x11=false -Dxwayland=false -Dbackend-vnc=false -Dscreenshare=false -Dsimple-clients=damage,im,egl,shm,touch,dmabuf-feedback,dmabuf-egl"
+    },
+    "src": [
+        {
+            "uri": "https://gitlab.com/acs-wayland/wayland.git",
+            "branch": "amd-acs-main"
+        },
+        {
+            "uri": "https://gitlab.com/acs-wayland/wayland-protocols.git",
+            "branch": "amd-acs-main"
+        },
+        {
+            "uri": "https://gitlab.com/acs-wayland/weston.git",
+            "branch": "amd-acs-main"
+        }
+    ],
+    "runtime": {
+        "pre-requisites": {
+            "x86_64": {
+                "fedora": {
+                    "cmds": [
+                        "sudo pip3 install meson",
+                        "sudo dnf install xmlto"
+                    ]
+                },
+                "ubuntu": {
+                    "cmds": [
+                        "sudo pip3 install meson",
+                        "sudo apt-get install -y libffi-devel libxml2-devel dot2tex doxygen xsltproc xmlto libXfont2-devel libwebp-devel rst2pdf libpciaccess-devel libudev-devel byacc flex libXfixes-devel libglvnd-devel libxkbcommon-devel libinput-devel libjpeg-devel libwebp-devel dbus-devel hwdata libva-devel freerdp-devel  libseat-devel ffmpeg systemd-devel pango-devel pixman-devel cairo-devel bison-devel pipewire-devel pam-devel wayland-devel lcms-devel colord-devel"
+                    ]
+                }
+            }
+        },
+        "post_cmds": [
+            {
+                "env": {
+                    "PATH": "${PATH}:${FLUTTER_WORKSPACE}/app/depot_tools"
+                },
+                "cwd": "${AMD_ACS_WAYLAND_SRC_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${AMD_ACS_WAYLAND_BUILD_DIR} | true\"",
+                    "meson setup ${AMD_ACS_WAYLAND_BUILD_DIR} --prefix=${INSTALL_PREFIX} ${AMD_ACS_WAYLAND_MESON_ARGS}",
+                    "autoninja -C ${AMD_ACS_WAYLAND_BUILD_DIR} install"
+                ]
+            },
+            {
+                "env": {
+                    "LD_LIBRARY_PATH": "${INSTALL_PREFIX}/lib64/libweston-13:${INSTALL_PREFIX}/lib64",
+                    "PKG_CONFIG_PATH": "${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/share/pkgconfig/",
+                    "PATH": "$PATH:${INSTALL_PREFIX}/bin:${INSTALL_PREFIX}/include:${FLUTTER_WORKSPACE}/app/depot_tools"
+                },
+                "cwd": "${AMD_ACS_WAYLAND_PROTOCOLS_SRC_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR} | true\"",
+                    "meson setup ${AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR} --prefix=${INSTALL_PREFIX} ${AMD_ACS_WAYLAND_PROTOCOLS_MESON_ARGS}",
+                    "autoninja -C ${AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR} install"
+                ]
+            },
+            {
+                "env": {
+                    "LD_LIBRARY_PATH": "${INSTALL_PREFIX}/lib64/libweston-13:${INSTALL_PREFIX}/lib64",
+                    "PKG_CONFIG_PATH": "${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/share/pkgconfig/",
+                    "PATH": "$PATH:${INSTALL_PREFIX}/bin:${INSTALL_PREFIX}/include:${FLUTTER_WORKSPACE}/app/depot_tools"
+                },
+                "cwd": "${AMD_ACS_WESTON_SRC_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${AMD_ACS_WESTON_BUILD_DIR} | true\"",
+                    "meson setup ${AMD_ACS_WESTON_BUILD_DIR} --prefix=${INSTALL_PREFIX} ${AMD_ACS_WESTON_MESON_ARGS}",
+                    "autoninja -C ${AMD_ACS_WESTON_BUILD_DIR} install"
+                ]
+            }
+        ]
+    }
+}

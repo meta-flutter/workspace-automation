@@ -26,31 +26,28 @@
             "sudo apt install -y build-essential libtool ninja-build"
           ],
           "20.04": [
-            "echo \"Ubuntu 20.04\"",
+            "echo \"Ubuntu 20.04 - aarch64\"",
             "sudo snap install cmake --classic",
             "wget https://apt.llvm.org/llvm.sh",
             "chmod +x llvm.sh",
             "sudo ./llvm.sh all",
-            "rm ./llvm.sh",
-            "clang --version"
+            "rm ./llvm.sh"
           ],
           "22.04": [
-            "echo \"Ubuntu 22.04\"",
+            "echo \"Ubuntu 22.04 - aarch64\"",
             "sudo snap install cmake --classic",
             "wget https://apt.llvm.org/llvm.sh",
             "chmod +x llvm.sh",
             "sudo ./llvm.sh all",
-            "rm ./llvm.sh",
-            "clang --version"
+            "rm ./llvm.sh"
           ],
           "24.04": [
-            "echo \"Ubuntu 24.04\"",
+            "echo \"Ubuntu 24.04 - aarch64\"",
             "sudo apt install -y cmake",
             "wget https://apt.llvm.org/llvm.sh",
             "chmod +x llvm.sh",
             "sudo ./llvm.sh all",
-            "rm ./llvm.sh",
-            "clang --version"
+            "rm ./llvm.sh"
           ]
         }
       },
@@ -66,16 +63,15 @@
             "sudo apt install -y build-essential libtool ninja-build"
           ],
           "20.04": [
-            "echo \"Ubuntu 20.04\"",
+            "echo \"Ubuntu 20.04 - x86_64\"",
             "sudo snap install cmake --classic",
             "wget https://apt.llvm.org/llvm.sh",
             "chmod +x llvm.sh",
             "sudo ./llvm.sh all",
-            "rm ./llvm.sh",
-            "clang --version"
+            "rm ./llvm.sh"
           ],
           "22.04": [
-            "echo \"Ubuntu 22.04\"",
+            "echo \"Ubuntu 22.04 - x86_64\"",
             "sudo snap install cmake --classic",
             "wget https://apt.llvm.org/llvm.sh",
             "chmod +x llvm.sh",
@@ -83,13 +79,12 @@
             "rm ./llvm.sh"
           ],
           "24.04": [
-            "echo \"Ubuntu 24.04\"",
+            "echo \"Ubuntu 24.04 - x86_64\"",
             "sudo apt install -y cmake",
             "wget https://apt.llvm.org/llvm.sh",
             "chmod +x llvm.sh",
             "sudo ./llvm.sh all",
-            "rm ./llvm.sh",
-            "clang --version"
+            "rm ./llvm.sh"
           ]
         },
         "fedora": {
@@ -98,7 +93,7 @@
             "sudo dnf -y upgrade",
             "sudo dnf -y install ninja-build cmake lld libtool",
             "sudo dnf -y install llvm-devel clang clang-format clangd clang-tidy lldb lld libcxx-devel libcxx-static libcxxabi-devel libcxxabi-static",
-            "sudo dnf -y install wayland-devel wayland-protocols-devel libxkbcommon-devel cmake ninja-build mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libglapi mesa-libxatracker",
+            "sudo dnf -y install wayland-devel wayland-protocols-devel libxkbcommon-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libglapi mesa-libxatracker",
             "cmake --version"
           ]
         }

@@ -1832,7 +1832,10 @@ def find_llvm_config_in_sysroot(sysroot):
             if file == 'llvm-config':
                 file_path = os.path.join(root, file)
                 if os.access(file_path, os.X_OK):
+                    if 'android' in file_path:
+                        continue
                     return file_path
+
     return None
 
 
@@ -1881,6 +1884,8 @@ def get_llvm_prefix(llvm_config):
 def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, app_folder):
     platform_['type'] = 'dependency'
     setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app_folder)
+    platform_['type'] = 'toolchain'
+    
     if not 'toolchain' in platform_:
         print_banner("Toolchain key not specified")
         return
