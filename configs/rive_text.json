@@ -3,7 +3,7 @@
     "load": true,
     "supported_archs": [
         "arm64",
-        "x86_64"
+        "x64"
     ],
     "supported_host_types": [
         "fedora",

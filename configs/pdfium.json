@@ -2,7 +2,7 @@
     "id": "pdfium",
     "load": false,
     "supported_archs": [
-        "x86_64"
+        "x64"
     ],
     "supported_host_types": [
         "ubuntu",

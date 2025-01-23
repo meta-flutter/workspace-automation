@@ -2,7 +2,8 @@
     "id": "firebase-cpp-sdk",
     "load": false,
     "supported_archs": [
-        "x86_64"
+        "arm64",
+        "x64"
     ],
     "supported_host_types": [
         "ubuntu",

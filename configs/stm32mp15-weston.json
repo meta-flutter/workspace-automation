@@ -2,8 +2,8 @@
     "id": "stm32mp15-weston",
     "load": false,
     "supported_archs": [
-        "x86_64",
-        "arm64"
+        "arm64",
+        "x64"
     ],
     "supported_host_types": [
         "darwin",
