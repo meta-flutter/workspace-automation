@@ -1752,7 +1752,7 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app
         else:
             value = "OFF"
         key = f'FLUTTER_WORKSPACE_{id_upper}_LOAD'
-        print_banner(f'Setting {key}={value}')
+        print_banner(f'{key}={value}')
         os.environ[key] = value
 
         if value == "OFF":
