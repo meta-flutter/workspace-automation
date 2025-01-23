@@ -40,10 +40,6 @@
         },
         "post_cmds": [
             {
-                "env": {
-                    "CC": "/usr/bin/clang",
-                    "CXX": "/usr/bin/clang++"
-                },
                 "cwd": "${CAMERA_SRC_DIR}",
                 "cmds": [
                     "bash -c \"sudo rm -rf ${CAMERA_BUILD_DIR}/* | true\"",

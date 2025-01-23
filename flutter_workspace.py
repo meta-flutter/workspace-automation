@@ -1765,7 +1765,7 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app
     runtime = platform_['runtime']
 
     # skip if architecture not supported
-    host_machine_arch = get_host_machine_arch()
+    host_machine_arch = get_flutter_arch()
     if host_machine_arch not in platform_['supported_archs']:
         print_banner("\"%s\" not supported on this machine" % platform_['id'])
         return

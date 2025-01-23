@@ -61,8 +61,6 @@
             },
             {
                 "env": {
-                    "CC": "/usr/bin/clang",
-                    "CXX": "/usr/bin/clang++",
                     "PATH": "${PATH}:/usr/local/go/bin"
                 },
                 "cwd": "${FIREBASE_BUILD_DIR}",

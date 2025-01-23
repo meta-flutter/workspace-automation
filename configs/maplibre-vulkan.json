@@ -58,10 +58,6 @@
                 ]
             },
             {
-                "env": {
-                    "CC": "/usr/bin/clang",
-                    "CXX": "/usr/bin/clang++"
-                },
                 "cwd": "${MAPLIBRE_BUILD_DIR}",
                 "cmds": [
                     "bash -c \"rm -rf ${MAPLIBRE_BUILD_DIR}/* | true\"",

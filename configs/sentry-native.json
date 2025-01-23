@@ -40,10 +40,6 @@
         },
         "post_cmds": [
             {
-                "env": {
-                    "CC": "/usr/bin/clang",
-                    "CXX": "/usr/bin/clang++"
-                },
                 "cwd": "${SENTRY_NATIVE_BUILD_DIR}",
                 "cmds": [
                     "cmake ${SENTRY_NATIVE_SRC_DIR} ${SENTRY_NATIVE_CMAKE_ARGS}",

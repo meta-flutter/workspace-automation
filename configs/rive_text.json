@@ -29,10 +29,6 @@
     "runtime": {
         "post_cmds": [
             {
-                "env": {
-                    "CC": "/usr/bin/clang",
-                    "CXX": "/usr/bin/clang++"
-                },
                 "cwd": "${RIVE_TEXT_BUILD_DIR}",
                 "cmds": [
                     "bash -c \"rm -rf ${RIVE_TEXT_BUILD_DIR}/* | true\"",
