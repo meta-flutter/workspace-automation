@@ -23,20 +23,25 @@
             "sudo apt update -y",
             "sudo apt upgrade -y",
             "sudo apt install -y libxkbcommon-dev libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libsecret-1-dev libsdl2-dev libjpeg-dev zenity",
-            "sudo apt install -y build-essential libtool ninja-build",
-            "sudo apt install -y flatpak libflatpak-dev gnome-software-plugin-flatpak",
-            "sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
-            "flatpak remotes"
+            "sudo apt install -y build-essential libtool ninja-build"
           ],
           "20.04": [
             "echo \"Ubuntu 20.04\"",
-            "sudo apt install -y libllvm-ocaml-dev llvm llvm-dev llvm-runtime clang clang-tools libclang-dev libclang1 clang-format clangd clang-tidy lldb lld libc++-dev libc++abi-dev libunwind-dev libc++1 libc++abi1",
-            "sudo snap install cmake --classic"
+            "sudo snap install cmake --classic",
+            "wget https://apt.llvm.org/llvm.sh",
+            "chmod +x llvm.sh",
+            "sudo ./llvm.sh all",
+            "rm ./llvm.sh",
+            "clang --version"
           ],
           "22.04": [
             "echo \"Ubuntu 22.04\"",
-            "sudo apt install -y libllvm-ocaml-dev llvm llvm-dev llvm-runtime clang clang-tools libclang-dev libclang1 clang-format clangd clang-tidy lldb lld libc++-dev libc++abi-dev libunwind-dev libc++1 libc++abi1",
-            "sudo snap install cmake --classic"
+            "sudo snap install cmake --classic",
+            "wget https://apt.llvm.org/llvm.sh",
+            "chmod +x llvm.sh",
+            "sudo ./llvm.sh all",
+            "rm ./llvm.sh",
+            "clang --version"
           ],
           "24.04": [
             "echo \"Ubuntu 24.04\"",
@@ -44,7 +49,8 @@
             "wget https://apt.llvm.org/llvm.sh",
             "chmod +x llvm.sh",
             "sudo ./llvm.sh all",
-            "rm ./llvm.sh"
+            "rm ./llvm.sh",
+            "clang --version"
           ]
         }
       },
@@ -57,20 +63,24 @@
             "sudo apt update -y",
             "sudo apt upgrade -y",
             "sudo apt install -y libxkbcommon-dev libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libsecret-1-dev libsdl2-dev libjpeg-dev zenity",
-            "sudo apt install -y build-essential libtool ninja-build",
-            "sudo apt install -y flatpak libflatpak-dev gnome-software-plugin-flatpak",
-            "sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
-            "flatpak remotes"
+            "sudo apt install -y build-essential libtool ninja-build"
           ],
           "20.04": [
             "echo \"Ubuntu 20.04\"",
-            "sudo apt install -y libllvm-ocaml-dev llvm llvm-dev llvm-runtime clang clang-tools libclang-dev libclang1 clang-format clangd clang-tidy lldb lld libc++-dev libc++abi-dev libunwind-dev libc++1 libc++abi1",
-            "sudo snap install cmake --classic"
+            "sudo snap install cmake --classic",
+            "wget https://apt.llvm.org/llvm.sh",
+            "chmod +x llvm.sh",
+            "sudo ./llvm.sh all",
+            "rm ./llvm.sh",
+            "clang --version"
           ],
           "22.04": [
             "echo \"Ubuntu 22.04\"",
-            "sudo apt install -y libllvm-ocaml-dev llvm llvm-dev llvm-runtime clang clang-tools libclang-dev libclang1 clang-format clangd clang-tidy lldb lld libc++-dev libc++abi-dev libunwind-dev libc++1 libc++abi1",
-            "sudo snap install cmake --classic"
+            "sudo snap install cmake --classic",
+            "wget https://apt.llvm.org/llvm.sh",
+            "chmod +x llvm.sh",
+            "sudo ./llvm.sh all",
+            "rm ./llvm.sh"
           ],
           "24.04": [
             "echo \"Ubuntu 24.04\"",
@@ -78,7 +88,8 @@
             "wget https://apt.llvm.org/llvm.sh",
             "chmod +x llvm.sh",
             "sudo ./llvm.sh all",
-            "rm ./llvm.sh"
+            "rm ./llvm.sh",
+            "clang --version"
           ]
         },
         "fedora": {

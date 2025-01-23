@@ -33,7 +33,8 @@
     "LIBWEBRTC_LIB_DIR": "${LIBWEBRTC_SRC_DIR}/out/Linux-Debug",
     "LIBWEBRTC_LIB": "${LIBWEBRTC_LIB_DIR}/libwebrtc.so",
     "PLUGIN_WEBRTC": "-DBUILD_PLUGIN_WEBRTC=${FLUTTER_WORKSPACE_LIBWEBRTC_LOAD} -DLIBWEBRTC_INC_DIR=${LIBWEBRTC_INC_DIR} -DLIBWEBRTC_LIB=${LIBWEBRTC_LIB}",
-    "HOMESCREEN_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Debug -DLLVM_CONFIG=${LLVM_CONFIG} -DSANITIZE_ADDRESS=OFF -DENABLE_DLT=OFF -DBUILD_UNIT_TESTS=OFF -DBUILD_DOCS=OFF -DBUILD_CRASH_HANDLER=OFF -DPLUGINS_DIR=${PLUGINS_DIR} -DENABLE_IVI_SHELL_CLIENT=OFF -DENABLE_XDG_CLIENT=ON -DENABLE_AGL_SHELL_CLIENT=OFF -DENABLE_LTO=ON -DDEBUG_PLATFORM_MESSAGES=OFF -DBUILD_BACKEND_WAYLAND_EGL=ON -DBUILD_BACKEND_WAYLAND_VULKAN=OFF -DBUILD_EGL_TRANSPARENCY=ON -DBUILD_EGL_ENABLE_3D=ON -DBUILD_EGL_ENABLE_MULTISAMPLE=ON -DBUILD_PLUGIN_FILAMENT_VIEW=ON -DBUILD_PLUGIN_NAV_RENDER_VIEW=ON -DBUILD_PLUGIN_LAYER_PLAYGROUND_VIEW=OFF -DBUILD_PLUGIN_AUDIOPLAYERS_LINUX=OFF -DBUILD_PLUGIN_URL_LAUNCHER=ON -DBUILD_PLUGIN_FILE_SELECTOR=ON ${PLUGIN_CAMERA} ${PLUGIN_FLATPAK} -DBUILD_PLUGIN_GO_ROUTER=ON -DBUILD_PLUGIN_SECURE_STORAGE=ON -DBUILD_PLUGIN_DESKTOP_WINDOW_LINUX=ON ${PLUGIN_FIREBASE} ${PLUGIN_RIVE} ${PLUGIN_PDF} ${FLUGIN_FILAMENT_VIEW} ${PLUGIN_WEBRTC}",
+    "PLUGIN_ARGS": "-DBUILD_PLUGIN_FILAMENT_VIEW=ON -DBUILD_PLUGIN_NAV_RENDER_VIEW=ON -DBUILD_PLUGIN_LAYER_PLAYGROUND_VIEW=OFF -DBUILD_PLUGIN_AUDIOPLAYERS_LINUX=OFF -DBUILD_PLUGIN_URL_LAUNCHER=ON -DBUILD_PLUGIN_FILE_SELECTOR=ON -DBUILD_PLUGIN_GO_ROUTER=ON -DBUILD_PLUGIN_SECURE_STORAGE=ON -DBUILD_PLUGIN_DESKTOP_WINDOW_LINUX=ON ${PLUGIN_FIREBASE} ${PLUGIN_RIVE} ${PLUGIN_PDF} ${FLUGIN_FILAMENT_VIEW} ${PLUGIN_WEBRTC} ${PLUGIN_CAMERA} ${PLUGIN_FLATPAK}",
+    "HOMESCREEN_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=Debug -DLLVM_CONFIG=${LLVM_CONFIG} -DSANITIZE_ADDRESS=OFF -DENABLE_DLT=OFF -DBUILD_UNIT_TESTS=OFF -DBUILD_DOCS=OFF -DBUILD_CRASH_HANDLER=OFF -DENABLE_IVI_SHELL_CLIENT=OFF -DENABLE_XDG_CLIENT=ON -DENABLE_AGL_SHELL_CLIENT=OFF -DENABLE_LTO=ON -DDEBUG_PLATFORM_MESSAGES=OFF -DBUILD_BACKEND_WAYLAND_EGL=ON -DBUILD_BACKEND_WAYLAND_VULKAN=OFF -DBUILD_EGL_TRANSPARENCY=ON -DBUILD_EGL_ENABLE_3D=ON -DBUILD_EGL_ENABLE_MULTISAMPLE=ON -DPLUGINS_DIR=${PLUGINS_DIR} ${PLUGIN_ARGS}",
     "HOMESCREEN_EXE": "LD_LIBRARY_PATH=${LIBWEBRTC_LIB_DIR}:${RIVE_TEXT_LIB_DIR} SPDLOG_LEVEL=debug ${HOMESCREEN_BUILD_DIR}/shell/homescreen -b ${PLATFORM_ID_DIR_RELATIVE}",
     "PING_CMD": "[ -n \"$WAYLAND_DISPLAY\" ] && echo \"Type=wayland\"",
     "CREATE_BUNDLE_FOLDER": "mkdir -p ${PLATFORM_ID_DIR_RELATIVE}/data",
@@ -90,7 +91,9 @@
         "ubuntu": {
           "cmds": [
             "sudo apt update -y",
-            "sudo apt install -y libxkbcommon-dev libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libsecret-1-dev libsdl2-dev libjpeg-dev zenity"
+            "sudo apt install -y flatpak libflatpak-dev gnome-software-plugin-flatpak",
+            "sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
+            "flatpak remotes"
           ],
           "20.04": [
             "echo \"Ubuntu 20.04\"",
@@ -111,7 +114,12 @@
       },
       "x86_64": {
         "ubuntu": {
-          "cmds": [],
+          "cmds": [
+            "sudo apt update -y",
+            "sudo apt install -y flatpak libflatpak-dev gnome-software-plugin-flatpak",
+            "sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
+            "flatpak remotes"
+          ],
           "20.04": [
             "echo \"Ubuntu 20.04\"",
             "sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio",
@@ -130,11 +138,9 @@
         },
         "fedora": {
           "cmds": [
+            "sudo dnf -y install SDL2-devel libsecret-devel zenity",
             "sudo dnf -y install libunwind-devel gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel gstreamer1-plugins-bad-free-extras gstreamer1-plugins-base-tools gstreamer1-plugins-good gstreamer1-plugins-good-extras gstreamer1-plugins-ugly-free",
-            "sudo dnf -y install SDL2-devel libsecret-devel zenity"
-          ],
-          "41": [
-            "echo \"Fedora 41\""
+            "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
           ]
         }
       }
@@ -143,7 +149,7 @@
       {
         "cwd": "${HOMESCREEN_BUILD_DIR}",
         "cmds": [
-          "cmake -GNinja ${HOMESCREEN_SRC_DIR} ${HOMESCREEN_CMAKE_ARGS}",
+          "cmake ${HOMESCREEN_SRC_DIR} -GNinja ${HOMESCREEN_CMAKE_ARGS}",
           "ninja homescreen"
         ]
       }

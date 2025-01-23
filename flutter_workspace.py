@@ -1763,14 +1763,16 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app
         id = platform_['id']
         id_conv = id.replace('-','_')
         id_upper = id_conv.upper()
+
         if id in disable or id in plex:
             value = "OFF"
         elif id in enable or platform_['load']:
             value = "ON"
         else:
             value = "OFF"
+
         key = f'FLUTTER_WORKSPACE_{id_upper}_LOAD'
-        print_banner(f'{key}={value}')
+        print(f'{key}={value}')
         os.environ[key] = value
 
         if value == "OFF":
@@ -1824,30 +1826,21 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app
     handle_custom_devices(platform_)
 
 
-def get_clang_version():
-    try:
-        result = subprocess.run(['clang', '--version'], capture_output=True, text=True, check=True)
-        version_line = result.stdout.splitlines()[0]
-        version = version_line.split()[2]
-        return version
-    except subprocess.CalledProcessError as e:
-        print(f"Error occurred: {e}")
-        return None
-
-
-def find_llvm_config(version):
-    import glob
-    pattern = f"/usr/bin/llvm-config-{version}*"
-    matches = glob.glob(pattern)
-    return matches
-
-
-def separate_version(version):
-    major, minor, patch = version.split('.')
-    return int(major), int(minor), int(patch)
+def find_llvm_config_in_sysroot(sysroot):
+    for root, _, files in os.walk(sysroot):
+        for file in files:
+            if file == 'llvm-config':
+                file_path = os.path.join(root, file)
+                if os.access(file_path, os.X_OK):
+                    return file_path
+    return None
 
 
 def get_llvm_version(llvm_config):
+    if not os.access(llvm_config, os.X_OK):
+        print(f"Error: {llvm_config} is not executable or not accessible.")
+        return None
+
     try:
         result = subprocess.run([llvm_config, '--version'], capture_output=True, text=True, check=True)
         version = result.stdout.strip()
@@ -1858,6 +1851,10 @@ def get_llvm_version(llvm_config):
 
 
 def get_llvm_cmakedir(llvm_config):
+    if not os.access(llvm_config, os.X_OK):
+        print(f"Error: {llvm_config} is not executable or not accessible.")
+        return None
+
     try:
         result = subprocess.run([llvm_config, '--cmakedir'], capture_output=True, text=True, check=True)
         cmake_dir = result.stdout.strip()
@@ -1868,6 +1865,10 @@ def get_llvm_cmakedir(llvm_config):
 
 
 def get_llvm_prefix(llvm_config):
+    if not os.access(llvm_config, os.X_OK):
+        print(f"Error: {llvm_config} is not executable or not accessible.")
+        return None
+
     try:
         result = subprocess.run([llvm_config, '--prefix'], capture_output=True, text=True, check=True)
         prefix_path = result.stdout.strip()
@@ -1885,25 +1886,29 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
         return
     
     if (platform_['toolchain'] == 'clang'):
-        clang_version = get_clang_version()
-        if clang_version:
-            print(f"Clang version: {clang_version}")
-            major_version, _, _ = separate_version(clang_version)
-            llvm_configs = find_llvm_config(major_version)
-            if llvm_configs:
-                print(f"Found llvm-config files: {llvm_configs}")
-                print(f"LLVM_CONFIG: {llvm_configs[0]}")
-                os.environ['LLVM_CONFIG'] = llvm_configs[0]
-                llvm_prefix = get_llvm_prefix(llvm_configs[0])
-                print(f"LLVM_PREFIX: {llvm_prefix}")
-                os.environ['CC'] = llvm_prefix + '/bin/clang'
-                os.environ['CXX'] = llvm_prefix + '/bin/clang++'
-                print(f"CC: {os.environ['CC']}")
-                print(f"CXX: {os.environ['CXX']}")
-            else:
-                print(f"No llvm-config files found for version {clang_version}.  Missing llvm runtime package")
+        llvm_config = find_llvm_config_in_sysroot('/usr')
+        if llvm_config:
+            llvm_prefix = get_llvm_prefix(llvm_config)
+            llvm_version = get_llvm_version(llvm_config)
+            llvm_cmakedir = get_llvm_cmakedir(llvm_config)
+
+            os.environ['LLVM_CONFIG'] = llvm_config
+            os.environ['LLVM_PREFIX'] = llvm_prefix
+            os.environ['LLVM_VERSION'] = llvm_version
+            os.environ['LLVM_CMAKEDIR'] = llvm_cmakedir
+
+            os.environ['CC'] = llvm_prefix + '/bin/clang'
+            os.environ['CXX'] = llvm_prefix + '/bin/clang++'
+
+            print(f"LLVM_CONFIG: {llvm_config}")
+            print(f"LLVM_PREFIX: {llvm_prefix}")
+            print(f"LLVM_VERSION: {llvm_version}")
+            print(f"LLVM_CMAKEDIR: {llvm_cmakedir}")
+            print(f"CC: {os.environ['CC']}")
+            print(f"CXX: {os.environ['CXX']}")
         else:
-            print("Failed to determine Clang version.")
+            print_banner("Failed to find llvm-config in /usr.")
+            exit(1)
     else:
         print_banner("Toolchain not supported")
 
