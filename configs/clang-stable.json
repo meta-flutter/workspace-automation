@@ -3,7 +3,6 @@
   "load": true,
   "supported_archs": [
     "aarch64",
-    "arm64",
     "x86_64"
   ],
   "supported_host_types": [
@@ -23,7 +22,7 @@
             "sudo apt update -y",
             "sudo apt upgrade -y",
             "sudo apt install -y libxkbcommon-dev libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libsecret-1-dev libsdl2-dev libjpeg-dev zenity",
-            "sudo apt install -y build-essential libtool ninja-build"
+            "sudo apt install -y build-essential libtool"
           ],
           "20.04": [
             "echo \"Ubuntu 20.04 - aarch64\"",
@@ -60,7 +59,7 @@
             "sudo apt update -y",
             "sudo apt upgrade -y",
             "sudo apt install -y libxkbcommon-dev libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libsecret-1-dev libsdl2-dev libjpeg-dev zenity",
-            "sudo apt install -y build-essential libtool ninja-build"
+            "sudo apt install -y build-essential libtool"
           ],
           "20.04": [
             "echo \"Ubuntu 20.04 - x86_64\"",
@@ -91,7 +90,7 @@
           "cmds": [
             "sudo dnf -y update",
             "sudo dnf -y upgrade",
-            "sudo dnf -y install ninja-build cmake lld libtool",
+            "sudo dnf -y install cmake lld libtool",
             "sudo dnf -y install llvm-devel clang clang-format clangd clang-tidy lldb lld libcxx-devel libcxx-static libcxxabi-devel libcxxabi-static",
             "sudo dnf -y install wayland-devel wayland-protocols-devel libxkbcommon-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libglapi mesa-libxatracker",
             "cmake --version"
