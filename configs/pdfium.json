@@ -10,7 +10,7 @@
     ],
     "type": "dependency",
     "env": {
-        "PATH": "${PATH}:${FLUTTER_WORKSPACE}/app/depot_tools",
+        "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools:${PATH}",
         "RUNTIME_MODE": "debug",
         "PDFIUM_ROOT": "${FLUTTER_WORKSPACE}/app/pdfium",
         "PDFIUM_SRC_DIR_RELATIVE": "pdfium",

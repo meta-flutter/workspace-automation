@@ -205,6 +205,10 @@ def main():
     config = get_workspace_config(args.config)
 
     globals_ = config.get('globals')
+    if 'CMAKE_BUILD_TYPE' in globals_:
+        os.environ['CMAKE_BUILD_TYPE'] = globals_['CMAKE_BUILD_TYPE']
+    if 'MESON_BUILD_TYPE' in globals_:
+        os.environ['MESON_BUILD_TYPE'] = globals_['MESON_BUILD_TYPE']
 
     platforms = config.get('platforms')
     for platform_ in platforms:

@@ -12,10 +12,10 @@
     ],
     "type": "dependency",
     "env": {
-        "PATH": "${PATH}:${FLUTTER_WORKSPACE}/app/depot_tools",
+        "$PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
         "MAPLIBRE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native",
         "MAPLIBRE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native/cmake-build-release",
-        "MAPLIBRE_CMAKE_ARGS": "-GNinja -DBUILD_SHARED_LIBS=OFF -DMLN_WITH_WERROR=OFF -DMLN_WITH_VULKAN=ON -DMLN_DRAWABLE_RENDERER=ON -DMLN_LEGACY_RENDERER=OFF -DMLN_WITH_EGL=OFF -DMLN_WITH_OPENGL=OFF",
+        "MAPLIBRE_CMAKE_ARGS": "-DBUILD_SHARED_LIBS=OFF -DMLN_WITH_WERROR=OFF -DMLN_WITH_VULKAN=ON -DMLN_DRAWABLE_RENDERER=ON -DMLN_LEGACY_RENDERER=OFF -DMLN_WITH_EGL=OFF -DMLN_WITH_OPENGL=OFF",
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/maplibre-vulkan"
     },
     "src": [
@@ -54,14 +54,11 @@
                 ]
             },
             {
-                "env": {
-                    "PATH": "${DEPOT_TOOLS}:$PATH:${FLUTTER_WORKSPACE}/app/depot_tools"
-                },
                 "cwd": "${MAPLIBRE_BUILD_DIR}",
                 "cmds": [
-                    "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
-                    "cmake ${MAPLIBRE_SRC_DIR} ${MAPLIBRE_CMAKE_ARGS}",
-                    "autoninja"
+                    "bash -c \"rm -rf * | true\"",
+                    "cmake -GNinja ${MAPLIBRE_CMAKE_ARGS} -S ${MAPLIBRE_SRC_DIR} -B .",
+                    "ninja -j${HARDWARE_THREADS}"
                 ]
             }
         ]

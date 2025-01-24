@@ -11,7 +11,6 @@
     ],
     "type": "dependency",
     "env": {
-        "CMAKE_BUILD_TYPE": "MinSizeRel",
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/cef-prebuilt",
         "ARCHIVE_FILE": "cef_binary_128.4.9%2Bg9840ad9%2Bchromium-128.0.6613.120_linux64_minimal",
         "ARCHIVE_FOLDER": "cef_binary_128.4.9+g9840ad9+chromium-128.0.6613.120_linux64_minimal",

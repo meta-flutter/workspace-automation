@@ -12,9 +12,8 @@
     ],
     "type": "dependency",
     "env": {
-        "PATH": "${PATH}:${FLUTTER_WORKSPACE}/app/depot_tools",
+        "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools:${PATH}",
         "RUNTIME_MODE": "debug",
-        "DEPOT_TOOLS": "${FLUTTER_WORKSPACE}/app/depot_tools",
         "LIBWEBRTC_ROOT": "${FLUTTER_WORKSPACE}/app/libwebrtc",
         "LIBWEBRTC_SRC_DIR_RELATIVE": "src",
         "LIBWEBRTC_SRC_DIR": "${LIBWEBRTC_ROOT}/${LIBWEBRTC_SRC_DIR_RELATIVE}",

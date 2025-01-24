@@ -12,11 +12,11 @@
     ],
     "type": "dependency",
     "env": {
-        "PATH": "${PATH}:${FLUTTER_WORKSPACE}/app/depot_tools",
+        "$PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:$PATH",
         "CAMERA_SRC_DIR": "${FLUTTER_WORKSPACE}/app/libcamera",
         "CAMERA_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/libcamera/buildDir",
         "INSTALL_PREFIX": "${FLUTTER_WORKSPACE}/app/libcamera/out/usr",
-        "CAMERA_MESON_ARGS": "--prefix=${INSTALL_PREFIX} -Dqcam=\"disabled\" -Dlc-compliance=\"disabled\" -Dcam=\"disabled\" -Dgstreamer=\"disabled\""
+        "CAMERA_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX} -Dqcam=\"disabled\" -Dlc-compliance=\"disabled\" -Dcam=\"disabled\" -Dgstreamer=\"disabled\""
     },
     "src": [
         {
@@ -61,7 +61,7 @@
             {
                 "cwd": "${CAMERA_BUILD_DIR}",
                 "cmds": [
-                    "autoninja -C ${CAMERA_BUILD_DIR} install"
+                    "ninja -C ${CAMERA_BUILD_DIR} install -j${HARDWARE_THREADS}"
                 ]
             }
         ]

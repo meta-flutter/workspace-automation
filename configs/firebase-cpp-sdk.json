@@ -12,12 +12,11 @@
     ],
     "type": "dependency",
     "env": {
-        "PATH": "${PATH}:${FLUTTER_WORKSPACE}/app/depot_tools",
-        "CMAKE_BUILD_TYPE": "MinSizeRel",
+        "$PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
         "FIREBASE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk",
         "FIREBASE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk/cmake-build-release",
         "FIREBASE_STAGING_DIR": "${FIREBASE_BUILD_DIR}/staging/release",
-        "FIREBASE_CMAKE_ARGS": "-GNinja -DFIREBASE_USE_BORINGSSL=ON -DFIREBASE_LINUX_USE_CXX11_ABI=ON -DCMAKE_STAGING_PREFIX=${FIREBASE_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+        "FIREBASE_CMAKE_ARGS": "-DFIREBASE_USE_BORINGSSL=ON -DFIREBASE_LINUX_USE_CXX11_ABI=ON -DCMAKE_STAGING_PREFIX=${FIREBASE_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
     },
     "src": [
         {
@@ -74,15 +73,12 @@
                 ]
             },
             {
-                "env": {
-                    "PATH": "${PATH}:/usr/local/go/bin:${FLUTTER_WORKSPACE}/app/depot_tools"
-                },
                 "cwd": "${FIREBASE_BUILD_DIR}",
                 "cmds": [
                     "go version",
                     "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
-                    "cmake ${FIREBASE_SRC_DIR} ${FIREBASE_CMAKE_ARGS}",
-                    "autoninja"
+                    "cmake -GNinja ${FIREBASE_CMAKE_ARGS} -S ${FIREBASE_SRC_DIR} -B .",
+                    "ninja -j${HARDWARE_THREADS}"
                 ]
             }
         ]

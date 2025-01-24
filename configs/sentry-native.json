@@ -12,12 +12,11 @@
     ],
     "type": "dependency",
     "env": {
-        "PATH": "${PATH}:${FLUTTER_WORKSPACE}/app/depot_tools",
-        "CMAKE_BUILD_TYPE": "MinSizeRel",
+        "$PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
         "SENTRY_NATIVE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/sentry-native",
         "SENTRY_NATIVE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/sentry-native/cmake-build-debug",
         "SENTRY_NATIVE_STAGING_DIR": "${SENTRY_NATIVE_BUILD_DIR}/staging/debug",
-        "SENTRY_NATIVE_CMAKE_ARGS": "-GNinja -D SENTRY_BUILD_TESTS=OFF -D SENTRY_BUILD_EXAMPLES=OFF -D SENTRY_BUILD_FORCE32=OFF -DCMAKE_STAGING_PREFIX=${SENTRY_NATIVE_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+        "SENTRY_NATIVE_CMAKE_ARGS": "-DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BUILD_FORCE32=OFF -DCMAKE_STAGING_PREFIX=${SENTRY_NATIVE_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
     },
     "src": [
         {
@@ -44,8 +43,8 @@
             {
                 "cwd": "${SENTRY_NATIVE_BUILD_DIR}",
                 "cmds": [
-                    "cmake ${SENTRY_NATIVE_SRC_DIR} ${SENTRY_NATIVE_CMAKE_ARGS}",
-                    "autoninja"
+                    "cmake -GNinja ${SENTRY_NATIVE_CMAKE_ARGS} -S ${SENTRY_NATIVE_SRC_DIR} -B .",
+                    "ninja -j${HARDWARE_THREADS}"
                 ]
             }
         ]
