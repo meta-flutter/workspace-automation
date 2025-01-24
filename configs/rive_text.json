@@ -12,6 +12,7 @@
     ],
     "type": "dependency",
     "env": {
+        "$PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
         "RIVE_TEXT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/rive-common",
         "RIVE_TEXT_BUILD_DIR": "${RIVE_TEXT_SRC_DIR}/cmake-build-release",
         "RIVE_TEXT_CMAKE_ARGS": "-D CMAKE_BUILD_TYPE=MinSizeRel"
@@ -33,8 +34,8 @@
                 "cwd": "${RIVE_TEXT_BUILD_DIR}",
                 "cmds": [
                     "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
-                    "cmake ${RIVE_TEXT_SRC_DIR} ${RIVE_TEXT_CMAKE_ARGS}",
-                    "make -j"
+                    "cmake ${RIVE_TEXT_SRC_DIR} -G Ninja ${RIVE_TEXT_CMAKE_ARGS}",
+                    "ninja -j${HARDWARE_THREADS}"
                 ]
             }
         ]

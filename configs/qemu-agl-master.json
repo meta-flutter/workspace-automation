@@ -1,5 +1,5 @@
 {
-    "id": "agl-qemu-master",
+    "id": "qemu-agl-master",
     "load": false,
     "supported_archs": [
         "arm64",

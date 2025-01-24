@@ -1366,7 +1366,7 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
 
                 base_url = local_url + artifact['endpoint']
                 base_url = os.path.expandvars(base_url)
-                filename = get_filename_from_url(base_url)
+                filename = os.path.expandvars(artifact.get('filename', get_filename_from_url(base_url)))
 
                 print(f'url: {base_url}')
                 print(f'filename: {filename}')
@@ -1758,6 +1758,10 @@ def is_host_type_supported(host_types):
 def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app_folder):
     """ Sets up platform """
 
+    if 'type' in platform_:
+        if platform_['type'] == 'toolchain':
+            return
+
     # setup environmental variable to use in later occuring CMake configs
     if 'load' in platform_ and 'id' in platform_:
         id = platform_['id']
@@ -1881,7 +1885,16 @@ def get_llvm_prefix(llvm_config):
         return None
 
 
+def get_hardware_threads():
+    import multiprocessing
+    try:
+        return len(os.sched_getaffinity(0))
+    except AttributeError:
+        return multiprocessing.cpu_count()
+
+
 def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, app_folder):
+    os.environ['HARDWARE_THREADS'] = str(get_hardware_threads())
     platform_['type'] = 'dependency'
     setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app_folder)
     platform_['type'] = 'toolchain'
@@ -1890,7 +1903,12 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
         print_banner("Toolchain key not specified")
         return
     
-    if (platform_['toolchain'] == 'clang'):
+    if (platform_['toolchain'] == 'llvm'):
+        if 'prefer_llvm' in platform_:
+            prefer_llvm = platform_['prefer_llvm']
+            os.environ['PREFER_LLVM'] = prefer_llvm
+            print(f'PREFER_LLVM: {prefer_llvm}')
+
         llvm_config = find_llvm_config_in_sysroot('/usr')
         if llvm_config:
             llvm_prefix = get_llvm_prefix(llvm_config)
@@ -1914,6 +1932,9 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
         else:
             print_banner("Failed to find llvm-config in /usr.")
             exit(1)
+
+    elif platform_['toolchain'] == 'common':
+        return
     else:
         print_banner("Toolchain not supported")
 

@@ -1,5 +1,5 @@
 {
-  "id": "clang-stable",
+  "id": "toolchain-llvm-18",
   "load": true,
   "supported_archs": [
     "aarch64",
@@ -10,7 +10,11 @@
     "fedora"
   ],
   "type": "toolchain",
-  "toolchain": "clang",
+  "toolchain": "llvm",
+  "prefer_llvm": "18",
+  "env": {
+    "VERSION": "18"
+  },
   "runtime": {
     "pre-requisites": {
       "aarch64": {
@@ -22,30 +26,10 @@
             "sudo apt update -y",
             "sudo apt upgrade -y",
             "sudo apt install -y libxkbcommon-dev libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libsecret-1-dev libsdl2-dev libjpeg-dev zenity",
-            "sudo apt install -y build-essential libtool"
-          ],
-          "20.04": [
-            "echo \"Ubuntu 20.04 - aarch64\"",
-            "sudo snap install cmake --classic",
+            "sudo apt install -y build-essential libtool",
             "wget https://apt.llvm.org/llvm.sh",
             "chmod +x llvm.sh",
-            "sudo ./llvm.sh all",
-            "rm ./llvm.sh"
-          ],
-          "22.04": [
-            "echo \"Ubuntu 22.04 - aarch64\"",
-            "sudo snap install cmake --classic",
-            "wget https://apt.llvm.org/llvm.sh",
-            "chmod +x llvm.sh",
-            "sudo ./llvm.sh all",
-            "rm ./llvm.sh"
-          ],
-          "24.04": [
-            "echo \"Ubuntu 24.04 - aarch64\"",
-            "sudo apt install -y cmake",
-            "wget https://apt.llvm.org/llvm.sh",
-            "chmod +x llvm.sh",
-            "sudo ./llvm.sh all",
+            "sudo ./llvm.sh ${VERSION} all",
             "rm ./llvm.sh"
           ]
         }
@@ -59,30 +43,10 @@
             "sudo apt update -y",
             "sudo apt upgrade -y",
             "sudo apt install -y libxkbcommon-dev libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libsecret-1-dev libsdl2-dev libjpeg-dev zenity",
-            "sudo apt install -y build-essential libtool"
-          ],
-          "20.04": [
-            "echo \"Ubuntu 20.04 - x86_64\"",
-            "sudo snap install cmake --classic",
+            "sudo apt install -y build-essential libtool",
             "wget https://apt.llvm.org/llvm.sh",
             "chmod +x llvm.sh",
-            "sudo ./llvm.sh all",
-            "rm ./llvm.sh"
-          ],
-          "22.04": [
-            "echo \"Ubuntu 22.04 - x86_64\"",
-            "sudo snap install cmake --classic",
-            "wget https://apt.llvm.org/llvm.sh",
-            "chmod +x llvm.sh",
-            "sudo ./llvm.sh all",
-            "rm ./llvm.sh"
-          ],
-          "24.04": [
-            "echo \"Ubuntu 24.04 - x86_64\"",
-            "sudo apt install -y cmake",
-            "wget https://apt.llvm.org/llvm.sh",
-            "chmod +x llvm.sh",
-            "sudo ./llvm.sh all",
+            "sudo ./llvm.sh ${VERSION} all",
             "rm ./llvm.sh"
           ]
         },
