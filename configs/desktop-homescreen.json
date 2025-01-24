@@ -149,6 +149,9 @@
     },
     "post_cmds": [
       {
+        "env": {
+           "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools:${PATH}"
+        },
         "cwd": "${HOMESCREEN_BUILD_DIR}",
         "cmds": [
           "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
