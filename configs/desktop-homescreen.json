@@ -11,7 +11,7 @@
   ],
   "type": "host",
   "env": {
-    "PATH": "${PATH}:${FLUTTER_WORKSPACE}/app/depot_tools",
+    "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools:${PATH}",
     "HOMESCREEN_SRC_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen",
     "HOMESCREEN_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen/build",
     "PLUGINS_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen-plugins/plugins",
