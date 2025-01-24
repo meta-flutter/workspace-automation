@@ -28,8 +28,10 @@
 # if QEMU image is loaded type `run-<platform id>` to run QEMU image
 #
 
+import argparse
 import io
 import json
+import logging
 import os
 import platform
 import shlex
@@ -50,6 +52,43 @@ from common import print_banner
 
 from create_aot import get_flutter_sdk_version
 from create_aot import create_platform_aot
+
+
+def handle_exception(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+
+
+class StreamToLogger:
+    def __init__(self, logger, log_level=logging.INFO):
+        self.logger = logger
+        self.log_level = log_level
+        self.linebuf = ''
+
+    def write(self, buf):
+        for line in buf.rstrip().splitlines():
+            self.logger.log(self.log_level, line.rstrip())
+
+    def flush(self):
+        pass
+
+
+def setup_logging(log_file):
+    logger = logging.getLogger(__file__)
+    logger.setLevel(logging.DEBUG)
+
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setLevel(logging.DEBUG)
+
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+
+    # Redirect stdout and stderr
+    sys.stdout = StreamToLogger(logger, logging.INFO)
+    sys.stderr = StreamToLogger(logger, logging.ERROR)
 
 
 def get_host_machine_arch():
@@ -77,7 +116,8 @@ def main():
     # check python version
     check_python_version()
 
-    import argparse
+    setup_logging('flutter_workspace.log')
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--clean', default=False,
                         action='store_true', help='Wipes workspace clean')
@@ -107,8 +147,14 @@ def main():
     parser.add_argument('--app-path', default='', type=str, help='Specify Application path')
     parser.add_argument('--copy-dconf-user', default=False, action='store_true', help='copy $HOME/.confi/dconf/user to $FLUTTER_WORKSPACE')
 
+    parser.add_argument('--log-file', default='flutter_workspace.log', type=str, help='Log output file')
+
     args = parser.parse_args()
 
+    setup_logging(args.log_file)
+
+    print(f'Arguments {args}')
+    
     #
     # Generate Release/Profile AOT
     #
@@ -1284,6 +1330,7 @@ def handle_pre_requisites(obj, cwd):
 
         if host_type == "linux":
             host_type = get_freedesktop_os_release_id()
+            host_type = host_type.lower()
 
         if host_specific_pre_requisites.get(host_type):
             distro = host_specific_pre_requisites[host_type]
@@ -1387,11 +1434,21 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
                     ['sudo', '-v'], stdout=subprocess.DEVNULL)
 
 
+def handle_commands(cmds, cwd):
+    if cmds:
+        for cmd in cmds:
+            expanded_cmd = os.path.expandvars(cmd)
+            cmd_arr = shlex.split(expanded_cmd)
+            subprocess.check_call(cmd_arr, cwd=cwd)
+
+
 def handle_commands_obj(cmd_list, cwd):
+    print('handle_commands_obj: %s' % cmd_list)
     if not cmd_list:
         return
 
     for obj in cmd_list:
+        print('obj: %s' % obj)
         if 'cmds' not in obj:
             continue
 
@@ -1420,19 +1477,12 @@ def handle_commands_obj(cmd_list, cwd):
             shell_ = obj.get('shell')
 
         cmds = obj.get('cmds')
+        print('cmds: %s' % cmds)
         for cmd in cmds:
             expanded_cmd = os.path.expandvars(cmd)
             cmd_arr = shlex.split(expanded_cmd)
             print('cmd: %s' % cmd_arr)
             subprocess.check_call(cmd_arr, cwd=cwd, env=local_env, shell=shell_)
-
-
-def handle_commands(cmds, cwd):
-    if cmds:
-        for cmd in cmds:
-            expanded_cmd = os.path.expandvars(cmd)
-            cmd_arr = shlex.split(expanded_cmd)
-            subprocess.check_call(cmd_arr, cwd=cwd)
 
 
 def handle_docker_registry(obj):

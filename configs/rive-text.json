@@ -14,7 +14,7 @@
     "env": {
         "$PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
         "RIVE_TEXT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/rive-common",
-        "RIVE_TEXT_BUILD_DIR": "${RIVE_TEXT_SRC_DIR}/cmake-build-release",
+        "RIVE_TEXT_BUILD_DIR": "${RIVE_TEXT_SRC_DIR}/build",
         "RIVE_TEXT_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
     },
     "src": [
@@ -33,9 +33,9 @@
             {
                 "cwd": "${RIVE_TEXT_BUILD_DIR}",
                 "cmds": [
-                    "bash -c \"rm -rf * | true\"",
+                    "rm -rf * | true",
                     "cmake --version",
-                    "cmake -GNinja ${RIVE_TEXT_CMAKE_ARGS} -S ${RIVE_TEXT_SRC_DIR} -B .",
+                    "cmake -GNinja ${RIVE_TEXT_CMAKE_ARGS} -S${RIVE_TEXT_SRC_DIR} -B${RIVE_TEXT_BUILD_DIR}",
                     "ninja -j${HARDWARE_THREADS}"
                 ]
             }
