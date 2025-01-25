@@ -207,7 +207,10 @@ def main():
     # Recursively change ownership to logged in user
     #
     user = get_process_stdout('logname').split('\n')
-    cmd = ['sudo', 'chown', '-R', f'{user[0]}:{user[0]}', workspace]
+    if 'no login name' in user[0]:
+        cmd = ['sudo', 'chown', '-R', '$(whoami)', workspace]
+    else:
+        cmd = ['sudo', 'chown', '-R', f'{user[0]}:{user[0]}', workspace]
     subprocess.check_call(cmd, stdout=subprocess.DEVNULL)
 
     #
@@ -401,10 +404,14 @@ def main():
     #
     # Recursively change ownership to logged in user
     #
-    user = get_process_stdout('logname').split('\n')
-    cmd = ['sudo', 'chown', '-R', f'{user[0]}:{user[0]}', '.']
-
     flutter_workspace = os.environ.get('FLUTTER_WORKSPACE')
+
+    user = get_process_stdout('logname').split('\n')
+    if 'no login name' in user[0]:
+        cmd = ['sudo', 'chown', '-R', '$(whoami)', flutter_workspace]
+    else:
+        cmd = ['sudo', 'chown', '-R', f'{user[0]}:{user[0]}', flutter_workspace]
+
     subprocess.check_call(cmd, cwd=flutter_workspace)
 
     #
