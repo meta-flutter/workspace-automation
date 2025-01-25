@@ -38,8 +38,10 @@
                 "cmds": [
                     "rm -rf * | true",
                     "cmake --version",
+                    "ninja --version",
                     "cmake ${RIVE_TEXT_CMAKE_ARGS} -S${RIVE_TEXT_SRC_DIR} -B${RIVE_TEXT_BUILD_DIR}",
-                    "make -j${HARDWARE_THREADS}"
+                    "make -j${HARDWARE_THREADS}",
+                    "${LLVM_STRIP} -s librive_text.so.*"
                 ]
             }
         ]

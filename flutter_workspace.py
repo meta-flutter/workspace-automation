@@ -1884,10 +1884,15 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app
     handle_custom_devices(platform_)
 
 
-def find_llvm_config_in_sysroot(sysroot):
+def find_llvm_config_in_sysroot(sysroot, prefer_llvm_config):
+    if prefer_llvm_config is None:
+        llvm_config = 'llvm-config'
+    else:
+        llvm_config = 'llvm-config-' + prefer_llvm_config
+
     for root, _, files in os.walk(sysroot):
         for file in files:
-            if file == 'llvm-config':
+            if file == llvm_config:
                 file_path = os.path.join(root, file)
                 if os.access(file_path, os.X_OK):
                     if 'android' in file_path:
@@ -1948,7 +1953,9 @@ def get_hardware_threads():
 
 
 def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, app_folder):
+
     os.environ['HARDWARE_THREADS'] = str(get_hardware_threads())
+
     platform_['type'] = 'dependency'
     setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app_folder)
     platform_['type'] = 'toolchain'
@@ -1958,12 +1965,13 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
         return
     
     if (platform_['toolchain'] == 'llvm'):
+        prefer_llvm = None
         if 'prefer_llvm' in platform_:
             prefer_llvm = platform_['prefer_llvm']
             os.environ['PREFER_LLVM'] = prefer_llvm
             print(f'PREFER_LLVM: {prefer_llvm}')
 
-        llvm_config = find_llvm_config_in_sysroot('/usr')
+        llvm_config = find_llvm_config_in_sysroot('/usr', prefer_llvm)
         if llvm_config:
             llvm_prefix = get_llvm_prefix(llvm_config)
             llvm_version = get_llvm_version(llvm_config)
@@ -1973,6 +1981,7 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
             os.environ['LLVM_PREFIX'] = llvm_prefix
             os.environ['LLVM_VERSION'] = llvm_version
             os.environ['LLVM_CMAKEDIR'] = llvm_cmakedir
+            os.environ['LLVM_STRIP'] = llvm_prefix + '/bin/llvm-strip'
 
             os.environ['CC'] = llvm_prefix + '/bin/clang'
             os.environ['CXX'] = llvm_prefix + '/bin/clang++'
@@ -1981,6 +1990,7 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
             print(f"LLVM_PREFIX: {llvm_prefix}")
             print(f"LLVM_VERSION: {llvm_version}")
             print(f"LLVM_CMAKEDIR: {llvm_cmakedir}")
+            print(f"LLVM_STRIP: {os.environ['LLVM_STRIP']}")
             print(f"CC: {os.environ['CC']}")
             print(f"CXX: {os.environ['CXX']}")
         else:
