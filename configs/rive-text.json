@@ -38,8 +38,8 @@
                 "cmds": [
                     "rm -rf * | true",
                     "cmake --version",
-                    "cmake -GNinja ${RIVE_TEXT_CMAKE_ARGS} -S${RIVE_TEXT_SRC_DIR} -B${RIVE_TEXT_BUILD_DIR}",
-                    "ninja -j${HARDWARE_THREADS}"
+                    "cmake ${RIVE_TEXT_CMAKE_ARGS} -S${RIVE_TEXT_SRC_DIR} -B${RIVE_TEXT_BUILD_DIR}",
+                    "make -j${HARDWARE_THREADS}"
                 ]
             }
         ]
