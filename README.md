@@ -184,6 +184,26 @@ Use for debugging
 * `cd hello_world`
 * `flutter run -d desktop-auto`
 
+### Working with LLVM
+
+#### Set the preferred LLVM toolchain
+
+To change the toolchain version used by flutter_workspace use the `PREFER_LLVM` variable
+```
+PREFER_LLVM=10 ./flutter_workspace.py
+```
+
+If the `PREFER_LLVM` key is set it overrides `clang-stable`.
+
+If you have multiple instances of the same llvm-config-<number> file present in `/usr`, the first ocurring will be selected.  This could be an Android NDK toolchain.
+
+Refer to listing available LLVM installs for debugging toolchain selection problems.
+
+#### List available LLVM installs
+```
+find /usr -type f -executable -name 'llvm-config*'
+```
+
 ### Visual Studio Code
 
 #### Launching on Ubuntu
@@ -199,4 +219,3 @@ Use for debugging
 `flutter_workspace.py` creates a `.vscode/launch.json` file if one is not present.
 It uses the repo json key `pubspec_path`.  If this key is present in the repo
 json, then it will add entry to `.vscode/launch.json`.
-

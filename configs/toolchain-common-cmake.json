@@ -1,0 +1,51 @@
+{
+    "id": "toolchain-common-cmake",
+    "load": true,
+    "supported_archs": [
+        "aarch64",
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "fedora",
+        "ubuntu"
+    ],
+    "type": "toolchain",
+    "toolchain": "common",
+    "env": {
+        "VERSION": "3.31",
+        "ARCHIVE_FILE": "cmake-${VERSION}.0-linux-${HOST_ARCH}",
+        "FILENAME": "cmake-${VERSION}.0"
+    },
+    "runtime": {
+        "artifacts": {
+            "http": {
+                "url": "https://cmake.org/files",
+                "artifacts": {
+                    "x86_64": [
+                        {
+                            "filename": "${FILENAME}.tar.gz",
+                            "endpoint": "/v${VERSION}/${ARCHIVE_FILE}.tar.gz",
+                            "sha1": "004236c139f3edd49ce1ba9515b639f381c53d9d"
+                        }
+                    ],
+                    "aarch64": [
+                        {
+                            "filename": "${FILENAME}.tar.gz",                            
+                            "endpoint": "/v${VERSION}/${ARCHIVE_FILE}.tar.gz",
+                            "sha1": "28ed854c164b99cefeba164ad849241312c51269"
+                        }
+                    ]
+                }
+            }
+        },
+        "post_cmds": [
+            {
+                "cwd": "${PLATFORM_ID_DIR}/${FILENAME}",
+                "cmds": [
+                    "rm -rf * |true",
+                    "tar --strip-components=1 -xzf ${PLATFORM_ID_DIR}/artifacts/${FILENAME}.tar.gz -C ."
+                ]
+            }
+        ]
+    }
+}

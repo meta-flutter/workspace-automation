@@ -2,6 +2,8 @@
     "id": "libcamera",
     "load": false,
     "supported_archs": [
+        "aarch64",
+        "arm64",
         "x86_64"
     ],
     "supported_host_types": [
@@ -10,9 +12,11 @@
     ],
     "type": "dependency",
     "env": {
+        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:$PATH",
         "CAMERA_SRC_DIR": "${FLUTTER_WORKSPACE}/app/libcamera",
         "CAMERA_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/libcamera/buildDir",
-        "CAMERA_MESON_ARGS": "-Dqcam=\"disabled\" -Dlc-compliance=\"disabled\" -Dcam=\"disabled\" -Dgstreamer=\"disabled\""
+        "INSTALL_PREFIX": "${FLUTTER_WORKSPACE}/app/libcamera/out/usr",
+        "CAMERA_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX} -Dqcam=\"disabled\" -Dlc-compliance=\"disabled\" -Dcam=\"disabled\" -Dgstreamer=\"disabled\""
     },
     "src": [
         {
@@ -23,6 +27,14 @@
     ],
     "runtime": {
         "pre-requisites": {
+            "aarch64": {
+                "ubuntu": {
+                    "cmds": [
+                        "sudo apt install -y libjpeg-dev libevent-dev",
+                        "pip3 install jinja2 ply pyyaml meson"
+                    ]
+                }
+            },
             "x86_64": {
                 "ubuntu": {
                     "cmds": [
@@ -40,21 +52,16 @@
         },
         "post_cmds": [
             {
-                "env": {
-                    "CC": "/usr/bin/clang",
-                    "CXX": "/usr/bin/clang++"
-                },
                 "cwd": "${CAMERA_SRC_DIR}",
                 "cmds": [
-                    "bash -c \"sudo rm -rf ${CAMERA_BUILD_DIR}/* | true\"",
+                    "bash -c \"rm -rf buildDir | true\"",
                     "meson setup buildDir ${CAMERA_MESON_ARGS}"
                 ]
             },
             {
                 "cwd": "${CAMERA_BUILD_DIR}",
                 "cmds": [
-                    "ninja -C ${CAMERA_BUILD_DIR} -j8",
-                    "sudo ninja -C ${CAMERA_BUILD_DIR} install"
+                    "ninja -C ${CAMERA_BUILD_DIR} install -j${HARDWARE_THREADS}"
                 ]
             }
         ]

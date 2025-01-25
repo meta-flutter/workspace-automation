@@ -10,12 +10,12 @@
     ],
     "type": "dependency",
     "env": {
+        "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools:${PATH}",
         "RUNTIME_MODE": "debug",
-        "DEPOT_TOOLS": "${FLUTTER_WORKSPACE}/app/depot_tools",
         "PDFIUM_ROOT": "${FLUTTER_WORKSPACE}/app/pdfium",
         "PDFIUM_SRC_DIR_RELATIVE": "pdfium",
         "PDFIUM_SRC_DIR": "${PDFIUM_ROOT}/${PDFIUM_SRC_DIR_RELATIVE}",
-        "GN_ARGS": "is_debug=false pdf_is_standalone=true is_component_build=false treat_warnings_as_errors=false is_clang=true clang_use_chrome_plugins=false use_custom_libcxx=true libcxx_is_shared=false target_os=\\\"linux\\\" target_cpu=\\\"x64\\\"",
+        "GN_ARGS": "is_debug=false pdf_is_standalone=true is_component_build=false treat_warnings_as_errors=false is_clang=true clang_use_chrome_plugins=false use_custom_libcxx=true libcxx_is_shared=false target_os=\\\"linux\\\" target_cpu=\\\"${HOST_ARCH_GOOGLE}\\\"",
         "PDFIUM_BUILD_DIR": "${PDFIUM_SRC_DIR}/out/Linux-Release",
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/pdfium",
         "VPYTHON_VIRTUALENV_ROOT": "${PDFIUM_ROOT}/.vpython-root"
@@ -40,6 +40,7 @@
         },
         "pre-requisites": {
             "x86_64": {
+                "darwin": {},
                 "fedora": {
                     "cmds": [
                         "sudo dnf install -y nasm"
@@ -59,10 +60,6 @@
                 ]
             },
             {
-                "env": {
-                    "PATH": "${DEPOT_TOOLS}:$PATH",
-                    "VPYTHON_VIRTUALENV_ROOT": "${VPYTHON_VIRTUALENV_ROOT}"
-                },
                 "cwd": "${PDFIUM_ROOT}",
                 "cmds": [
                     "mkdir -p ${VPYTHON_VIRTUALENV_ROOT}",
@@ -71,11 +68,7 @@
             },
             {
                 "env": {
-                    "PATH": "${DEPOT_TOOLS}:$PATH",
-                    "VPYTHON_VIRTUALENV_ROOT": "${VPYTHON_VIRTUALENV_ROOT}",
-                    "PKG_CONFIG_PATH": "/usr/lib64/pkgconfig",
-                    "CC": "/usr/bin/clang",
-                    "CXX": "/usr/bin/clang++"
+                    "PKG_CONFIG_PATH": "/usr/lib64/pkgconfig"
                 },
                 "cwd": "${PDFIUM_SRC_DIR}",
                 "cmds": [
@@ -87,13 +80,9 @@
                 ]
             },
             {
-                "env": {
-                    "PATH": "${DEPOT_TOOLS}:$PATH",
-                    "VPYTHON_VIRTUALENV_ROOT": "${VPYTHON_VIRTUALENV_ROOT}"
-                },
                 "cwd": "${PDFIUM_SRC_DIR}",
                 "cmds": [
-                    "ninja -C ${PDFIUM_BUILD_DIR} pdfium -j8"
+                    "autoninja -C ${PDFIUM_BUILD_DIR} pdfium"
                 ]
             }
         ]

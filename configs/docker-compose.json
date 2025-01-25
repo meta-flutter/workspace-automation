@@ -2,6 +2,7 @@
     "id": "docker-compose",
     "load": false,
     "supported_archs": [
+        "aarch64",
         "x86_64"
     ],
     "supported_host_types": [

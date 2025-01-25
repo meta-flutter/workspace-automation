@@ -2,6 +2,8 @@
     "id": "firebase-cpp-sdk",
     "load": false,
     "supported_archs": [
+        "aarch64",
+        "arm64",
         "x86_64"
     ],
     "supported_host_types": [
@@ -10,11 +12,12 @@
     ],
     "type": "dependency",
     "env": {
-        "CMAKE_BUILD_TYPE": "Release",
+        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/lib",
         "FIREBASE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk",
-        "FIREBASE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk/cmake-build-release",
+        "FIREBASE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk/build",
         "FIREBASE_STAGING_DIR": "${FIREBASE_BUILD_DIR}/staging/release",
-        "FIREBASE_CMAKE_ARGS": "-DFIREBASE_USE_BORINGSSL=ON -DFIREBASE_LINUX_USE_CXX11_ABI=ON -DCMAKE_STAGING_PREFIX=${FIREBASE_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+        "FIREBASE_CMAKE_ARGS": "-DFIREBASE_USE_BORINGSSL=ON -DFIREBASE_LINUX_USE_CXX11_ABI=ON -DCMAKE_STAGING_PREFIX=${FIREBASE_STAGING_DIR} -DCMAKE_BUILD_TYPE=Release"
     },
     "src": [
         {
@@ -33,6 +36,17 @@
     ],
     "runtime": {
         "pre-requisites": {
+            "aarch64": {
+                "ubuntu": {
+                    "cmds": [
+                        "pip3 install absl-py",
+                        "sudo rm -rf /usr/local/go | true",
+                        "wget https://golang.org/dl/go1.21.5.linux-amd64.tar.gz",
+                        "sudo tar -C /usr/local -xzf go1.21.5.linux-amd64.tar.gz",
+                        "rm go1.21.5.linux-amd64.tar.gz"
+                    ]
+                }
+            },
             "x86_64": {
                 "ubuntu": {
                     "cmds": [
@@ -61,16 +75,14 @@
             },
             {
                 "env": {
-                    "CC": "/usr/bin/clang",
-                    "CXX": "/usr/bin/clang++",
                     "PATH": "${PATH}:/usr/local/go/bin"
                 },
                 "cwd": "${FIREBASE_BUILD_DIR}",
                 "cmds": [
                     "go version",
-                    "bash -c \"rm -rf ${FIREBASE_BUILD_DIR}/* | true\"",
-                    "cmake ${FIREBASE_SRC_DIR} ${FIREBASE_CMAKE_ARGS}",
-                    "make -j 8"
+                    "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
+                    "cmake -GNinja ${FIREBASE_CMAKE_ARGS} -S ${FIREBASE_SRC_DIR} -B .",
+                    "ninja -j${HARDWARE_THREADS}"
                 ]
             }
         ]

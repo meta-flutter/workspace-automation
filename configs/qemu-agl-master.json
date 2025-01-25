@@ -1,9 +1,9 @@
 {
-    "id": "agl-qemu-octopus",
+    "id": "qemu-agl-master",
     "load": false,
     "supported_archs": [
-        "x86_64",
-        "arm64"
+        "arm64",
+        "x86_64"
     ],
     "supported_host_types": [
         "darwin",
@@ -12,7 +12,7 @@
     ],
     "type": "qemu",
     "env": {
-        "RELEASE_NAME": "octopus",
+        "RELEASE_NAME": "master",
         "RELEASE_VERSION": "latest",
         "FLUTTER_DEBUG_PORT": "1234",
         "FLUTTER_OBSERVATORY_HOST": "0.0.0.0",
@@ -48,7 +48,7 @@
         },
         "artifacts": {
             "http": {
-                "url": "https://download.automotivelinux.org/AGL/release/${RELEASE_NAME}/${RELEASE_VERSION}",
+                "url": "https://download.automotivelinux.org/AGL/snapshots/${RELEASE_NAME}/${RELEASE_VERSION}",
                 "artifacts": {
                     "x86_64": [
                         {

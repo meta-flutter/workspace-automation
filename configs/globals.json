@@ -1,5 +1,7 @@
 {
     "flutter-version": "3.27.1",
     "github_token": "",
-    "cookie_file": ""
+    "cookie_file": "",
+    "CMAKE_BUILD_TYPE": "MinSizeRel",
+    "MESON_BUILD_TYPE": "minsize"
 }

@@ -2,6 +2,7 @@
     "id": "libwebrtc",
     "load": false,
     "supported_archs": [
+        "aarch64",
         "arm64",
         "x86_64"
     ],
@@ -11,12 +12,12 @@
     ],
     "type": "dependency",
     "env": {
+        "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools:${PATH}",
         "RUNTIME_MODE": "debug",
-        "DEPOT_TOOLS": "${FLUTTER_WORKSPACE}/app/depot_tools",
         "LIBWEBRTC_ROOT": "${FLUTTER_WORKSPACE}/app/libwebrtc",
         "LIBWEBRTC_SRC_DIR_RELATIVE": "src",
         "LIBWEBRTC_SRC_DIR": "${LIBWEBRTC_ROOT}/${LIBWEBRTC_SRC_DIR_RELATIVE}",
-        "GN_ARGS": "target_os=\\\"linux\\\" target_cpu=\\\"x64\\\" is_debug=true rtc_include_tests=false rtc_use_h264=true ffmpeg_branding=\\\"Chrome\\\" is_component_build=false use_rtti=true use_custom_libcxx=true rtc_enable_protobuf=false",
+        "GN_ARGS": "target_os=\\\"linux\\\" target_cpu=\\\"${HOST_ARCH_GOOGLE}\\\" is_debug=true rtc_include_tests=false rtc_use_h264=true ffmpeg_branding=\\\"Chrome\\\" is_component_build=false use_rtti=true use_custom_libcxx=true rtc_enable_protobuf=false",
         "LIBWEBRTC_BUILD_DIR": "${LIBWEBRTC_SRC_DIR}/out/Linux-Debug",
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/libwebrtc",
         "VPYTHON_VIRTUALENV_ROOT": "${LIBWEBRTC_ROOT}/.vpython-root"
@@ -51,20 +52,12 @@
         },
         "post_cmds": [
             {
-                "env": {
-                    "PATH": "${DEPOT_TOOLS}:$PATH",
-                    "VPYTHON_VIRTUALENV_ROOT": "${VPYTHON_VIRTUALENV_ROOT}"
-                },
                 "cwd": "${LIBWEBRTC_ROOT}",
                 "cmds": [
                     "gclient sync -D -R -v"
                 ]
             },
             {
-                "env": {
-                    "PATH": "${DEPOT_TOOLS}:$PATH",
-                    "VPYTHON_VIRTUALENV_ROOT": "${VPYTHON_VIRTUALENV_ROOT}"
-                },
                 "cwd": "${LIBWEBRTC_SRC_DIR}",
                 "cmds": [
                     "mkdir -p ${VPYTHON_VIRTUALENV_ROOT}",
@@ -76,13 +69,9 @@
                 ]
             },
             {
-                "env": {
-                    "PATH": "${DEPOT_TOOLS}:$PATH",
-                    "VPYTHON_VIRTUALENV_ROOT": "${VPYTHON_VIRTUALENV_ROOT}"
-                },
                 "cwd": "${LIBWEBRTC_SRC_DIR}",
                 "cmds": [
-                    "ninja -C ${LIBWEBRTC_BUILD_DIR} libwebrtc -j20"
+                    "autoninja -C ${LIBWEBRTC_BUILD_DIR} libwebrtc"
                 ]
             }
         ]

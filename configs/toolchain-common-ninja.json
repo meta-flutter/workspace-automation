@@ -1,0 +1,50 @@
+{
+    "id": "toolchain-common-ninja",
+    "load": true,
+    "supported_archs": [
+        "aarch64",
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "fedora",
+        "ubuntu"
+    ],
+    "type": "toolchain",
+    "toolchain": "common",
+    "env": {
+        "VERSION": "1.12.1",
+        "ARCHIVE_FILE": "ninja-${VERSION}"
+    },
+    "runtime": {
+        "artifacts": {
+            "http": {
+                "url": "https://github.com/ninja-build/ninja",
+                "artifacts": {
+                    "x86_64": [
+                        {
+                            "filename": "${ARCHIVE_FILE}.zip",
+                            "endpoint": "/releases/download/v${VERSION}/ninja-linux.zip",
+                            "sha1": "0adea0f99aceafdac3361d091bc90b9dab722f2b"
+                        }
+                    ],
+                    "aarch64": [
+                        {
+                            "filename": "${ARCHIVE_FILE}.zip",
+                            "endpoint": "/releases/download/v${VERSION}/ninja-linux-aarch64.zip",
+                            "sha1": "31ce26f7fc77df4dcbc6ca56cc3b9794778e4ea5"
+                        }
+                    ]
+                }
+            }
+        },
+        "post_cmds": [
+            {
+                "cwd": "${PLATFORM_ID_DIR}",
+                "cmds": [
+                    "bash -c \"rm ninja | true\"",
+                    "unzip ${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}.zip -d ."
+                ]
+            }
+        ]
+    }
+}

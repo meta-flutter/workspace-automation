@@ -1,0 +1,101 @@
+{
+    "id": "amd-acs",
+    "load": false,
+    "supported_archs": [
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "fedora",
+        "ubuntu"
+    ],
+    "type": "dependency",
+    "env": {
+        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/lib",
+        "INSTALL_PREFIX": "${FLUTTER_WORKSPACE}/app/amdgpu/",
+        "AMD_ACS_WAYLAND_SRC_DIR": "${FLUTTER_WORKSPACE}/app/wayland",
+        "AMD_ACS_WAYLAND_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/wayland/buildDir",
+        "AMD_ACS_WAYLAND_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX}",
+        "AMD_ACS_WAYLAND_PROTOCOLS_SRC_DIR": "${FLUTTER_WORKSPACE}/app/wayland-protocols",
+        "AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/wayland-protocols/buildDir",
+        "AMD_ACS_WAYLAND_PROTOCOLS_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX}",
+        "AMD_ACS_WESTON_SRC_DIR": "${FLUTTER_WORKSPACE}/app/weston",
+        "AMD_ACS_WESTON_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/weston/buildDir",
+        "AMD_ACS_WESTON_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX} -Dbackend-rdp=false -Dbackend-drm-screencast-vaapi=false -Dbackend-x11=false -Dxwayland=false -Dbackend-vnc=false -Dscreenshare=false -Dsimple-clients=damage,im,egl,shm,touch,dmabuf-feedback,dmabuf-egl"
+    },
+    "src": [
+        {
+            "uri": "https://gitlab.com/acs-wayland/wayland.git",
+            "branch": "amd-acs-main"
+        },
+        {
+            "uri": "https://gitlab.com/acs-wayland/wayland-protocols.git",
+            "branch": "amd-acs-main"
+        },
+        {
+            "uri": "https://gitlab.com/acs-wayland/weston.git",
+            "branch": "amd-acs-main"
+        }
+    ],
+    "runtime": {
+        "pre-requisites": {
+            "x86_64": {
+                "fedora": {
+                    "cmds": [
+                        "sudo pip3 install meson",
+                        "sudo dnf -y install libffi-devel libxml2-devel dot2tex doxygen xsltproc xmlto libXfont2-devel libwebp-devel rst2pdf libpciaccess-devel libudev-devel byacc flex libXfixes-devel libglvnd-devel libxkbcommon-devel libinput-devel libjpeg-devel libwebp-devel dbus-devel hwdata libva-devel freerdp-devel  libseat-devel ffmpeg systemd-devel pango-devel pixman-devel cairo-devel bison-devel pipewire-devel pam-devel wayland-devel lcms-devel colord-devel"
+                    ]
+                },
+                "ubuntu": {
+                    "cmds": [
+                        "sudo pip3 install meson"
+                    ],
+                    "20.0.4": {
+                        "cmds": [
+                            "sudo apt install -y graphviz libffi-dev libxml2-dev dot2tex doxygen xsltproc xmlto ninja-build libpixman-1-dev libxfont2 libxfont-dev libwebp-dev libcairo2-dev valgrind systemd-coredump rst2pdf libcunit1-dev libpciaccess-dev libwayland-dev libudev-dev libelf-dev libbison-dev byacc flex libxfixes-dev libxcb-glx0-dev libx11-xcb-dev libxcb-dri2-0-dev libxcb-dri3-dev libxcb-present-dev libxshmfence-dev libxxf86vm-dev libxrandr-dev glslang-tools libglvnd-dev libxkbcommon-dev libinput-dev libpango1.0-dev libpangocairo-1.0-0 libjpeg-dev libwebp-dev libsystemd-dev libdbus-1-dev hwdata liblcms2-dev libva-dev freerdp2-dev libxcursor-dev libcolord-dev libegl-mesa0 libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev libgstreamer-plugins-bad1.0-dev libseat-dev libpam0g-dev libsdl-pango-dev ffmpeg"
+                        ]
+                    },
+                    "22.0.4": {
+                        "cmds": [
+                            "sudo apt install -y graphviz libffi-dev libxml2-dev dot2tex doxygen xsltproc xmlto ninja-build libpixman-1-dev libxfont2 libxfont-dev libwebp-dev libcairo2-dev valgrind systemd-coredump rst2pdf libcunit1-dev libpciaccess-dev libwayland-dev libudev-dev libelf-dev libbison-dev byacc flex libxfixes-dev libxcb-glx0-dev libx11-xcb-dev libxcb-dri2-0-dev libxcb-dri3-dev libxcb-present-dev libxshmfence-dev libxxf86vm-dev libxrandr-dev glslang-tools libglvnd-dev libxkbcommon-dev libinput-dev libpango1.0-dev libpangocairo-1.0-0 libjpeg-dev libwebp-dev libsystemd-dev libdbus-1-dev hwdata liblcms2-dev libva-dev freerdp2-dev libxcursor-dev libcolord-dev libegl-mesa0 libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev libgstreamer-plugins-bad1.0-dev libseat-dev libpam0g-dev libsdl-pango-dev ffmpeg"
+                        ]
+                    }
+                }
+            }
+        },
+        "post_cmds": [
+            {
+                "cwd": "${AMD_ACS_WAYLAND_SRC_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${AMD_ACS_WAYLAND_BUILD_DIR} | true\"",
+                    "meson setup ${AMD_ACS_WAYLAND_BUILD_DIR} ${AMD_ACS_WAYLAND_MESON_ARGS}",
+                    "ninja -C ${AMD_ACS_WAYLAND_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                ]
+            },
+            {
+                "env": {
+                    "LD_LIBRARY_PATH": "${LD_LIBRARY_PATH}:${INSTALL_PREFIX}/lib64/libweston-13:${INSTALL_PREFIX}/lib64:${INSTALL_PREFIX}/x86_64-linux-gnu/libweston-13:${INSTALL_PREFIX}/x86_64-linux-gnu",
+                    "PKG_CONFIG_PATH": "${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/x86_64-linux-gnu/pkgconfig/:${INSTALL_PREFIX}/x86_64-linux-gnu/pkgconfig/:${INSTALL_PREFIX}/share/pkgconfig/"
+                },
+                "cwd": "${AMD_ACS_WAYLAND_PROTOCOLS_SRC_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR} | true\"",
+                    "meson setup ${AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR} ${AMD_ACS_WAYLAND_PROTOCOLS_MESON_ARGS}",
+                    "ninja -C ${AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                ]
+            },
+            {
+                "env": {
+                    "LD_LIBRARY_PATH": "${LD_LIBRARY_PATH}:${INSTALL_PREFIX}/lib64/libweston-13:${INSTALL_PREFIX}/lib64:${INSTALL_PREFIX}/x86_64-linux-gnu/libweston-13:${INSTALL_PREFIX}/x86_64-linux-gnu",
+                    "PKG_CONFIG_PATH": "${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/x86_64-linux-gnu/pkgconfig/:${INSTALL_PREFIX}/x86_64-linux-gnu/pkgconfig/:${INSTALL_PREFIX}/share/pkgconfig/"
+                },
+                "cwd": "${AMD_ACS_WESTON_SRC_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${AMD_ACS_WESTON_BUILD_DIR} | true\"",
+                    "meson setup ${AMD_ACS_WESTON_BUILD_DIR} ${AMD_ACS_WESTON_MESON_ARGS}",
+                    "ninja -C ${AMD_ACS_WESTON_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                ]
+            }
+        ]
+    }
+}

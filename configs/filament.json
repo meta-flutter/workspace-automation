@@ -2,6 +2,8 @@
     "id": "filament",
     "load": false,
     "supported_archs": [
+        "aarch64",
+        "arm64",
         "x86_64"
     ],
     "supported_host_types": [
@@ -10,13 +12,13 @@
     ],
     "type": "dependency",
     "env": {
-        "CMAKE_BUILD_TYPE": "Release",
+        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/lib",
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches",
         "FILAMENT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/filament",
         "FILAMENT_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/filament/cmake-build-release",
         "FILAMENT_STAGING_DIR": "${FILAMENT_BUILD_DIR}/staging/release",
-        "FILAMENT_CMAKE_ARGS": "-DFILAMENT_SUPPORTS_VULKAN=ON -DFILAMENT_ENABLE_LTO=ON -DFILAMENT_SUPPORTS_OPENGL=OFF -DFILAMENT_USE_EXTERNAL_GLES3=OFF -DFILAMENT_SUPPORTS_WAYLAND=ON -DFILAMENT_SUPPORTS_X11=OFF -DFILAMENT_SUPPORTS_XCB=OFF -DFILAMENT_SUPPORTS_EGL_ON_LINUX=OFF -DFILAMENT_SKIP_SDL2=ON -DFILAMENT_SKIP_SAMPLES=ON -DFILAMENT_USE_SWIFTSHADER=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_STAGING_PREFIX=${FILAMENT_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}",
-        "PLAYX_3D_SCENE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/playx-3d-scene"
+        "FILAMENT_CMAKE_ARGS": "-DFILAMENT_SUPPORTS_VULKAN=ON -DFILAMENT_ENABLE_LTO=ON -DFILAMENT_SUPPORTS_OPENGL=OFF -DFILAMENT_USE_EXTERNAL_GLES3=OFF -DFILAMENT_SUPPORTS_WAYLAND=ON -DFILAMENT_SUPPORTS_X11=OFF -DFILAMENT_SUPPORTS_XCB=OFF -DFILAMENT_SUPPORTS_EGL_ON_LINUX=OFF -DFILAMENT_SKIP_SDL2=ON -DFILAMENT_SKIP_SAMPLES=ON -DFILAMENT_USE_SWIFTSHADER=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_STAGING_PREFIX=${FILAMENT_STAGING_DIR} -DCMAKE_BUILD_TYPE=Release"
     },
     "src": [
         {
@@ -31,34 +33,28 @@
     ],
     "runtime": {
         "pre-requisites": {
+            "aarch64": {
+                "ubuntu": {
+                    "cmds": [
+                        "pip3 install absl-py",
+                        "sudo apt update -y",
+                        "sudo apt install -y libsdl2-dev libjpeg-dev"
+                    ]
+                }
+            },
             "x86_64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo snap install cmake --classic",
-                        "pip3 install clang absl-py",
-                        "sudo add-apt-repository -y ppa:kisak/kisak-mesa",
+                        "pip3 install absl-py",
                         "sudo apt update -y",
-                        "sudo apt install lsb-release wget software-properties-common gnupg apt-file",
-                        "sudo apt update",
-                        "sudo apt install -y libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libxkbcommon-dev ninja-build",
-                        "sudo apt install -y build-essential libtool libsecret-1-dev libsdl2-dev libjpeg-dev zenity",
-                        "sudo apt install -y libllvm-ocaml-dev llvm llvm-dev llvm-runtime clang clang-tools libclang-dev libclang1 clang-format clangd clang-tidy lldb lld libc++-dev libc++abi-dev libc++1 libc++abi1",
-                        "sudo apt autoremove -y",
-                        "sudo apt clean -y",
-                        "cmake --version",
-                        "apt-file search cmake"
+                        "sudo apt install -y libsdl2-dev libjpeg-dev"
                     ]
                 },
                 "fedora": {
                     "cmds": [
-                        "sudo dnf -y update",
-                        "sudo dnf -y upgrade",
-                        "sudo dnf -y install wayland-devel wayland-protocols-devel libxkbcommon-devel cmake ninja-build mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libglapi mesa-libxatracker",
-                        "sudo dnf -y install libcxx-devel libcxx-static libcxxabi-devel libcxxabi-static libunwind-devel ninja-build lld libtool SDL2-devel libsecret-devel",
                         "pip3 install absl-py",
-                        "sudo dnf -y autoremove",
-                        "cmake --version",
-                        "dnf provides cmake"
+                        "sudo dnf -y update",
+                        "sudo dnf -y install SDL2-devel"
                     ]
                 }
             }
@@ -76,14 +72,11 @@
                 ]
             },
             {
-                "env": {
-                    "CC": "/usr/bin/clang",
-                    "CXX": "/usr/bin/clang++"
-                },
                 "cwd": "${FILAMENT_BUILD_DIR}",
                 "cmds": [
-                    "cmake ${FILAMENT_SRC_DIR} ${FILAMENT_CMAKE_ARGS}",
-                    "make install -j"
+                    "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
+                    "cmake -G Ninja ${FILAMENT_CMAKE_ARGS} -S ${FILAMENT_SRC_DIR} -B ${FILAMENT_BUILD_DIR}",
+                    "ninja install -j${HARDWARE_THREADS}"
                 ]
             }
         ]

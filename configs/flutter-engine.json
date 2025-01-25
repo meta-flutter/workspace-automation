@@ -2,8 +2,9 @@
     "id": "flutter-engine",
     "load": false,
     "supported_archs": [
-        "x86_64",
-        "arm64"
+        "aarch64",
+        "arm64",
+        "x86_64"
     ],
     "supported_host_types": [
         "ubuntu",
@@ -11,6 +12,7 @@
     ],
     "type": "dependency",
     "env": {
+        "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools:${PATH}",
         "RUNTIME_MODE": "debug",
         "DEPOT_TOOLS": "${FLUTTER_WORKSPACE}/app/depot_tools",
         "ENGINE_ROOT": "${FLUTTER_WORKSPACE}/app/engine",
@@ -39,65 +41,51 @@
             "safesync_url": ""
         },
         "pre-requisites": {
-            "arm64": {
+            "aarch64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt install pkg-config libfreetype-dev git"
-                    ]
-                },
-                "fedora": {
-                    "cmds": [
-                        "sudo dnf install pkg-config freetype-devel git"
+                        "sudo apt install -y pkg-config libfreetype-dev git"
                     ]
                 }
             },
             "x86_64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt install pkg-config libfreetype-dev git"
+                        "sudo apt install -y pkg-config libfreetype-dev git"
                     ]
                 },
                 "fedora": {
                     "cmds": [
-                        "sudo dnf install pkg-config freetype-devel git"
+                        "sudo dnf install -y pkg-config freetype-devel git"
                     ]
                 }
             }
         },
         "post_cmds": [
             {
-                "env": {
-                    "PATH": "${DEPOT_TOOLS}:$PATH"
-                },
                 "cwd": "${ENGINE_ROOT}",
                 "cmds": [
                     "gclient sync -D -R --revision ${FLUTTER_ENGINE_VERSION} -v"
                 ]
             },
             {
-                "env": {
-                    "PATH": "${DEPOT_TOOLS}:$PATH"
-                },
                 "cwd": "${ENGINE_SRC_DIR}/flutter",
                 "cmds": [
                     "git reset --hard"
                 ]
             },
             {
-                "env": {
-                    "PATH": "${DEPOT_TOOLS}:$PATH"
-                },
                 "cwd": "${ENGINE_SRC_DIR}",
                 "cmds": [
                     "./flutter/tools/gn ${ENGINE_BUILD_FLAGS}",
                     "echo ${GN_ARGS_APPEND} >> ${GN_ARGS_FILE}",
-                    "ninja -C ${ENGINE_BUILD_DIR}"
+                    "autoninja -C ${ENGINE_BUILD_DIR}"
                 ]
             },
             {
                 "cwd": "${ENGINE_BUILD_DIR}",
                 "cmds": [
-                    "bash -c \"rm -rf ${PLATFORM_ID_DIR}/bundle | true\"",
+                    "rm -rf ${PLATFORM_ID_DIR}/bundle | true",
                     "mkdir -p ${PLATFORM_ID_DIR}/bundle/data/",
                     "mkdir -p ${PLATFORM_ID_DIR}/bundle/lib/",
                     "cp ${ENGINE_BUILD_DIR}/icudtl.dat ${PLATFORM_ID_DIR}/bundle/data/",
