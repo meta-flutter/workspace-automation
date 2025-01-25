@@ -154,7 +154,9 @@
         },
         "cwd": "${HOMESCREEN_BUILD_DIR}",
         "cmds": [
-          "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
+          "cmake --version",
+          "find /usr -iname llvm-config-*",
+          "bash -c \"rm -rf *| true\"",
           "cmake ${HOMESCREEN_CMAKE_ARGS} -S ${HOMESCREEN_SRC_DIR} -B ${HOMESCREEN_BUILD_DIR}",
           "make -j${HARDWARE_THREADS}",
           "strip shell/homescreen"
