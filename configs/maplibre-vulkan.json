@@ -12,7 +12,8 @@
     ],
     "type": "dependency",
     "env": {
-        "$PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
+        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/lib",
         "MAPLIBRE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native",
         "MAPLIBRE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native/build",
         "MAPLIBRE_CMAKE_ARGS": "-DBUILD_SHARED_LIBS=OFF -DMLN_WITH_WERROR=OFF -DMLN_WITH_VULKAN=ON -DMLN_DRAWABLE_RENDERER=ON -DMLN_LEGACY_RENDERER=OFF -DMLN_WITH_EGL=OFF -DMLN_WITH_OPENGL=OFF",
@@ -56,8 +57,8 @@
             {
                 "cwd": "${MAPLIBRE_BUILD_DIR}",
                 "cmds": [
-                    "bash -c \"rm -rf * | true\"",
-                    "cmake -GNinja ${MAPLIBRE_CMAKE_ARGS} -S ${MAPLIBRE_SRC_DIR} -B .",
+                    "rm -rf * | true",
+                    "cmake -G Ninja ${MAPLIBRE_CMAKE_ARGS} -S ${MAPLIBRE_SRC_DIR} -B ${MAPLIBRE_BUILD_DIR}",
                     "ninja -j${HARDWARE_THREADS}"
                 ]
             }

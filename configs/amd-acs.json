@@ -10,7 +10,8 @@
     ],
     "type": "dependency",
     "env": {
-        "$PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
+        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/lib",
         "INSTALL_PREFIX": "${FLUTTER_WORKSPACE}/app/amdgpu/",
         "AMD_ACS_WAYLAND_SRC_DIR": "${FLUTTER_WORKSPACE}/app/wayland",
         "AMD_ACS_WAYLAND_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/wayland/buildDir",
@@ -73,7 +74,7 @@
             },
             {
                 "env": {
-                    "LD_LIBRARY_PATH": "${INSTALL_PREFIX}/lib64/libweston-13:${INSTALL_PREFIX}/lib64:${INSTALL_PREFIX}/x86_64-linux-gnu/libweston-13:${INSTALL_PREFIX}/x86_64-linux-gnu",
+                    "LD_LIBRARY_PATH": "${LD_LIBRARY_PATH}:${INSTALL_PREFIX}/lib64/libweston-13:${INSTALL_PREFIX}/lib64:${INSTALL_PREFIX}/x86_64-linux-gnu/libweston-13:${INSTALL_PREFIX}/x86_64-linux-gnu",
                     "PKG_CONFIG_PATH": "${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/x86_64-linux-gnu/pkgconfig/:${INSTALL_PREFIX}/x86_64-linux-gnu/pkgconfig/:${INSTALL_PREFIX}/share/pkgconfig/"
                 },
                 "cwd": "${AMD_ACS_WAYLAND_PROTOCOLS_SRC_DIR}",
@@ -85,7 +86,7 @@
             },
             {
                 "env": {
-                    "LD_LIBRARY_PATH": "${INSTALL_PREFIX}/lib64/libweston-13:${INSTALL_PREFIX}/lib64:${INSTALL_PREFIX}/x86_64-linux-gnu/libweston-13:${INSTALL_PREFIX}/x86_64-linux-gnu",
+                    "LD_LIBRARY_PATH": "${LD_LIBRARY_PATH}:${INSTALL_PREFIX}/lib64/libweston-13:${INSTALL_PREFIX}/lib64:${INSTALL_PREFIX}/x86_64-linux-gnu/libweston-13:${INSTALL_PREFIX}/x86_64-linux-gnu",
                     "PKG_CONFIG_PATH": "${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/x86_64-linux-gnu/pkgconfig/:${INSTALL_PREFIX}/x86_64-linux-gnu/pkgconfig/:${INSTALL_PREFIX}/share/pkgconfig/"
                 },
                 "cwd": "${AMD_ACS_WESTON_SRC_DIR}",

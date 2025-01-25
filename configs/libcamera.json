@@ -12,7 +12,7 @@
     ],
     "type": "dependency",
     "env": {
-        "$PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:$PATH",
+        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:$PATH",
         "CAMERA_SRC_DIR": "${FLUTTER_WORKSPACE}/app/libcamera",
         "CAMERA_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/libcamera/buildDir",
         "INSTALL_PREFIX": "${FLUTTER_WORKSPACE}/app/libcamera/out/usr",
@@ -54,7 +54,7 @@
             {
                 "cwd": "${CAMERA_SRC_DIR}",
                 "cmds": [
-                    "bash -c \"sudo rm -rf ${CAMERA_BUILD_DIR}/* | true\"",
+                    "rm -rf * | true",
                     "meson setup buildDir ${CAMERA_MESON_ARGS}"
                 ]
             },

@@ -12,7 +12,8 @@
     ],
     "type": "dependency",
     "env": {
-        "$PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
+        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/lib",
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches",
         "FILAMENT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/filament",
         "FILAMENT_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/filament/build",
@@ -73,8 +74,8 @@
             {
                 "cwd": "${FILAMENT_BUILD_DIR}",
                 "cmds": [
-                    "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
-                    "cmake -GNinja ${FILAMENT_CMAKE_ARGS} -S ${FILAMENT_SRC_DIR} -B .",
+                    "rm -rf * | true\"",
+                    "cmake -G Ninja ${FILAMENT_CMAKE_ARGS} -S ${FILAMENT_SRC_DIR} -B ${FILAMENT_BUILD_DIR}",
                     "ninja install -j${HARDWARE_THREADS}"
                 ]
             }
