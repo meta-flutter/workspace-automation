@@ -54,7 +54,7 @@
             {
                 "cwd": "${CAMERA_SRC_DIR}",
                 "cmds": [
-                    "rm -rf * | true",
+                    "bash -c \"rm -rf buildDir | true\"",
                     "meson setup buildDir ${CAMERA_MESON_ARGS}"
                 ]
             },

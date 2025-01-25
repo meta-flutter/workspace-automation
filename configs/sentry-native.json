@@ -26,25 +26,11 @@
         }
     ],
     "runtime": {
-        "pre-requisites": {
-            "x86_64": {
-                "fedora": {
-                    "cmds": [
-                        "sudo dnf install libunwind-devel"
-                    ]
-                },
-                "ubuntu": {
-                    "cmds": [
-                        "sudo apt-get install libunwind-dev"
-                    ]
-                }
-            }
-        },
         "post_cmds": [
             {
                 "cwd": "${SENTRY_NATIVE_BUILD_DIR}",
                 "cmds": [
-                    "rm -rf * | true",
+                    "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
                     "cmake -G Ninja ${SENTRY_NATIVE_CMAKE_ARGS} -S ${SENTRY_NATIVE_SRC_DIR} -B ${SENTRY_NATIVE_BUILD_DIR}",
                     "ninja -j${HARDWARE_THREADS}"
                 ]

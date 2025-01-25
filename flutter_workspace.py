@@ -1414,7 +1414,6 @@ def handle_commands_obj(cmd_list, cwd):
         return
 
     for obj in cmd_list:
-        print('obj: %s' % obj)
         if 'cmds' not in obj:
             continue
 
@@ -1435,7 +1434,6 @@ def handle_commands_obj(cmd_list, cwd):
 
         if 'cwd' in obj:
             cwd = os.path.expandvars(obj.get('cwd'))
-            print('cwd: ', cwd)
             make_sure_path_exists(cwd)
 
         shell_ = False
@@ -1443,11 +1441,10 @@ def handle_commands_obj(cmd_list, cwd):
             shell_ = obj.get('shell')
 
         cmds = obj.get('cmds')
-        print('cmds: %s' % cmds)
         for cmd in cmds:
             expanded_cmd = os.path.expandvars(cmd)
             cmd_arr = shlex.split(expanded_cmd)
-            print('cmd: %s' % cmd_arr)
+            print(f'cmd: {cmd_arr}')
             subprocess.check_call(cmd_arr, cwd=cwd, env=local_env, shell=shell_)
 
 

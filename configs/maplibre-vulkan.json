@@ -57,7 +57,7 @@
             {
                 "cwd": "${MAPLIBRE_BUILD_DIR}",
                 "cmds": [
-                    "rm -rf * | true",
+                    "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
                     "cmake -G Ninja ${MAPLIBRE_CMAKE_ARGS} -S ${MAPLIBRE_SRC_DIR} -B ${MAPLIBRE_BUILD_DIR}",
                     "ninja -j${HARDWARE_THREADS}"
                 ]

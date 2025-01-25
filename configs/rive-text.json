@@ -34,7 +34,7 @@
             {
                 "cwd": "${RIVE_TEXT_BUILD_DIR}",
                 "cmds": [
-                    "rm -rf * | true",
+                    "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
                     "cmake -G Ninja ${RIVE_TEXT_CMAKE_ARGS} -S ${RIVE_TEXT_SRC_DIR} -B ${RIVE_TEXT_BUILD_DIR}",
                     "ninja -j${HARDWARE_THREADS}"
                 ]

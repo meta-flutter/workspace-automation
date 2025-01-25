@@ -44,19 +44,19 @@
             "aarch64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt install pkg-config libfreetype-dev git"
+                        "sudo apt install -y pkg-config libfreetype-dev git"
                     ]
                 }
             },
             "x86_64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt install pkg-config libfreetype-dev git"
+                        "sudo apt install -y pkg-config libfreetype-dev git"
                     ]
                 },
                 "fedora": {
                     "cmds": [
-                        "sudo dnf install pkg-config freetype-devel git"
+                        "sudo dnf install -y pkg-config freetype-devel git"
                     ]
                 }
             }
@@ -85,7 +85,7 @@
             {
                 "cwd": "${ENGINE_BUILD_DIR}",
                 "cmds": [
-                    "bash -c \"rm -rf ${PLATFORM_ID_DIR}/bundle | true\"",
+                    "rm -rf ${PLATFORM_ID_DIR}/bundle | true",
                     "mkdir -p ${PLATFORM_ID_DIR}/bundle/data/",
                     "mkdir -p ${PLATFORM_ID_DIR}/bundle/lib/",
                     "cp ${ENGINE_BUILD_DIR}/icudtl.dat ${PLATFORM_ID_DIR}/bundle/data/",

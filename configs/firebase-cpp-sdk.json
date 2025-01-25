@@ -17,7 +17,7 @@
         "FIREBASE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk",
         "FIREBASE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk/build",
         "FIREBASE_STAGING_DIR": "${FIREBASE_BUILD_DIR}/staging/release",
-        "FIREBASE_CMAKE_ARGS": "-DFIREBASE_USE_BORINGSSL=ON -DFIREBASE_LINUX_USE_CXX11_ABI=ON -DCMAKE_STAGING_PREFIX=${FIREBASE_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+        "FIREBASE_CMAKE_ARGS": "-DFIREBASE_USE_BORINGSSL=ON -DFIREBASE_LINUX_USE_CXX11_ABI=ON -DCMAKE_STAGING_PREFIX=${FIREBASE_STAGING_DIR} -DCMAKE_BUILD_TYPE=Release"
     },
     "src": [
         {
@@ -74,6 +74,9 @@
                 ]
             },
             {
+                "env": {
+                    "PATH": "${PATH}:/usr/local/go/bin"
+                },
                 "cwd": "${FIREBASE_BUILD_DIR}",
                 "cmds": [
                     "go version",

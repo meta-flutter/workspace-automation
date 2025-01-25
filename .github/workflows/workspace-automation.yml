@@ -26,10 +26,12 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Setup workspace and test
+      - name: Create workspace
         run: |
           ./flutter_workspace.py
 
+      - name: Test workspace
+        run: |
           source ./setup_env.sh
           flutter doctor -v
           dart --version
