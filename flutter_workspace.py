@@ -1970,6 +1970,8 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
             prefer_llvm = platform_['prefer_llvm']
             os.environ['PREFER_LLVM'] = prefer_llvm
             print(f'PREFER_LLVM: {prefer_llvm}')
+        else:
+            prefer_llvm = os.environ.get('PREFER_LLVM', None)
 
         llvm_config = find_llvm_config_in_sysroot('/usr', prefer_llvm)
         if llvm_config:
