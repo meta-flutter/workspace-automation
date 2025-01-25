@@ -1961,7 +1961,7 @@ def get_hardware_threads():
 
 def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, app_folder):
 
-    os.environ['HARDWARE_THREADS'] = str(get_hardware_threads())
+    os.environ['HARDWARE_THREADS'] = str(get_hardware_threads() - 1)
 
     platform_['type'] = 'dependency'
     setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app_folder)
@@ -1972,13 +1972,12 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
         return
     
     if (platform_['toolchain'] == 'llvm'):
-        prefer_llvm = None
-        if 'prefer_llvm' in platform_:
-            prefer_llvm = platform_['prefer_llvm']
-            os.environ['PREFER_LLVM'] = prefer_llvm
-            print(f'PREFER_LLVM: {prefer_llvm}')
-        else:
-            prefer_llvm = os.environ.get('PREFER_LLVM', None)
+        prefer_llvm = os.environ.get('PREFER_LLVM', None)
+        if not prefer_llvm:
+            if 'prefer_llvm' in platform_:
+                prefer_llvm = platform_['prefer_llvm']
+                os.environ['PREFER_LLVM'] = prefer_llvm
+                print(f'PREFER_LLVM: {prefer_llvm}')
 
         llvm_config = find_llvm_config_in_sysroot('/usr', prefer_llvm)
         if llvm_config:
