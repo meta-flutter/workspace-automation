@@ -31,7 +31,6 @@
 import argparse
 import io
 import json
-import logging
 import os
 import platform
 import shlex
@@ -60,37 +59,6 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         return
 
 
-class StreamToLogger:
-    def __init__(self, logger, log_level=logging.INFO):
-        self.logger = logger
-        self.log_level = log_level
-        self.linebuf = ''
-
-    def write(self, buf):
-        for line in buf.rstrip().splitlines():
-            self.logger.log(self.log_level, line.rstrip())
-
-    def flush(self):
-        pass
-
-
-def setup_logging(log_file):
-    logger = logging.getLogger(__file__)
-    logger.setLevel(logging.DEBUG)
-
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setLevel(logging.DEBUG)
-
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    file_handler.setFormatter(formatter)
-
-    logger.addHandler(file_handler)
-
-    # Redirect stdout and stderr
-    sys.stdout = StreamToLogger(logger, logging.INFO)
-    sys.stderr = StreamToLogger(logger, logging.ERROR)
-
-
 def get_host_machine_arch():
     os.environ['HOST_ARCH'] = platform.machine()
     return platform.machine()
@@ -115,8 +83,6 @@ def get_flutter_arch():
 def main():
     # check python version
     check_python_version()
-
-    setup_logging('flutter_workspace.log')
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--clean', default=False,
@@ -147,11 +113,7 @@ def main():
     parser.add_argument('--app-path', default='', type=str, help='Specify Application path')
     parser.add_argument('--copy-dconf-user', default=False, action='store_true', help='copy $HOME/.confi/dconf/user to $FLUTTER_WORKSPACE')
 
-    parser.add_argument('--log-file', default='flutter_workspace.log', type=str, help='Log output file')
-
     args = parser.parse_args()
-
-    setup_logging(args.log_file)
 
     print(f'Arguments {args}')
     

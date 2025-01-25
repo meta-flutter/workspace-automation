@@ -1,5 +1,10 @@
 # Changelog
 
+Jan 25, 2025
+1. Ubuntu CI Matrix is green - ubuntu 20, 22, 24, 22 arm64, 24 arm64
+
+...
+
 Oct Nov 2, 2024
 1. add missing git pull in get_repos
 
