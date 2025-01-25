@@ -156,7 +156,7 @@
         "cmds": [
           "rm -rf * | true",
           "cmake ${HOMESCREEN_CMAKE_ARGS} -S ${HOMESCREEN_SRC_DIR} -B ${HOMESCREEN_BUILD_DIR}",
-          "make -j${HARDWARE_THREADS} VERBOSE=1",
+          "make -j${HARDWARE_THREADS}",
           "${LLVM_STRIP} shell/homescreen"
         ]
       }

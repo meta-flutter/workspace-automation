@@ -1961,7 +1961,10 @@ def get_hardware_threads():
 
 def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, app_folder):
 
-    os.environ['HARDWARE_THREADS'] = str(get_hardware_threads() - 1)
+    hw_threads = get_hardware_threads()
+    if not os.getenv('GITHUB_ACTIONS'):
+        hw_threads = hw_threads - 1
+    os.environ['HARDWARE_THREADS'] = str(hw_threads)
 
     platform_['type'] = 'dependency'
     setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app_folder)
