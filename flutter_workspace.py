@@ -180,6 +180,14 @@ def main():
         flutter_analyze_git_commits()
         return
 
+    user = get_process_stdout('whoami').split('\n')
+    username = user[0]
+    print_banner("Running as: %s" % username)
+    # we need to know the user running the script
+    if username == 'root':
+        print("Please run as non-root user")
+        exit()
+
     # reset sudo timestamp
     subprocess.check_call(['sudo', '-k'], stdout=subprocess.DEVNULL)
 
@@ -206,11 +214,7 @@ def main():
     #
     # Recursively change ownership to logged in user
     #
-    user = get_process_stdout('logname').split('\n')
-    if 'no login name' in user[0]:
-        cmd = ['sudo', 'chown', '-R', '$(whoami)', workspace]
-    else:
-        cmd = ['sudo', 'chown', '-R', f'{user[0]}:{user[0]}', workspace]
+    cmd = ['sudo', 'chown', '-R', username, workspace]
     subprocess.check_call(cmd, stdout=subprocess.DEVNULL)
 
     #
@@ -404,15 +408,8 @@ def main():
     #
     # Recursively change ownership to logged in user
     #
-    flutter_workspace = os.environ.get('FLUTTER_WORKSPACE')
-
-    user = get_process_stdout('logname').split('\n')
-    if 'no login name' in user[0]:
-        cmd = ['sudo', 'chown', '-R', '$(whoami)', flutter_workspace]
-    else:
-        cmd = ['sudo', 'chown', '-R', f'{user[0]}:{user[0]}', flutter_workspace]
-
-    subprocess.check_call(cmd, cwd=flutter_workspace)
+    cmd = ['sudo', 'chown', '-R', username, workspace]
+    subprocess.check_call(cmd, cwd=workspace)
 
     #
     # Done

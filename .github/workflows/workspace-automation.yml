@@ -28,8 +28,8 @@ jobs:
 
       - name: Setup workspace and test
         run: |
-          sudo ./flutter_workspace.py
-          source ./setup_env.sh
+          ./flutter_workspace.py
+
           source ./setup_env.sh
           flutter doctor -v
           dart --version
