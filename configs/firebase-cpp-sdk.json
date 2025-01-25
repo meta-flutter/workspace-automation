@@ -14,7 +14,7 @@
     "env": {
         "$PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
         "FIREBASE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk",
-        "FIREBASE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk/cmake-build-release",
+        "FIREBASE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk/build",
         "FIREBASE_STAGING_DIR": "${FIREBASE_BUILD_DIR}/staging/release",
         "FIREBASE_CMAKE_ARGS": "-DFIREBASE_USE_BORINGSSL=ON -DFIREBASE_LINUX_USE_CXX11_ABI=ON -DCMAKE_STAGING_PREFIX=${FIREBASE_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
     },
