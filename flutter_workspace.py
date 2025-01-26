@@ -1301,11 +1301,11 @@ def handle_pre_requisites(obj, cwd):
         if host_specific_pre_requisites.get(host_type):
             distro = host_specific_pre_requisites[host_type]
             handle_conditionals(distro.get('conditionals'), cwd)
-            handle_commands(distro.get('cmds'), cwd)
+            handle_commands(distro.get('cmds', None), cwd)
             host_os_version_id = get_freedesktop_os_release_version_id()
             if host_os_version_id in distro:
                 os_version = distro[host_os_version_id]
-                handle_commands(os_version.get('cmds'), cwd)
+                handle_commands(os_version, cwd)
         else:
             print('handle_pre_requisites: Not supported')
             exit(1)
@@ -1409,7 +1409,6 @@ def handle_commands(cmds, cwd):
 
 
 def handle_commands_obj(cmd_list, cwd):
-    print('handle_commands_obj: %s' % cmd_list)
     if not cmd_list:
         return
 
@@ -1908,6 +1907,9 @@ def get_llvm_prefix(llvm_config):
 
 
 def get_hardware_threads():
+    if os.getenv('HARDWARE_THREADS'):
+        return int(os.getenv('HARDWARE_THREADS'))
+
     import multiprocessing
     try:
         return len(os.sched_getaffinity(0))
@@ -1919,7 +1921,8 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
 
     hw_threads = get_hardware_threads()
     if not os.getenv('GITHUB_ACTIONS'):
-        hw_threads = hw_threads - 1
+        if hw_threads > 1:
+            hw_threads = hw_threads - 1
     os.environ['HARDWARE_THREADS'] = str(hw_threads)
 
     platform_['type'] = 'dependency'
