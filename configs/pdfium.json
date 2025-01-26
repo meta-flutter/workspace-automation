@@ -63,7 +63,7 @@
                 "cwd": "${PDFIUM_ROOT}",
                 "cmds": [
                     "mkdir -p ${VPYTHON_VIRTUALENV_ROOT}",
-                    "gclient sync -D -R -v"
+                    "gclient sync -D -R -j${HARDWARE_THREADS} -v"
                 ]
             },
             {

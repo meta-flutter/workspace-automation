@@ -54,7 +54,7 @@
             {
                 "cwd": "${LIBWEBRTC_ROOT}",
                 "cmds": [
-                    "gclient sync -D -R -v"
+                    "gclient sync -D -R -j${HARDWARE_THREADS} -v"
                 ]
             },
             {
