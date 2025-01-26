@@ -5,7 +5,7 @@ Workspace Automation that supports embedded Flutter development
 We developed a Python script, `flutter_workspace.py` to automate embedded flutter setup.
 This script reads a configuration folder of JSON files, or a single JSON configuration file and sets up a Flutter Workspace.
 
-### Discord Server https://discord.gg/VKcpSHgjGQ
+#### Discord Server https://discord.gg/VKcpSHgjGQ
 
 ### create_aot.py
 
@@ -17,7 +17,7 @@ Example use:
 
 Expects to be run from an active FLUTTER_WORKSPACE.  Meaning you need to source you environment first.
 
-#### Environmental variables used by script:
+#### Environmental variables used by script
 
 * GEN_SNAPSHOT - (Required) Set GEN_SNAPSHOT to location of executable gen_snapshot
 
@@ -34,6 +34,10 @@ Expects to be run from an active FLUTTER_WORKSPACE.  Meaning you need to source 
 * APP_GEN_SNAPSHOT_AOT_FILENAME - Defaults to 'libapp.so.{runtime_mode}'
 
 * FLUTTER_PREBUILD_CMD
+
+* PREFER_LLVM - (optional) set the LLVM version to use.  If not found, defaults to using `llvm-config`.
+
+* HARDWARE_THREADS - (optional) set the maximum hardware thread count used in building and fetching.  Used for low RAM machines.
 
 ### flutter_workspace.py
 
@@ -140,7 +144,7 @@ This option also has the impact of forcing the environmental variable `FLUTTER_W
 
 Enable Platform Configuration(s).  Pass platform-id values.  Select multiple platform ids by seperating with `,`.
 
-e.g. `--enable=firebase-cpp-sdk`
+e.g. `--enable=filament`
 
 This option also has the impact of forcing the environmental variable `FLUTTER_WORKSPACE_<platfor id>)_LOAD=ON`.  This variable can be used reliably in a configuration type other than `dependency`.
 

@@ -43,8 +43,18 @@
                 "fedora": {
                     "cmds": [
                         "sudo pip3 install meson",
-                        "sudo dnf -y install libffi-devel libxml2-devel dot2tex doxygen xsltproc xmlto libXfont2-devel libwebp-devel rst2pdf libpciaccess-devel libudev-devel byacc flex libXfixes-devel libglvnd-devel libxkbcommon-devel libinput-devel libjpeg-devel libwebp-devel dbus-devel hwdata libva-devel freerdp-devel  libseat-devel ffmpeg systemd-devel pango-devel pixman-devel cairo-devel bison-devel pipewire-devel pam-devel wayland-devel lcms-devel colord-devel"
-                    ]
+                        "sudo dnf -y install libffi-devel libxml2-devel dot2tex doxygen xsltproc xmlto libXfont2-devel libwebp-devel rst2pdf libpciaccess-devel libudev-devel byacc flex libXfixes-devel libglvnd-devel libxkbcommon-devel libinput-devel libjpeg-devel libwebp-devel dbus-devel hwdata libva-devel freerdp-devel  libseat-devel systemd-devel pango-devel pixman-devel cairo-devel bison-devel pipewire-devel pam-devel wayland-devel lcms-devel colord-devel"
+                    ],
+                    "40": {
+                        "cmds": [
+                            "sudo dnf -y install ffmpeg-free-devel"
+                        ]
+                    },
+                    "41": {
+                        "cmds": [
+                            "sudo dnf -y install ffmpeg-devel"
+                        ]
+                    }
                 },
                 "ubuntu": {
                     "cmds": [

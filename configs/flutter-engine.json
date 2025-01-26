@@ -65,7 +65,7 @@
             {
                 "cwd": "${ENGINE_ROOT}",
                 "cmds": [
-                    "gclient sync -D -R --revision ${FLUTTER_ENGINE_VERSION} -v"
+                    "gclient sync -D -R --revision ${FLUTTER_ENGINE_VERSION} -j${HARDWARE_THREADS} -v"
                 ]
             },
             {

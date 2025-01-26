@@ -141,8 +141,10 @@
         },
         "fedora": {
           "cmds": [
+            "sudo dnf update -y",
             "sudo dnf -y install SDL2-devel libsecret-devel zenity",
             "sudo dnf -y install libunwind-devel gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel gstreamer1-plugins-bad-free-extras gstreamer1-plugins-base-tools gstreamer1-plugins-good gstreamer1-plugins-good-extras gstreamer1-plugins-ugly-free",
+            "flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
             "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
           ]
         }
