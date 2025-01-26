@@ -54,7 +54,7 @@
                     "cmds": [
                         "pip3 install absl-py",
                         "sudo dnf -y update",
-                        "sudo dnf -y install SDL2-devel"
+                        "sudo dnf -y install SDL2-devel libjpeg-devel"
                     ]
                 }
             }

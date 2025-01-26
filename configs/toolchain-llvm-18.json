@@ -53,11 +53,8 @@
         "fedora": {
           "cmds": [
             "sudo dnf -y update",
-            "sudo dnf -y upgrade",
-            "sudo dnf -y install cmake lld libtool",
-            "sudo dnf -y install llvm-devel clang clang-format clangd clang-tidy lldb lld libcxx-devel libcxx-static libcxxabi-devel libcxxabi-static",
-            "sudo dnf -y install wayland-devel wayland-protocols-devel libxkbcommon-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libglapi mesa-libxatracker",
-            "cmake --version"
+            "sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libglapi mesa-libxatracker",
+            "sudo dnf -y install llvm-devel clang clang-tools-extra lldb lld libcxx-devel libcxx-static libcxxabi-devel libcxxabi-static"
           ]
         }
       }

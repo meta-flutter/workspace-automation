@@ -1305,7 +1305,7 @@ def handle_pre_requisites(obj, cwd):
             host_os_version_id = get_freedesktop_os_release_version_id()
             if host_os_version_id in distro:
                 os_version = distro[host_os_version_id]
-                handle_commands(os_version, cwd)
+                handle_commands(os_version.get('cmds'), cwd)
         else:
             print('handle_pre_requisites: Not supported')
             exit(1)

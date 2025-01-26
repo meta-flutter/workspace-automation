@@ -12,11 +12,12 @@
     ],
     "type": "dependency",
     "env": {
+        "VERSION": "0.8.4",
         "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
         "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/lib",
         "RIVE_TEXT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/rive-common",
         "RIVE_TEXT_BUILD_DIR": "${RIVE_TEXT_SRC_DIR}/build",
-        "RIVE_TEXT_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+        "RIVE_TEXT_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DENABLE_LTO=ON"
     },
     "src": [
         {
@@ -36,7 +37,8 @@
                 "cmds": [
                     "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
                     "cmake -G Ninja ${RIVE_TEXT_CMAKE_ARGS} -S ${RIVE_TEXT_SRC_DIR} -B ${RIVE_TEXT_BUILD_DIR}",
-                    "ninja -j${HARDWARE_THREADS}"
+                    "ninja -j${HARDWARE_THREADS}",
+                    "${LLVM_STRIP} librive_text.so.${VERSION}"
                 ]
             }
         ]
