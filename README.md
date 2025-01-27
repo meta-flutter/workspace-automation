@@ -35,10 +35,6 @@ Expects to be run from an active FLUTTER_WORKSPACE.  Meaning you need to source 
 
 * FLUTTER_PREBUILD_CMD
 
-* PREFER_LLVM - (optional) set the LLVM version to use.  If not found, defaults to using `llvm-config`.
-
-* HARDWARE_THREADS - (optional) set the maximum hardware thread count used in building and fetching.  Used for low RAM machines.
-
 ### flutter_workspace.py
 
 flutter_workspace.py does the following tasks automatically for you
@@ -59,6 +55,11 @@ flutter_workspace.py does the following tasks automatically for you
   * Fedora 37 (x86_64)
   * Mac M1/M2 (arm64)
 
+#### Environmental Variables
+
+* PREFER_LLVM - (optional) set the LLVM version to use.  If not found, defaults to using `llvm-config`.
+
+* HARDWARE_THREADS - (optional) set the maximum hardware thread count used in building and fetching.  Used for low RAM machines.
 
 ### Flutter Workspace
 
