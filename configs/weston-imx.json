@@ -1,5 +1,5 @@
 {
-    "id": "amd-acs",
+    "id": "weston-imx",
     "load": false,
     "supported_archs": [
         "x86_64"
@@ -12,29 +12,22 @@
     "env": {
         "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
         "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/lib",
-        "INSTALL_PREFIX": "${FLUTTER_WORKSPACE}/app/amdgpu/",
-        "AMD_ACS_WAYLAND_SRC_DIR": "${FLUTTER_WORKSPACE}/app/wayland",
-        "AMD_ACS_WAYLAND_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/wayland/buildDir",
-        "AMD_ACS_WAYLAND_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX}",
-        "AMD_ACS_WAYLAND_PROTOCOLS_SRC_DIR": "${FLUTTER_WORKSPACE}/app/wayland-protocols",
-        "AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/wayland-protocols/buildDir",
-        "AMD_ACS_WAYLAND_PROTOCOLS_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX}",
-        "AMD_ACS_WESTON_SRC_DIR": "${FLUTTER_WORKSPACE}/app/weston",
-        "AMD_ACS_WESTON_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/weston/buildDir",
-        "AMD_ACS_WESTON_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX} -Dbackend-rdp=false -Dbackend-drm-screencast-vaapi=false -Dbackend-x11=false -Dxwayland=false -Dbackend-vnc=false -Dscreenshare=false -Dsimple-clients=damage,im,egl,shm,touch,dmabuf-feedback,dmabuf-egl"
+        "INSTALL_PREFIX": "${FLUTTER_WORKSPACE}/app/imxgpu/",
+        "WAYLAND_PROTOCOLS_IMX_SRC_DIR": "${FLUTTER_WORKSPACE}/app/wayland-protocols-imx",
+        "WAYLAND_PROTOCOLS_IMX_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/wayland-protocols-imx/buildDir",
+        "WAYLAND_PROTOCOLS_IMX_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX}",
+        "WESTON_IMX_SRC_DIR": "${FLUTTER_WORKSPACE}/app/weston-imx",
+        "WESTON_IMX_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/weston-imx/buildDir",
+        "WESTON_IMX_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX} -Dbackend-default=wayland -Dremoting=false -Dpipewire=false -Drenderer-g2d=false -Dbackend-drm=false -Dbackend-rdp=false -Dbackend-drm-screencast-vaapi=false -Dbackend-x11=false -Dxwayland=false -Dbackend-vnc=false -Dscreenshare=false -Dsimple-clients=damage,im,egl,shm,touch,dmabuf-feedback,dmabuf-egl"
     },
     "src": [
         {
-            "uri": "https://gitlab.com/acs-wayland/wayland.git",
-            "branch": "amd-acs-main"
+            "uri": "https://github.com/nxp-imx/wayland-protocols-imx.git",
+            "branch": "wayland-protocols-imx-1.32"
         },
         {
-            "uri": "https://gitlab.com/acs-wayland/wayland-protocols.git",
-            "branch": "amd-acs-main"
-        },
-        {
-            "uri": "https://gitlab.com/acs-wayland/weston.git",
-            "branch": "amd-acs-main"
+            "uri": "https://github.com/nxp-imx/weston-imx.git",
+            "branch": "weston-imx-12.0.4"
         }
     ],
     "runtime": {
@@ -75,11 +68,15 @@
         },
         "post_cmds": [
             {
-                "cwd": "${AMD_ACS_WAYLAND_SRC_DIR}",
+                "env": {
+                    "LD_LIBRARY_PATH": "${LD_LIBRARY_PATH}:${INSTALL_PREFIX}/lib64/libweston-13:${INSTALL_PREFIX}/lib64:${INSTALL_PREFIX}/x86_64-linux-gnu/libweston-13:${INSTALL_PREFIX}/x86_64-linux-gnu",
+                    "PKG_CONFIG_PATH": "${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/x86_64-linux-gnu/pkgconfig/:${INSTALL_PREFIX}/x86_64-linux-gnu/pkgconfig/:${INSTALL_PREFIX}/share/pkgconfig/"
+                },
+                "cwd": "${WAYLAND_PROTOCOLS_IMX_SRC_DIR}",
                 "cmds": [
-                    "bash -c \"rm -rf ${AMD_ACS_WAYLAND_BUILD_DIR} | true\"",
-                    "meson setup ${AMD_ACS_WAYLAND_BUILD_DIR} ${AMD_ACS_WAYLAND_MESON_ARGS}",
-                    "ninja -C ${AMD_ACS_WAYLAND_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                    "bash -c \"rm -rf ${WAYLAND_PROTOCOLS_IMX_BUILD_DIR} | true\"",
+                    "meson setup ${WAYLAND_PROTOCOLS_IMX_BUILD_DIR} ${WAYLAND_PROTOCOLS_IMX_MESON_ARGS}",
+                    "ninja -C ${WAYLAND_PROTOCOLS_IMX_BUILD_DIR} install -j${HARDWARE_THREADS}"
                 ]
             },
             {
@@ -87,41 +84,17 @@
                     "LD_LIBRARY_PATH": "${LD_LIBRARY_PATH}:${INSTALL_PREFIX}/lib64/libweston-13:${INSTALL_PREFIX}/lib64:${INSTALL_PREFIX}/x86_64-linux-gnu/libweston-13:${INSTALL_PREFIX}/x86_64-linux-gnu",
                     "PKG_CONFIG_PATH": "${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/x86_64-linux-gnu/pkgconfig/:${INSTALL_PREFIX}/x86_64-linux-gnu/pkgconfig/:${INSTALL_PREFIX}/share/pkgconfig/"
                 },
-                "cwd": "${AMD_ACS_WAYLAND_PROTOCOLS_SRC_DIR}",
+                "cwd": "${WESTON_IMX_SRC_DIR}",
                 "cmds": [
-                    "bash -c \"rm -rf ${AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR} | true\"",
-                    "meson setup ${AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR} ${AMD_ACS_WAYLAND_PROTOCOLS_MESON_ARGS}",
-                    "ninja -C ${AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR} install -j${HARDWARE_THREADS}"
-                ]
-            },
-            {
-                "env": {
-                    "LD_LIBRARY_PATH": "${LD_LIBRARY_PATH}:${INSTALL_PREFIX}/lib64/libweston-13:${INSTALL_PREFIX}/lib64:${INSTALL_PREFIX}/x86_64-linux-gnu/libweston-13:${INSTALL_PREFIX}/x86_64-linux-gnu",
-                    "PKG_CONFIG_PATH": "${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/lib64/pkgconfig/:${INSTALL_PREFIX}/x86_64-linux-gnu/pkgconfig/:${INSTALL_PREFIX}/x86_64-linux-gnu/pkgconfig/:${INSTALL_PREFIX}/share/pkgconfig/"
-                },
-                "cwd": "${AMD_ACS_WESTON_SRC_DIR}",
-                "cmds": [
-                    "bash -c \"rm -rf ${AMD_ACS_WESTON_BUILD_DIR} | true\"",
-                    "meson setup ${AMD_ACS_WESTON_BUILD_DIR} ${AMD_ACS_WESTON_MESON_ARGS}",
-                    "ninja -C ${AMD_ACS_WESTON_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                    "bash -c \"rm -rf ${WESTON_IMX_BUILD_DIR} | true\"",
+                    "meson setup ${WESTON_IMX_BUILD_DIR} ${WESTON_IMX_MESON_ARGS}",
+                    "ninja -C ${WESTON_IMX_BUILD_DIR} install -j${HARDWARE_THREADS}"
                 ]
             }
         ],
         "do_clean": [
             {
-                "cwd": "${AMD_ACS_WAYLAND_BUILD_DIR}",
-                "cmds": [
-                    "ninja -t clean"
-                ]
-            },
-            {
-                "cwd": "${AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR}",
-                "cmds": [
-                    "ninja -t clean"
-                ]
-            },
-            {
-                "cwd": "${AMD_ACS_WESTON_BUILD_DIR}",
+                "cwd": "${WESTON_IMX_BUILD_DIR}",
                 "cmds": [
                     "ninja -t clean"
                 ]

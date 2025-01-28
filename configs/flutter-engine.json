@@ -92,6 +92,14 @@
                     "cp ${ENGINE_BUILD_DIR}/libflutter_engine.so ${PLATFORM_ID_DIR}/bundle/lib/"
                 ]
             }
+        ],
+        "do_clean": [
+            {
+                "cwd": "${ENGINE_BUILD_DIR}",
+                "cmds": [
+                    "ninja -t clean"
+                ]
+            }
         ]
     }
 }

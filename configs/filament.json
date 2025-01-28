@@ -79,6 +79,14 @@
                     "ninja install -j${HARDWARE_THREADS}"
                 ]
             }
+        ],
+        "do_clean": [
+            {
+                "cwd": "${FILAMENT_BUILD_DIR}",
+                "cmds": [
+                    "ninja -t clean"
+                ]
+            }
         ]
     }
 }

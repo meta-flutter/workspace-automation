@@ -189,6 +189,16 @@ Use for debugging
 * `cd hello_world`
 * `flutter run -d desktop-auto`
 
+
+### Running `dart_pdf` demo
+
+    ./flutter_workspace.py --enable=pdfium
+    source ./setup_env.sh
+    export LD_LIBRARY_PATH=${FLUTTER_WORKSPACE}/app/pdfium/pdfium/out/Linux-Release/
+    pushd app/dart_pdf/demo
+    flutter run -d desktop-homescreen
+
+
 ### Working with LLVM
 
 #### Set the preferred LLVM toolchain

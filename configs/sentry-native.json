@@ -32,7 +32,16 @@
                 "cmds": [
                     "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
                     "cmake -G Ninja ${SENTRY_NATIVE_CMAKE_ARGS} -S ${SENTRY_NATIVE_SRC_DIR} -B ${SENTRY_NATIVE_BUILD_DIR}",
-                    "ninja -j${HARDWARE_THREADS}"
+                    "ninja -j${HARDWARE_THREADS}",
+                    "${LLVM_STRIP} ${SENTRY_NATIVE_BUILD_DIR}/libsentry.so"
+                ]
+            }
+        ],
+        "do_clean": [
+            {
+                "cwd": "${SENTRY_NATIVE_BUILD_DIR}",
+                "cmds": [
+                    "ninja -t clean"
                 ]
             }
         ]

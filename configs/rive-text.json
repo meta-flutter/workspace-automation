@@ -41,6 +41,14 @@
                     "${LLVM_STRIP} librive_text.so.${VERSION}"
                 ]
             }
+        ],
+        "do_clean": [
+            {
+                "cwd": "${RIVE_TEXT_BUILD_DIR}",
+                "cmds": [
+                    "ninja -t clean"
+                ]
+            }
         ]
     }
 }
