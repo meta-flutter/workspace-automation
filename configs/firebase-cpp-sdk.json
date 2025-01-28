@@ -85,6 +85,14 @@
                     "ninja -j${HARDWARE_THREADS}"
                 ]
             }
+        ],
+        "do_clean": [
+            {
+                "cwd": "${FIREBASE_BUILD_DIR}",
+                "cmds": [
+                    "ninja -t clean"
+                ]
+            }
         ]
     }
 }

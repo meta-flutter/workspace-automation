@@ -62,6 +62,14 @@
                     "ninja -j${HARDWARE_THREADS}"
                 ]
             }
+        ],
+        "do_clean": [
+            {
+                "cwd": "${MAPLIBRE_BUILD_DIR}",
+                "cmds": [
+                    "ninja -t clean"
+                ]
+            }
         ]
     }
 }

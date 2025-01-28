@@ -26,10 +26,7 @@
     "FILAMENT_INCLUDE_DIR": "${FLUTTER_WORKSPACE}/app/filament/cmake-build-release/staging/release/include",
     "FILAMENT_LINK_LIBRARIES_DIR": "${FLUTTER_WORKSPACE}/app/filament/cmake-build-release/staging/release/lib/x86_64",
     "FLUGIN_FILAMENT_VIEW": "-DBUILD_PLUGIN_FILAMENT_VIEW=${FLUTTER_WORKSPACE_FILAMENT_LOAD} -DFILAMENT_INCLUDE_DIR=${FILAMENT_INCLUDE_DIR} -DFILAMENT_LINK_LIBRARIES_DIR=${FILAMENT_LINK_LIBRARIES_DIR}",
-    "PDFIUM_SRC_DIR": "${FLUTTER_WORKSPACE}/app/pdfium/pdfium",
-    "PDFIUM_INCLUDE_DIR": "${PDFIUM_SRC_DIR}/public",
-    "PDFIUM_LINK_LIBRARIES_DIR": "${PDFIUM_SRC_DIR}/out/Linux-Release",
-    "PLUGIN_PDF": "-DBUILD_PLUGIN_PDF=${FLUTTER_WORKSPACE_PDFIUM_LOAD} -DPDFIUM_INCLUDE_DIR=${PDFIUM_INCLUDE_DIR} -DPDFIUM_LINK_LIBRARIES_DIR=${PDFIUM_LINK_LIBRARIES_DIR}",
+    "PLUGIN_PDF": "-DBUILD_PLUGIN_PDF=${FLUTTER_WORKSPACE_PDFIUM_LOAD}",
     "LIBWEBRTC_SRC_DIR": "${FLUTTER_WORKSPACE}/app/libwebrtc/src",
     "LIBWEBRTC_INC_DIR": "${LIBWEBRTC_SRC_DIR}/libwebrtc/include",
     "LIBWEBRTC_LIB_DIR": "${LIBWEBRTC_SRC_DIR}/out/Linux-Debug",
@@ -98,21 +95,27 @@
             "sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
             "flatpak remotes"
           ],
-          "20.04": [
-            "echo \"Ubuntu 20.04\"",
-            "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
-            "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
-          ],
-          "22.04": [
-            "echo \"Ubuntu 22.04\"",
-            "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
-            "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
-          ],
-          "24.04": [
-            "echo \"Ubuntu 24.04\"",
-            "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
-            "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
-          ]
+          "20.04": {
+            "cmds": [
+              "echo \"Ubuntu 20.04\"",
+              "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
+              "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
+            ]
+          },
+          "22.04": {
+            "cmds": [
+              "echo \"Ubuntu 22.04\"",
+              "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
+              "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
+            ]
+          },
+          "24.04": {
+            "cmds": [
+              "echo \"Ubuntu 24.04\"",
+              "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
+              "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
+            ]
+          }
         }
       },
       "x86_64": {
@@ -123,21 +126,27 @@
             "sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
             "flatpak remotes"
           ],
-          "20.04": [
-            "echo \"Ubuntu 20.04\"",
-            "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
-            "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
-          ],
-          "22.04": [
-            "echo \"Ubuntu 22.04\"",
-            "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
-            "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
-          ],
-          "24.04": [
-            "echo \"Ubuntu 24.04\"",
-            "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
-            "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
-          ]
+          "20.04": {
+            "cmds": [
+              "echo \"Ubuntu 20.04\"",
+              "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
+              "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
+            ]
+          },
+          "22.04": {
+            "cmds": [
+              "echo \"Ubuntu 22.04\"",
+              "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
+              "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
+            ]
+          },
+          "24.04": {
+            "cmds": [
+              "echo \"Ubuntu 24.04\"",
+              "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
+              "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
+            ]
+          }
         },
         "fedora": {
           "cmds": [
@@ -158,6 +167,14 @@
           "cmake -G Ninja ${HOMESCREEN_CMAKE_ARGS} -S ${HOMESCREEN_SRC_DIR} -B ${HOMESCREEN_BUILD_DIR}",
           "ninja -j${HARDWARE_THREADS}",
           "${LLVM_STRIP} shell/homescreen"
+        ]
+      }
+    ],
+    "do_clean": [
+      {
+        "cwd": "${HOMESCREEN_BUILD_DIR}",
+        "cmds": [
+          "ninja -t clean"
         ]
       }
     ]
