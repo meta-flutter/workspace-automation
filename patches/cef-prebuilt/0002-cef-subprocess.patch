@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 165fb4b..3834d73 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -219,6 +219,8 @@ find_package(CEF REQUIRED)
+ # directory.
+ add_subdirectory(${CEF_LIBCEF_DLL_WRAPPER_PATH} libcef_dll_wrapper)
+ 
++add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../subprocess/src" "${CMAKE_CURRENT_SOURCE_DIR}/${WEBVIEW_SUBPROCESS_PROJECT_NAME}")
++
+ # Include application targets.
+ # Comes from the <target>/CMakeLists.txt file in the current directory.
+ # TODO: Change these lines to match your project target when you copy this file.
