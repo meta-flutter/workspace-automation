@@ -61,6 +61,10 @@
                     "git add .",
                     "git commit -s -m \"Initial commit\"", 
                     "git apply ${PATCH_FOLDER}/0001-clang-build.patch",
+                    "git apply ${PATCH_FOLDER}/0002-cef-subprocess.patch",
+                    "git apply ${PATCH_FOLDER}/0003-add-dylib.patch",
+                    "git apply ${PATCH_FOLDER}/0004-add-dylib-header.patch",
+                    "git apply ${PATCH_FOLDER}/0005-include-dylib.patch",
                     "rm -rf .git",
                     "rm .gitattributes"
                 ]

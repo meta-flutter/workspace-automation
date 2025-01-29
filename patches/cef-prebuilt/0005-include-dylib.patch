@@ -1,0 +1,27 @@
+diff --git a/libcef_dll/CMakeLists.txt b/libcef_dll/CMakeLists.txt
+index afe3596..9024e09 100644
+--- a/libcef_dll/CMakeLists.txt
++++ b/libcef_dll/CMakeLists.txt
+@@ -730,9 +730,9 @@ set(LIBCEF_INCLUDE_WRAPPER_SRCS
+   ../include/wrapper/cef_stream_resource_handler.h
+   ../include/wrapper/cef_xml_object.h
+   ../include/wrapper/cef_zip_archive.h
++  ../include/wrapper/cef_library_loader.h
+   )
+ set(LIBCEF_INCLUDE_WRAPPER_SRCS_MAC
+-  ../include/wrapper/cef_library_loader.h
+   )
+ LIBCEF_APPEND_PLATFORM_SOURCES(LIBCEF_INCLUDE_WRAPPER_SRCS)
+ source_group(include\\\\wrapper FILES ${LIBCEF_INCLUDE_WRAPPER_SRCS})
+@@ -751,10 +751,10 @@ set(LIBCEF_WRAPPER_SRCS
+   wrapper/cef_zip_archive.cc
+   wrapper/libcef_dll_wrapper.cc
+   wrapper/libcef_dll_wrapper2.cc
++  wrapper/libcef_dll_dylib.cc
+   )
+ set(LIBCEF_WRAPPER_SRCS_MAC
+   wrapper/cef_library_loader_mac.mm
+-  wrapper/libcef_dll_dylib.cc
+   )
+ LIBCEF_APPEND_PLATFORM_SOURCES(LIBCEF_WRAPPER_SRCS)
+ source_group(libcef_dll\\\\wrapper FILES ${LIBCEF_WRAPPER_SRCS})
