@@ -149,3 +149,7 @@ engine-revision.json
 
 *.scpt
 
+
+AGL
+amdgpu
+imxgpu
