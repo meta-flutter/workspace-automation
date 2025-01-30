@@ -1,0 +1,172 @@
+{
+    "id": "agl-compositor",
+    "load": false,
+    "supported_archs": [
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "fedora",
+        "ubuntu"
+    ],
+    "type": "dependency",
+    "env": {
+        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/lib",
+        "INSTALL_PREFIX": "${FLUTTER_WORKSPACE}/AGL/",
+        "SEATD_SRC_DIR": "${FLUTTER_WORKSPACE}/app/seatd",
+        "SEATD_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/seatd/buildDir",
+        "SEATD_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX}",
+        "WAYLAND_SRC_DIR": "${FLUTTER_WORKSPACE}/app/wayland",
+        "WAYLAND_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/wayland/buildAglDir",
+        "WAYLAND_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX}",
+        "WAYLAND_PROTOCOLS_SRC_DIR": "${FLUTTER_WORKSPACE}/app/wayland-protocols",
+        "WAYLAND_PROTOCOLS_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/wayland-protocols/buildAglDir",
+        "WAYLAND_PROTOCOLS_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX}",
+        "WESTON_SRC_DIR": "${FLUTTER_WORKSPACE}/app/weston",
+        "WESTON_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/agl-compositor/buildDir",
+        "WESTON_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX} -Dbackend-drm=true -Dbackend-drm-screencast-vaapi=false -Dbackend-headless=false -Dbackend-pipewire=false -Dbackend-rdp=false -Dscreenshare=false -Dbackend-vnc=false -Dbackend-wayland=true -Dbackend-x11=false -Dbackend-default=wayland -Dxwayland=false -Dsystemd=false -Dremoting=false -Dpipewire=false -Dsimple-clients=damage,im,egl,shm,touch,dmabuf-feedback,dmabuf-egl",
+        "AGL_COMPOSITOR_SRC_DIR": "${FLUTTER_WORKSPACE}/app/agl-compositor",
+        "AGL_COMPOSITOR_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/agl-compositor/buildDir",
+        "AGL_COMPOSITOR_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX} -Ddrm-lease=false -Dgrpc-proxy=false -Dpolicy-default=allow-all -Dxwayland=false",
+        "WAYPP_SRC_DIR": "${FLUTTER_WORKSPACE}/app/waypp",
+        "WAYPP_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/waypp/build",
+        "WAYPP_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DLLVM_CONFIG=${LLVM_CONFIG} -DENABLE_LTO=ON -DENABLE_AGL_SHELL_CLIENT=ON -DBUILD_EXAMPLES=ON"
+    },
+    "src": [
+        {
+            "uri": "https://git.sr.ht/~kennylevinsen/seatd",
+            "branch": "0.9.1"
+        },
+        {
+            "uri": "https://gitlab.freedesktop.org/wayland/wayland.git",
+            "branch": "1.23"
+        },
+        {
+            "uri": "https://gitlab.freedesktop.org/wayland/wayland-protocols.git",
+            "branch": "1.31"
+        },
+        {
+            "uri": "https://gitlab.freedesktop.org/wayland/weston.git",
+            "branch": "13.0"
+        },
+        {
+            "uri": "https://gerrit.automotivelinux.org/gerrit/src/agl-compositor.git",
+            "branch": "salmon"
+        },
+        {
+            "uri": "https://github.com/jwinarske/waypp.git",
+            "branch": "dev"
+        },
+        {
+            "uri": "https://gerrit.automotivelinux.org/gerrit/apps/flutter-ics-homescreen.git",
+            "branch": "salmon"
+        }
+    ],
+    "runtime": {
+        "pre-requisites": {
+            "x86_64": {
+                "fedora": {
+                    "cmds": [
+                        "pip3 install meson",
+                        "sudo dnf -y install libffi-devel libxml2-devel dot2tex doxygen xsltproc xmlto libXfont2-devel libwebp-devel rst2pdf libpciaccess-devel libudev-devel byacc flex libXfixes-devel libglvnd-devel libxkbcommon-devel libinput-devel libjpeg-devel libwebp-devel dbus-devel hwdata libva-devel freerdp-devel  libseat-devel systemd-devel pango-devel pixman-devel cairo-devel bison-devel pipewire-devel pam-devel wayland-devel lcms-devel colord-devel"
+                    ],
+                    "40": {
+                        "cmds": [
+                            "sudo dnf -y install ffmpeg-free-devel"
+                        ]
+                    },
+                    "41": {
+                        "cmds": [
+                            "sudo dnf -y install ffmpeg-devel"
+                        ]
+                    }
+                },
+                "ubuntu": {
+                    "cmds": [
+                        "pip3 install meson"
+                    ],
+                    "20.0.4": {
+                        "cmds": [
+                            "sudo apt install -y graphviz libffi-dev libxml2-dev dot2tex doxygen xsltproc xmlto ninja-build libpixman-1-dev libxfont2 libxfont-dev libwebp-dev libcairo2-dev valgrind systemd-coredump rst2pdf libcunit1-dev libpciaccess-dev libwayland-dev libudev-dev libelf-dev libbison-dev byacc flex libxfixes-dev libxcb-glx0-dev libx11-xcb-dev libxcb-dri2-0-dev libxcb-dri3-dev libxcb-present-dev libxshmfence-dev libxxf86vm-dev libxrandr-dev glslang-tools libglvnd-dev libxkbcommon-dev libinput-dev libpango1.0-dev libpangocairo-1.0-0 libjpeg-dev libwebp-dev libsystemd-dev libdbus-1-dev hwdata liblcms2-dev libva-dev freerdp2-dev libxcursor-dev libcolord-dev libegl-mesa0 libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev libgstreamer-plugins-bad1.0-dev libseat-dev libpam0g-dev libsdl-pango-dev ffmpeg"
+                        ]
+                    },
+                    "22.0.4": {
+                        "cmds": [
+                            "sudo apt install -y graphviz libffi-dev libxml2-dev dot2tex doxygen xsltproc xmlto ninja-build libpixman-1-dev libxfont2 libxfont-dev libwebp-dev libcairo2-dev valgrind systemd-coredump rst2pdf libcunit1-dev libpciaccess-dev libwayland-dev libudev-dev libelf-dev libbison-dev byacc flex libxfixes-dev libxcb-glx0-dev libx11-xcb-dev libxcb-dri2-0-dev libxcb-dri3-dev libxcb-present-dev libxshmfence-dev libxxf86vm-dev libxrandr-dev glslang-tools libglvnd-dev libxkbcommon-dev libinput-dev libpango1.0-dev libpangocairo-1.0-0 libjpeg-dev libwebp-dev libsystemd-dev libdbus-1-dev hwdata liblcms2-dev libva-dev freerdp2-dev libxcursor-dev libcolord-dev libegl-mesa0 libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev libgstreamer-plugins-bad1.0-dev libseat-dev libpam0g-dev libsdl-pango-dev ffmpeg"
+                        ]
+                    }
+                }
+            }
+        },
+        "post_cmds": [
+            {
+                "cwd": "${SEATD_SRC_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${SEATD_BUILD_DIR} | true\"",
+                    "meson setup ${SEATD_BUILD_DIR} ${SEATD_MESON_ARGS}",
+                    "ninja -C ${SEATD_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                ]
+            },
+            {
+                "cwd": "${WAYLAND_SRC_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${WAYLAND_BUILD_DIR} | true\"",
+                    "meson setup ${WAYLAND_BUILD_DIR} ${WAYLAND_MESON_ARGS}",
+                    "ninja -C ${WAYLAND_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                ]
+            },
+            {
+                "env": {
+                    "PATH": "${INSTALL_PREFIX}/bin:$PATH",
+                    "LD_LIBRARY_PATH": "${LD_LIBRARY_PATH}:${INSTALL_PREFIX}/lib64/libweston-13:${INSTALL_PREFIX}/lib64:${INSTALL_PREFIX}/x86_64-linux-gnu/libweston-13:${INSTALL_PREFIX}/x86_64-linux-gnu",
+                    "PKG_CONFIG_PATH": "${INSTALL_PREFIX}/share/pkgconfig:${INSTALL_PREFIX}/lib64/pkgconfig:${INSTALL_PREFIX}/lib64/pkgconfig:${INSTALL_PREFIX}/lib/x86_64-linux-gnu/pkgconfig"
+                },
+                "cwd": "${WAYLAND_PROTOCOLS_SRC_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${WAYLAND_PROTOCOLS_BUILD_DIR} | true\"",
+                    "meson setup ${WAYLAND_PROTOCOLS_BUILD_DIR} ${WAYLAND_PROTOCOLS_MESON_ARGS}",
+                    "ninja -C ${WAYLAND_PROTOCOLS_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                ]
+            },
+            {
+                "env": {
+                    "PATH": "${INSTALL_PREFIX}/bin:$PATH",
+                    "LD_LIBRARY_PATH": "${LD_LIBRARY_PATH}:${INSTALL_PREFIX}/lib64/libweston-13:${INSTALL_PREFIX}/lib64:${INSTALL_PREFIX}/x86_64-linux-gnu/libweston-13:${INSTALL_PREFIX}/x86_64-linux-gnu",
+                    "PKG_CONFIG_PATH": "${INSTALL_PREFIX}/share/pkgconfig:${INSTALL_PREFIX}/lib64/pkgconfig:${INSTALL_PREFIX}/lib64/pkgconfig:${INSTALL_PREFIX}/lib/x86_64-linux-gnu/pkgconfig"
+                },
+                "cwd": "${WESTON_SRC_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${WESTON_BUILD_DIR} | true\"",
+                    "meson setup ${WESTON_BUILD_DIR} ${WESTON_MESON_ARGS}",
+                    "ninja -C ${WESTON_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                ]
+            },
+            {
+                "env": {
+                    "PATH": "${INSTALL_PREFIX}/bin:$PATH",
+                    "LD_LIBRARY_PATH": "${LD_LIBRARY_PATH}:${INSTALL_PREFIX}/lib64/libweston-13:${INSTALL_PREFIX}/lib64:${INSTALL_PREFIX}/x86_64-linux-gnu/libweston-13:${INSTALL_PREFIX}/x86_64-linux-gnu",
+                    "PKG_CONFIG_PATH": "${INSTALL_PREFIX}/share/pkgconfig:${INSTALL_PREFIX}/lib64/pkgconfig:${INSTALL_PREFIX}/lib64/pkgconfig:${INSTALL_PREFIX}/lib/x86_64-linux-gnu/pkgconfig"
+                },
+                "cwd": "${AGL_COMPOSITOR_SRC_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${AGL_COMPOSITOR_BUILD_DIR} | true\"",
+                    "meson setup ${AGL_COMPOSITOR_BUILD_DIR} ${AGL_COMPOSITOR_MESON_ARGS}",
+                    "ninja -C ${AGL_COMPOSITOR_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                ]
+            },
+            {
+                "env": {
+                    "PATH": "${INSTALL_PREFIX}/bin:$PATH",
+                    "LD_LIBRARY_PATH": "${LD_LIBRARY_PATH}:${INSTALL_PREFIX}/lib64/libweston-13:${INSTALL_PREFIX}/lib64:${INSTALL_PREFIX}/x86_64-linux-gnu/libweston-13:${INSTALL_PREFIX}/x86_64-linux-gnu",
+                    "PKG_CONFIG_PATH": "${INSTALL_PREFIX}/share/pkgconfig:${INSTALL_PREFIX}/lib64/pkgconfig:${INSTALL_PREFIX}/lib64/pkgconfig:${INSTALL_PREFIX}/lib/x86_64-linux-gnu/pkgconfig"
+                },
+                "cwd": "${WAYPP_SRC_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${WAYPP_BUILD_DIR} | true\"",
+                    "cmake -G Ninja ${WAYPP_CMAKE_ARGS} -S ${WAYPP_SRC_DIR} -B ${WAYPP_BUILD_DIR}",
+                    "ninja -C ${WAYPP_BUILD_DIR} -j${HARDWARE_THREADS}"
+                ]
+            }
+        ]
+    }
+}
