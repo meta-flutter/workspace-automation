@@ -2263,12 +2263,12 @@ def install_minimum_runtime_deps():
 
         if os_release_id == 'ubuntu':
             subprocess.check_output(['sudo', 'apt', 'update', '-y'])
-            packages = 'sudo apt install --no-install-recommends -y git git-lfs curl python3-pip libcurl4-openssl-dev libssl-dev libgtk-3-dev python3-venv python3-pycurl python3-toml python3-dotenv python3-pip python3-dev build-essential libcurl4-openssl-dev'.split(' ')
+            packages = 'sudo apt install --no-install-recommends -y git git-lfs unzip curl python3-pip libcurl4-openssl-dev libssl-dev libgtk-3-dev python3-venv python3-pycurl python3-toml python3-dotenv python3-pip python3-dev build-essential libcurl4-openssl-dev'.split(' ')
             subprocess.check_output(packages)
 
         elif os_release_id == 'fedora':
             subprocess.check_output(['sudo', 'dnf', '-y', 'update'])
-            packages = 'sudo dnf -y install dnf-plugins-core git git-lfs curl python3-pip libcurl-devel openssl-devel gtk3-devel python3-virtualenv python3-pycurl python3-toml python3-dotenv python3-devel gcc libcurl-devel'.split(' ')
+            packages = 'sudo dnf -y install dnf-plugins-core git git-lfs unzip curl python3-pip libcurl-devel openssl-devel gtk3-devel python3-virtualenv python3-pycurl python3-toml python3-dotenv python3-devel gcc libcurl-devel'.split(' ')
             subprocess.check_output(packages)
 
     elif host_type == "darwin":
