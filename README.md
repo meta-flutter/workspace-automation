@@ -7,6 +7,12 @@ This script reads a configuration folder of JSON files, or a single JSON configu
 
 #### Discord Server https://discord.gg/VKcpSHgjGQ
 
+### Minimum requirements
+
+* Ubuntu
+
+    sudo apt install -y apt-utils python3
+
 ### create_aot.py
 
 create AOT is used to create libapp.so for use on a device.
