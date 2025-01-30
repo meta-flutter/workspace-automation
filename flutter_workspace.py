@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# SPDX-FileCopyrightText: (C) 2020-2024 meta-flutter contributors
+# SPDX-FileCopyrightText: (C) 2020-2025 workspace-automation contributors
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -2262,18 +2262,14 @@ def install_minimum_runtime_deps():
         os_release_id = get_freedesktop_os_release_id()
 
         if os_release_id == 'ubuntu':
-            cmd = ['sudo', 'apt', 'update', '-y']
-            subprocess.check_output(cmd)
-            packages = 'git git-lfs curl python3-pip libcurl4-openssl-dev libssl-dev libgtk-3-dev python3-venv python3-pycurl python3-toml python3-dotenv python3-pip python3-dev build-essential libcurl4-openssl-dev'.split(' ')
-            for package in packages:
-                ubuntu_install_pkg_if_not_installed(package)
+            subprocess.check_output(['sudo', 'apt', 'update', '-y'])
+            packages = 'sudo apt install --no-install-recommends -y git git-lfs curl python3-pip libcurl4-openssl-dev libssl-dev libgtk-3-dev python3-venv python3-pycurl python3-toml python3-dotenv python3-pip python3-dev build-essential libcurl4-openssl-dev'.split(' ')
+            subprocess.check_output(packages)
 
         elif os_release_id == 'fedora':
-            cmd = ['sudo', 'dnf', '-y', 'update']
-            subprocess.check_output(cmd)
-            packages = 'dnf-plugins-core git git-lfs curl python3-pip libcurl-devel openssl-devel gtk3-devel python3-virtualenv python3-pycurl python3-toml python3-dotenv python3-devel gcc libcurl-devel'.split(' ')
-            for package in packages:
-                fedora_install_pkg_if_not_installed(package)
+            subprocess.check_output(['sudo', 'dnf', '-y', 'update'])
+            packages = 'sudo dnf -y install dnf-plugins-core git git-lfs curl python3-pip libcurl-devel openssl-devel gtk3-devel python3-virtualenv python3-pycurl python3-toml python3-dotenv python3-devel gcc libcurl-devel'.split(' ')
+            subprocess.check_output(packages)
 
     elif host_type == "darwin":
         brew_path = get_mac_brew_path()
