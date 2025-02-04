@@ -48,6 +48,11 @@ from common import fetch_https_binary_file
 from common import handle_ctrl_c
 from common import make_sure_path_exists
 from common import print_banner
+from common import get_ws_folder
+from common import reset_sudo_timestamp
+from common import validate_sudo_user_timestamp
+from common import validate_sudo_user
+from common import chown_workspace
 
 from create_aot import get_flutter_sdk_version
 from create_aot import create_platform_aot
@@ -142,6 +147,11 @@ def main():
         flutter_analyze_git_commits()
         return
 
+    #
+    # Control+C handler
+    #
+    signal.signal(signal.SIGINT, handle_ctrl_c)
+
     user = get_process_stdout('whoami').split('\n')
     username = user[0]
     print_banner("Running as: %s" % username)
@@ -150,25 +160,17 @@ def main():
         print("Please run as non-root user")
         exit()
 
-    # reset sudo timestamp
-    subprocess.check_call(['sudo', '-k'], stdout=subprocess.DEVNULL)
+    #
+    # Handle sudo for scenarios that require it
+    #
+    reset_sudo_timestamp()
 
-    # validate sudo user timestamp
-    if os.path.exists(args.stdin_file):
-        stdin_file = open(args.stdin_file)
-        subprocess.check_call(['sudo', '-S', '-v'],
-                              stdout=subprocess.DEVNULL, stdin=stdin_file)
-    else:
-        subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    validate_sudo_user_timestamp(args)
 
     #
     # Target Folder
     #
-    if "FLUTTER_WORKSPACE" in os.environ:
-        workspace = os.environ.get('FLUTTER_WORKSPACE')
-    else:
-        workspace = os.getcwd()
-
+    workspace = get_ws_folder()
     config_folder = os.path.join(workspace, '.config')
 
     print_banner("Setting up Flutter Workspace in: %s" % workspace)
@@ -176,8 +178,7 @@ def main():
     #
     # Recursively change ownership to logged in user
     #
-    cmd = ['sudo', 'chown', '-R', username, workspace]
-    subprocess.check_call(cmd, stdout=subprocess.DEVNULL)
+    chown_workspace(username, workspace)
 
     #
     # Install minimum package
@@ -185,23 +186,9 @@ def main():
     install_minimum_runtime_deps()
 
     #
-    # Virtual Python Setup
-    #
-    venv_dir = os.path.join(config_folder, 'venv')
-    subprocess.check_call([sys.executable, '-m', 'venv', venv_dir], stdout=subprocess.DEVNULL)
-    os.environ['PATH'] = '%s:%s' % (os.path.join(venv_dir, 'bin'), os.environ.get('PATH'))
-
-    #
-    # Control+C handler
-    #
-    signal.signal(signal.SIGINT, handle_ctrl_c)
-
-    #
     # Create Workspace
     #
-    is_exist = os.path.exists(workspace)
-    if not is_exist:
-        os.makedirs(workspace)
+    make_sure_path_exists(workspace)
 
     if os.path.exists(workspace):
         os.environ['FLUTTER_WORKSPACE'] = workspace
@@ -370,8 +357,7 @@ def main():
     #
     # Recursively change ownership to logged in user
     #
-    cmd = ['sudo', 'chown', '-R', username, workspace]
-    subprocess.check_call(cmd, cwd=workspace)
+    chown_workspace(username, workspace)
 
     #
     # Done
@@ -686,15 +672,15 @@ def get_workspace_repos(base_folder, config):
         for repo in repos:
             futures.append(executor.submit(get_repo, base_folder=base_folder, uri=repo.get(
                 'uri'), branch=repo.get('branch'), rev=repo.get('rev')))
-            subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+            validate_sudo_user()
 
         for _ in concurrent.futures.as_completed(futures):
-            subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+            validate_sudo_user()
 
     print_banner("Repos Cloned")
 
     # reset sudo timeout
-    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    validate_sudo_user()
 
     #
     # Create vscode startup tasks
@@ -721,16 +707,15 @@ def get_platform_src(src, base_folder: str):
         for repo in src:
             futures.append(executor.submit(get_repo, base_folder=base_folder, uri=repo.get(
                 'uri'), branch=repo.get('branch'), rev=repo.get('rev')))
-            subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+            validate_sudo_user()
 
         for future in concurrent.futures.as_completed(futures):
             future.result()  # Get result to propagate any exceptions
-            subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+            validate_sudo_user()
 
     print_banner("Source Repos Cloned")
 
-    # reset sudo timeout
-    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    validate_sudo_user()
 
 
 def get_flutter_settings_folder():
@@ -1391,13 +1376,11 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
                 futures.append(executor.submit(download_https_file, cwd, base_url, filename, cookie_file,
                                                netrc, artifact.get('md5'), artifact.get('sha1'),
                                                artifact.get('sha256'), True))
-                subprocess.check_call(
-                    ['sudo', '-v'], stdout=subprocess.DEVNULL)
+                validate_sudo_user()
 
             for future in concurrent.futures.as_completed(futures):
                 future.result()
-                subprocess.check_call(
-                    ['sudo', '-v'], stdout=subprocess.DEVNULL)
+                validate_sudo_user()
 
 
 def handle_commands(cmds, cwd):
@@ -1823,26 +1806,26 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app
 
     cwd = get_platform_working_dir(platform_['id'])
 
-    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    validate_sudo_user()
 
     handle_dotenv(platform_.get('dotenv'))
     handle_env(platform_.get('env'), None)
 
     create_platform_config_file(runtime.get('config'), cwd)
     create_gclient_config_file(runtime.get('gclient_config'))
-    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    validate_sudo_user()
     handle_artifacts_obj(runtime.get('artifacts'),
                          host_machine_arch, cwd, git_token, cookie_file)
-    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    validate_sudo_user()
     handle_pre_requisites(runtime.get('pre-requisites'), cwd)
-    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    validate_sudo_user()
     handle_docker_obj(runtime.get('docker'), host_machine_arch, cwd)
-    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    validate_sudo_user()
     handle_conditionals(runtime.get('conditionals'), cwd)
-    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    validate_sudo_user()
     handle_qemu_obj(runtime.get('qemu'), cwd, platform_[
         'id'], 'debug')
-    subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+    validate_sudo_user()
     handle_commands_obj(runtime.get('post_cmds'), cwd)
 
     handle_custom_devices(platform_)
@@ -1943,7 +1926,15 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
                 os.environ['PREFER_LLVM'] = prefer_llvm
                 print(f'PREFER_LLVM: {prefer_llvm}')
 
-        llvm_config = find_llvm_config_in_sysroot('/usr', prefer_llvm)
+        host_type = get_host_type()
+
+        if host_type == 'linux':
+            llvm_base_path = '/usr'
+        elif host_type == 'darwin':
+            prefer_llvm = None
+            llvm_base_path = '/opt/homebrew'
+
+        llvm_config = find_llvm_config_in_sysroot(llvm_base_path, prefer_llvm)
         if llvm_config:
             llvm_prefix = get_llvm_prefix(llvm_config)
             llvm_version = get_llvm_version(llvm_config)
@@ -1966,7 +1957,7 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
             print(f"CC: {os.environ['CC']}")
             print(f"CXX: {os.environ['CXX']}")
         else:
-            print_banner("Failed to find llvm-config in /usr.")
+            print_banner(f'Failed to find llvm-config in {llvm_base_path}.')
             exit(1)
 
     elif platform_['toolchain'] == 'common':
@@ -2022,14 +2013,14 @@ def setup_platforms(platforms, git_token, cookie_file, plex, enable, disable, ap
         setup_platform(dependency, git_token, cookie_file, plex, enable, disable, app_folder)
 
         # reset sudo timeout
-        subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+        validate_sudo_user()
 
     # iterate over non-dependencies
     for platform_ in get_not_dependencies(platforms):
         setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app_folder)
 
         # reset sudo timeout
-        subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+        validate_sudo_user()
 
     print_banner("Platform Setup Complete")
 
@@ -2201,61 +2192,18 @@ def get_mac_brew_path() -> str:
     return result.stdout.decode('utf-8').rstrip()
 
 
-def get_mac_openssl_prefix() -> str:
-    """ Read brew openssl prefix variable """
-    if platform.machine() == 'arm64':
-        return subprocess.check_output(
-            ['arch', '-arm64', 'brew', '--prefix', 'openssl@3']).decode('utf-8').rstrip()
-    else:
-        return subprocess.check_output(['brew', '--prefix', 'openssl@3']).decode('utf-8').rstrip()
-
-
-def mac_brew_reinstall_package(pkg):
-    """ Re-installs brew package """
-    if platform.machine() == 'arm64':
-        subprocess.run(['arch', '-arm64', 'brew', 'reinstall', pkg])
-    else:
-        subprocess.run(['brew', 'reinstall', pkg])
-
-
-def mac_pip3_install(pkg):
-    """ Install pip3 on mac """
-    if platform.machine() == 'arm64':
-        cmd = 'arch -arm64 pip3 install %s' % pkg
-    else:
-        cmd = 'pip3 install %s' % pkg
-    p = subprocess.Popen(cmd, universal_newlines=True, shell=True,
-                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    text = p.stdout.read()
-    p.wait()
-    print(text)
-
-
-def mac_is_cocoapods_installed():
-    cmd = ['gem', 'list', '|', 'grep', 'cocoapods ']
-
-    result = get_process_stdout(cmd).strip('\'').strip('\n')
-
-    if 'cocoapods ' in result:
-        print("Package cocoapods Found")
-        return True
-    else:
-        print("Package cocoapods Not Found")
-        return False
-
-
-def mac_install_cocoapods_if_not_installed():
-    if not mac_is_cocoapods_installed():
-        subprocess.check_output(
-            ['sudo', 'gem', '-y', 'install', 'activesupport', '-v', '6.1.7.3'])
-        subprocess.check_output(['sudo', 'gem', '-y', 'install', 'cocoapods'])
-        subprocess.run(
-            ['sudo', 'gem', 'uninstall', 'ffi', '&&', 'sudo', 'gem', 'install', 'ffi', '--', '--enable-libffi-alloc'])
+def activate_python_venv():
+    workspace = get_ws_folder()
+    config_folder = os.path.join(workspace, '.config')
+    venv_dir = os.path.join(config_folder, 'venv')
+    subprocess.check_call([sys.executable, '-m', 'venv', venv_dir], stdout=subprocess.DEVNULL)
+    os.environ['PATH'] = '%s:%s' % (os.path.join(venv_dir, 'bin'), os.environ.get('PATH'))
 
 
 def install_minimum_runtime_deps():
     """Install minimum runtime deps to run this script"""
     host_type = get_host_type()
+
 
     if host_type == "linux":
 
@@ -2271,18 +2219,32 @@ def install_minimum_runtime_deps():
             packages = 'sudo dnf -y install dnf-plugins-core git git-lfs unzip curl python3-pip libcurl-devel openssl-devel gtk3-devel python3-virtualenv python3-pycurl python3-toml python3-dotenv python3-devel gcc libcurl-devel'.split(' ')
             subprocess.check_output(packages)
 
-    elif host_type == "darwin":
+        activate_python_venv()
+
+
+    if host_type == "darwin":
+
         brew_path = get_mac_brew_path()
         if brew_path == '':
             sys.exit(
                 "brew is required for this script.  Please install.  https://brew.sh")
 
-        mac_brew_reinstall_package('openssl@3')
+        os.environ['NONINTERACTIVE'] = '1'
+        os.environ['HOMEBREW_NO_AUTO_UPDATE'] = '1'
 
-        mac_pip3_install(
-            '--install-option="--with-openssl" --install-option="--openssl-dir=%s" pycurl' % (get_mac_openssl_prefix()))
+        subprocess.run(['brew', 'update'])
+        subprocess.run(['brew', 'doctor'])
 
-        mac_install_cocoapods_if_not_installed()
+        packages = 'brew install git git-lfs unzip curl python3'.split(' ')
+        subprocess.check_output(packages)
+
+        activate_python_venv()
+
+        cmd = 'pip install --upgrade pip'.split(' ')
+        subprocess.check_output(cmd)
+
+        cmd = 'python -m pip install toml pycurl python-dotenv'.split(' ')
+        subprocess.check_output(cmd)
 
 
 def is_repo(path):

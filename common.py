@@ -9,7 +9,9 @@
 import errno
 import os
 import sys
+import subprocess
 
+from platform import system
 from sys import stderr as stream
 
 # use kiB's
@@ -259,6 +261,49 @@ def fetch_https_binary_file(url, filename, redirect, headers, cookie_file, netrc
         sys.exit('Download Failed')
 
     return success
+
+
+def get_ws_folder():
+    if "FLUTTER_WORKSPACE" in os.environ:
+        workspace = os.environ.get('FLUTTER_WORKSPACE')
+    else:
+        workspace = os.getcwd()
+    return workspace
+
+
+def get_host_type() -> str:
+    """returns host type in lower case"""
+    return system().lower().rstrip()
+
+
+def reset_sudo_timestamp():
+    """invalidate sudo timestamp file"""
+    if get_host_type() == "linux":
+        subprocess.check_call(['sudo', '-k'], stdout=subprocess.DEVNULL)
+
+
+def validate_sudo_user_timestamp(args):
+    """read password from standard input if available"""
+    if os.path.exists(args.stdin_file):
+        stdin_file = open(args.stdin_file)
+        if get_host_type() == "linux":
+            subprocess.check_call(['sudo', '-S', '-v'], stdout=subprocess.DEVNULL, stdin=stdin_file)
+    else:
+        if get_host_type() == "linux":
+            subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+
+
+def validate_sudo_user():
+    """update user's sudo timestamp without running a command"""
+    if get_host_type() == "linux":
+        subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
+
+
+def chown_workspace(username, workspace):
+    """chown workspace if linux"""
+    if get_host_type() == "linux":
+        cmd = ['sudo', 'chown', '-R', username, workspace]
+        subprocess.check_call(cmd, cwd=workspace, stdout=subprocess.DEVNULL)
 
 
 def test_internet_connection() -> bool:

@@ -3,17 +3,20 @@
   "load": true,
   "supported_archs": [
     "aarch64",
+    "arm64",
     "x86_64"
   ],
   "supported_host_types": [
-    "ubuntu",
-    "fedora"
+    "darwin",
+    "fedora",
+    "ubuntu"
   ],
   "type": "toolchain",
   "toolchain": "llvm",
   "prefer_llvm": "18",
   "env": {
-    "VERSION": "18"
+    "VERSION": "18",
+    "NONINTERACTIVE": "1"
   },
   "runtime": {
     "pre-requisites": {
@@ -31,6 +34,13 @@
             "chmod +x llvm.sh",
             "sudo ./llvm.sh ${VERSION} all",
             "rm ./llvm.sh"
+          ]
+        }
+      },
+      "arm64": {
+        "darwin": {
+          "cmds": [
+            "brew install llvm"
           ]
         }
       },
