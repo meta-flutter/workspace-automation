@@ -1,0 +1,39 @@
+From e0ba0d632509eb0d4f1afe2694d0d0bf40496339 Mon Sep 17 00:00:00 2001
+From: Joel Winarske <joel.winarske@gmail.com>
+Date: Tue, 4 Feb 2025 14:46:15 -0800
+Subject: [PATCH] mvp library install
+
+Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
+---
+ third_party/spirv-cross/CMakeLists.txt            | 1 +
+ third_party/spirv-tools/source/opt/CMakeLists.txt | 2 ++
+ 2 files changed, 3 insertions(+)
+
+diff --git a/third_party/spirv-cross/CMakeLists.txt b/third_party/spirv-cross/CMakeLists.txt
+index dbf85d5d9..50c4b33eb 100644
+--- a/third_party/spirv-cross/CMakeLists.txt
++++ b/third_party/spirv-cross/CMakeLists.txt
+@@ -292,6 +292,7 @@ if (SPIRV_CROSS_STATIC)
+ 		else()
+ 			message(FATAL_ERROR "Must enable GLSL support to enable MSL support.")
+ 		endif()
++		install(TARGETS spirv-cross-msl LIBRARY DESTINATION lib/filament)
+ 	endif()
+ 
+ 	if (SPIRV_CROSS_ENABLE_HLSL)
+diff --git a/third_party/spirv-tools/source/opt/CMakeLists.txt b/third_party/spirv-tools/source/opt/CMakeLists.txt
+index c34c38d0b..c1a5cdddf 100644
+--- a/third_party/spirv-tools/source/opt/CMakeLists.txt
++++ b/third_party/spirv-tools/source/opt/CMakeLists.txt
+@@ -270,6 +270,8 @@ target_link_libraries(SPIRV-Tools-opt
+ set_property(TARGET SPIRV-Tools-opt PROPERTY FOLDER "SPIRV-Tools libraries")
+ spvtools_check_symbol_exports(SPIRV-Tools-opt)
+ 
++install(TARGETS SPIRV-Tools-opt LIBRARY DESTINATION lib/filament)
++
+ if(ENABLE_SPIRV_TOOLS_INSTALL)
+   install(TARGETS SPIRV-Tools-opt EXPORT SPIRV-Tools-optTargets
+     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+-- 
+2.48.1
+
