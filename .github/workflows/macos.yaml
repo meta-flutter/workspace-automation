@@ -1,0 +1,59 @@
+name: macos-workspace-automation
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened, closed ]
+  release:
+    types: [ published, created, edited ]
+  workflow_dispatch:
+  schedule:
+    # daily
+    - cron:  '0 0 * * *'
+
+jobs:
+
+  workspace-automation:
+
+    env:
+      NONINTERACTIVE: 1
+      HOMEBREW_NO_AUTO_UPDATE: 1
+
+    strategy:
+      matrix:
+        os: [ macos-14, macos-15 ]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Brew fixup
+        run: |
+          brew uninstall ruby@3.0 | true
+          brew unlink ruby@3.0 | true
+
+          brew uninstall openssl@1.1 | true
+          brew link --overwrite openssl@3
+
+          brew untap homebrew/cask | true
+          brew untap homebrew/core | true
+
+          brew install ruby | true
+
+          brew update
+          brew upgrade
+          brew cleanup |true
+          brew doctor |true
+          ruby -v
+
+      - name: Create workspace
+        run: |
+          ./flutter_workspace.py
+
+      - name: Test workspace
+        run: |
+          source ./setup_env.sh
+          flutter doctor -v
+          dart --version
