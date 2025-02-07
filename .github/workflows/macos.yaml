@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ macos-14, macos-15 ]
+        os: [ macos-13, macos-14, macos-15 ]
 
     runs-on: ${{ matrix.os }}
 
@@ -35,6 +35,7 @@ jobs:
           brew cleanup |true
           brew doctor |true
           ruby -v
+          
 
       - name: Create workspace
         run: |

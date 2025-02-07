@@ -1179,6 +1179,12 @@ def get_darwin_major_version() -> str:
     return str(major)
 
 
+def get_darwin_brew_prefix() -> str:
+    """Returns brew prefix for selected package"""
+    
+    return ""
+
+
 def get_host_type() -> str:
     """Returns host system"""
     return system().lower().rstrip()
@@ -1326,8 +1332,7 @@ def handle_pre_requisites(obj, cwd):
                 os_version = distro[host_os_version_id]
                 handle_commands(os_version.get('cmds', None), cwd)
         else:
-            print('handle_pre_requisites: Not supported')
-            exit(1)
+            print(f'handle_pre_requisites: Not supported: [{host_os_release_id}, {host_os_version_id}]')
 
 
 def get_filename_from_url(url):
@@ -1966,7 +1971,7 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
             llvm_base_path = '/usr'
         elif host_type == 'darwin':
             prefer_llvm = None
-            llvm_base_path = '/opt/homebrew'
+            llvm_base_path = get_mac_brew_prefix('llvm')
 
         llvm_config = find_llvm_config_in_sysroot(llvm_base_path, prefer_llvm)
         if llvm_config:
@@ -2226,6 +2231,12 @@ def get_mac_brew_path() -> str:
     return result.stdout.decode('utf-8').rstrip()
 
 
+def get_mac_brew_prefix(package) -> str:
+    """ Read brew prefix for selected package """
+    result = subprocess.run(['brew', '--prefix', package], stdout=subprocess.PIPE)
+    return result.stdout.decode('utf-8').rstrip()
+
+
 def activate_python_venv():
     """Activate Python Virtual Environment using venv"""
     workspace = get_ws_folder()
@@ -2301,7 +2312,7 @@ def install_minimum_runtime_deps():
         subprocess.run(['brew', 'update'])
         subprocess.run(['brew', 'doctor'])
 
-        packages = 'brew install git git-lfs unzip curl python3'.split(' ')
+        packages = 'brew install git git-lfs unzip curl'.split(' ')
         subprocess.check_output(packages)
 
         # bootstrap with venv
