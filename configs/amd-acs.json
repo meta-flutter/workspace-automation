@@ -13,28 +13,32 @@
         "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
         "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/lib",
         "INSTALL_PREFIX": "${FLUTTER_WORKSPACE}/amdgpu/",
-        "AMD_ACS_WAYLAND_SRC_DIR": "${FLUTTER_WORKSPACE}/app/wayland",
-        "AMD_ACS_WAYLAND_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/wayland/buildDir",
+        "SRC_SUBPATH": "amd-acs",
+        "AMD_ACS_WAYLAND_SRC_DIR": "${FLUTTER_WORKSPACE}/app/${SRC_SUBPATH}/wayland",
+        "AMD_ACS_WAYLAND_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/${SRC_SUBPATH}/wayland/buildDir",
         "AMD_ACS_WAYLAND_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX}",
-        "AMD_ACS_WAYLAND_PROTOCOLS_SRC_DIR": "${FLUTTER_WORKSPACE}/app/wayland-protocols",
-        "AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/wayland-protocols/buildDir",
+        "AMD_ACS_WAYLAND_PROTOCOLS_SRC_DIR": "${FLUTTER_WORKSPACE}/app/${SRC_SUBPATH}/wayland-protocols",
+        "AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/${SRC_SUBPATH}/wayland-protocols/buildDir",
         "AMD_ACS_WAYLAND_PROTOCOLS_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX}",
-        "AMD_ACS_WESTON_SRC_DIR": "${FLUTTER_WORKSPACE}/app/weston",
-        "AMD_ACS_WESTON_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/weston/buildDir",
+        "AMD_ACS_WESTON_SRC_DIR": "${FLUTTER_WORKSPACE}/app/${SRC_SUBPATH}/weston",
+        "AMD_ACS_WESTON_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/${SRC_SUBPATH}/weston/buildDir",
         "AMD_ACS_WESTON_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX} -Dbackend-rdp=false -Dbackend-drm-screencast-vaapi=false -Dbackend-x11=false -Dxwayland=false -Dbackend-vnc=false -Dscreenshare=false -Dsimple-clients=damage,im,egl,shm,touch,dmabuf-feedback,dmabuf-egl"
     },
     "src": [
         {
             "uri": "https://gitlab.com/acs-wayland/wayland.git",
-            "branch": "amd-acs-main"
+            "branch": "amd-acs-main",
+            "subpath": "${SRC_SUBPATH}"
         },
         {
             "uri": "https://gitlab.com/acs-wayland/wayland-protocols.git",
-            "branch": "amd-acs-main"
+            "branch": "amd-acs-main",
+            "subpath": "${SRC_SUBPATH}"
         },
         {
             "uri": "https://gitlab.com/acs-wayland/weston.git",
-            "branch": "amd-acs-main"
+            "branch": "amd-acs-main",
+            "subpath": "${SRC_SUBPATH}"
         }
     ],
     "runtime": {
