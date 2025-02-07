@@ -13,51 +13,45 @@
         "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
         "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/lib",
         "INSTALL_PREFIX": "${FLUTTER_WORKSPACE}/AGL/",
-        "SRC_SUBPATH": "agl/salmon",
-        "SEATD_SRC_DIR": "${FLUTTER_WORKSPACE}/app/${SRC_SUBPATH}/seatd",
-        "SEATD_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/${SRC_SUBPATH}/seatd/buildDir",
+        "SEATD_SRC_DIR": "${FLUTTER_WORKSPACE}/app/seatd",
+        "SEATD_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/seatd/buildDir",
         "SEATD_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX}",
-        "WAYLAND_SRC_DIR": "${FLUTTER_WORKSPACE}/app/${SRC_SUBPATH}/wayland",
-        "WAYLAND_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/${SRC_SUBPATH}/wayland/buildAglDir",
+        "WAYLAND_SRC_DIR": "${FLUTTER_WORKSPACE}/app/wayland",
+        "WAYLAND_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/wayland/buildAglDir",
         "WAYLAND_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX}",
-        "WAYLAND_PROTOCOLS_SRC_DIR": "${FLUTTER_WORKSPACE}/app/${SRC_SUBPATH}/wayland-protocols",
-        "WAYLAND_PROTOCOLS_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/${SRC_SUBPATH}/wayland-protocols/buildAglDir",
+        "WAYLAND_PROTOCOLS_SRC_DIR": "${FLUTTER_WORKSPACE}/app/wayland-protocols",
+        "WAYLAND_PROTOCOLS_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/wayland-protocols/buildAglDir",
         "WAYLAND_PROTOCOLS_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX}",
-        "WESTON_SRC_DIR": "${FLUTTER_WORKSPACE}/app/${SRC_SUBPATH}/weston",
-        "WESTON_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/${SRC_SUBPATH}/agl-compositor/buildDir",
+        "WESTON_SRC_DIR": "${FLUTTER_WORKSPACE}/app/weston",
+        "WESTON_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/agl-compositor/buildDir",
         "WESTON_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX} -Dbackend-drm=true -Dbackend-drm-screencast-vaapi=false -Dbackend-headless=false -Dbackend-pipewire=false -Dbackend-rdp=false -Dscreenshare=false -Dbackend-vnc=false -Dbackend-wayland=true -Dbackend-x11=false -Dbackend-default=wayland -Dxwayland=false -Dsystemd=false -Dremoting=false -Dpipewire=false -Dsimple-clients=damage,im,egl,shm,touch,dmabuf-feedback,dmabuf-egl",
-        "AGL_COMPOSITOR_SRC_DIR": "${FLUTTER_WORKSPACE}/app/${SRC_SUBPATH}/agl-compositor",
-        "AGL_COMPOSITOR_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/${SRC_SUBPATH}/agl-compositor/buildDir",
+        "AGL_COMPOSITOR_SRC_DIR": "${FLUTTER_WORKSPACE}/app/agl-compositor",
+        "AGL_COMPOSITOR_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/agl-compositor/buildDir",
         "AGL_COMPOSITOR_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${INSTALL_PREFIX} -Ddrm-lease=false -Dgrpc-proxy=false -Dpolicy-default=allow-all -Dxwayland=false",
         "WAYPP_SRC_DIR": "${FLUTTER_WORKSPACE}/app/waypp",
         "WAYPP_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/waypp/build",
-        "WAYPP_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DLLVM_CONFIG=${LLVM_CONFIG} -DENABLE_LTO=ON -DENABLE_STATIC_LINK=ON -DENABLE_AGL_SHELL_CLIENT=ON -DWAYPP_BUILD_EXAMPLES=ON"
+        "WAYPP_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DLLVM_CONFIG=${LLVM_CONFIG} -DENABLE_LTO=ON -DENABLE_AGL_SHELL_CLIENT=ON -DBUILD_EXAMPLES=ON"
     },
     "src": [
         {
             "uri": "https://git.sr.ht/~kennylevinsen/seatd",
-            "branch": "0.9.1",
-            "subpath": "${SRC_SUBPATH}"
+            "branch": "0.9.1"
         },
         {
             "uri": "https://gitlab.freedesktop.org/wayland/wayland.git",
-            "branch": "1.23",
-            "subpath": "${SRC_SUBPATH}"
+            "branch": "1.23"
         },
         {
             "uri": "https://gitlab.freedesktop.org/wayland/wayland-protocols.git",
-            "branch": "1.40",
-            "subpath": "${SRC_SUBPATH}"
+            "branch": "1.31"
         },
         {
             "uri": "https://gitlab.freedesktop.org/wayland/weston.git",
-            "branch": "13.0",
-            "subpath": "${SRC_SUBPATH}"
+            "branch": "13.0"
         },
         {
             "uri": "https://gerrit.automotivelinux.org/gerrit/src/agl-compositor.git",
-            "branch": "salmon",
-            "subpath": "${SRC_SUBPATH}"
+            "branch": "salmon"
         },
         {
             "uri": "https://github.com/jwinarske/waypp.git",
@@ -65,7 +59,7 @@
         },
         {
             "uri": "https://gerrit.automotivelinux.org/gerrit/apps/flutter-ics-homescreen.git",
-            "subpath": "${SRC_SUBPATH}"
+            "branch": "salmon"
         }
     ],
     "runtime": {
