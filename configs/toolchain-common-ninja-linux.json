@@ -1,5 +1,5 @@
 {
-    "id": "toolchain-common-ninja",
+    "id": "toolchain-common-ninja-linux",
     "load": true,
     "supported_archs": [
         "aarch64",

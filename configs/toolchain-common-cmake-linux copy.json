@@ -1,5 +1,5 @@
 {
-    "id": "toolchain-common-cmake",
+    "id": "toolchain-common-cmake-linux",
     "load": true,
     "supported_archs": [
         "aarch64",

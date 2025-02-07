@@ -7,6 +7,7 @@
         "x86_64"
     ],
     "supported_host_types": [
+        "darwin",
         "fedora",
         "ubuntu"
     ],
@@ -37,8 +38,7 @@
                 "cmds": [
                     "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
                     "cmake -G Ninja ${RIVE_TEXT_CMAKE_ARGS} -S ${RIVE_TEXT_SRC_DIR} -B ${RIVE_TEXT_BUILD_DIR}",
-                    "ninja -j${HARDWARE_THREADS}",
-                    "${LLVM_STRIP} librive_text.so.${VERSION}"
+                    "ninja -j${HARDWARE_THREADS}"
                 ]
             }
         ],

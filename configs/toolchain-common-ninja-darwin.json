@@ -1,0 +1,31 @@
+{
+    "id": "toolchain-common-ninja-darwin",
+    "load": true,
+    "supported_archs": [
+        "arm64",
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "darwin"
+    ],
+    "type": "toolchain",
+    "toolchain": "common",
+    "runtime": {
+        "pre-requisites": {
+            "arm64": {
+                "darwin": {
+                    "cmds": [
+                        "brew install ninja"
+                    ]
+                }
+            },
+            "x86_64": {
+                "darwin": {
+                    "cmds": [
+                        "brew install ninja"
+                    ]
+                }
+            }
+        }
+    }
+}
