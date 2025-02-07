@@ -586,7 +586,7 @@ def validate_custom_device_config(config):
     return True
 
 
-def get_repo(base_folder, uri, branch, rev):
+def get_repo(base_folder, uri, branch, rev, subpath):
     """ Clone Git Repo """
     if not uri:
         print("repo entry needs a 'uri' key.  Skipping")
@@ -602,16 +602,22 @@ def get_repo(base_folder, uri, branch, rev):
 
     print_banner(f'Fetching: {repo_name}')
 
+    if subpath:
+        subpath = os.path.expandvars(subpath)
+        base_folder = os.path.join(base_folder, subpath)
+        make_sure_path_exists(base_folder)
+
     git_folder = os.path.join(base_folder, repo_name)
+
     git_hidden_folder = os.path.join(git_folder, '.git')
 
-    # print_banner(f'Checking if file exists: {git_hidden_folder}')
+    print_banner(f'Checking if file exists: {git_hidden_folder}')
     if os.path.exists(git_hidden_folder):
-        # print_banner(f'git reset --hard: {repo_name}')
+        print_banner(f'git reset --hard: {repo_name}')
         cmd = ['git', 'reset', '--hard']
         subprocess.check_call(cmd, cwd=git_folder)
 
-        # print_banner(f'git fetch --all: {repo_name}')
+        print_banner(f'git fetch --all: {repo_name}')
         cmd = ['git', 'fetch', '--all']
         subprocess.check_call(cmd, cwd=git_folder)
 
@@ -619,14 +625,14 @@ def get_repo(base_folder, uri, branch, rev):
         cmd = ['git', 'pull', 'origin', branch]
         subprocess.check_call(cmd, cwd=git_folder)
     else:
-        # print_banner(f'Checking if folder exists: {git_folder}')
+        print_banner(f'Checking if folder exists: {git_folder}')
         if (os.path.exists(git_folder)):
             try:
                 subprocess.run(['rm', '-rf', git_folder], cwd=base_folder, check=True)
             except subprocess.CalledProcessError:
                 pass
 
-        # print_banner(f'git clone {uri} -b {branch} {repo_name}')
+        print_banner(f'git clone {uri} -b {branch} {repo_name}')
         cmd = ['git', 'clone', uri, '-b', branch, repo_name]
         subprocess.check_call(cmd, cwd=base_folder)
 
@@ -671,7 +677,7 @@ def get_workspace_repos(base_folder, config):
         futures = []
         for repo in repos:
             futures.append(executor.submit(get_repo, base_folder=base_folder, uri=repo.get(
-                'uri'), branch=repo.get('branch'), rev=repo.get('rev')))
+                'uri'), branch=repo.get('branch'), rev=repo.get('rev'), subpath=repo.get('subpath')))
             validate_sudo_user()
 
         for _ in concurrent.futures.as_completed(futures):
@@ -706,7 +712,7 @@ def get_platform_src(src, base_folder: str):
         futures = []
         for repo in src:
             futures.append(executor.submit(get_repo, base_folder=base_folder, uri=repo.get(
-                'uri'), branch=repo.get('branch'), rev=repo.get('rev')))
+                'uri'), branch=repo.get('branch'), rev=repo.get('rev'), subpath=repo.get('subpath')))
             validate_sudo_user()
 
         for future in concurrent.futures.as_completed(futures):
@@ -1763,6 +1769,9 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app
         if platform_['type'] == 'toolchain':
             return
 
+    handle_dotenv(platform_.get('dotenv'))
+    handle_env(platform_.get('env'), None)
+
     # setup environmental variable to use in later occuring CMake configs
     if 'load' in platform_ and 'id' in platform_:
         id = platform_['id']
@@ -1807,9 +1816,6 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app
     cwd = get_platform_working_dir(platform_['id'])
 
     validate_sudo_user()
-
-    handle_dotenv(platform_.get('dotenv'))
-    handle_env(platform_.get('env'), None)
 
     create_platform_config_file(runtime.get('config'), cwd)
     create_gclient_config_file(runtime.get('gclient_config'))
