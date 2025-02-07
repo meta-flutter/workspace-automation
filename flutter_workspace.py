@@ -89,6 +89,9 @@ def main():
     # check python version
     check_python_version()
 
+    if os.environ.get('PYTHON') == None:
+        os.environ['PYTHON'] = sys.executable
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--clean', default=False,
                         action='store_true', help='Wipes workspace clean')
@@ -1150,6 +1153,32 @@ def get_freedesktop_os_release_version_id() -> str:
     """Returns OS Release VERSION_ID value"""
     return get_freedesktop_os_release().get('VERSION_ID').rstrip()
 
+
+def break_version(version):
+    import re
+    match = re.match(r'^(\d+)(?:\.(\d+))?(?:\.(\d+))?$', version)
+    if match:
+        major = int(match.group(1))
+        minor = int(match.group(2)) if match.group(2) else 0
+        patch = int(match.group(3)) if match.group(3) else 0
+        return major, minor, patch
+    else:
+        raise ValueError("Invalid version format")
+
+
+def get_darwin_version() -> str:
+    """Returns Darwin version value"""
+    return platform.mac_ver()[0]
+
+
+def get_darwin_major_version() -> str:
+    """Returns Darwin version value"""
+    version = get_darwin_version()
+    major, _, _ = break_version(version)
+    print_banner(f'Darwin {major}')
+    return str(major)
+
+
 def get_host_type() -> str:
     """Returns host system"""
     return system().lower().rstrip()
@@ -1279,16 +1308,21 @@ def handle_pre_requisites(obj, cwd):
 
         host_type = get_host_type()
 
+        host_os_version_id = ''
+        host_os_release_id = ''
         if host_type == "linux":
-            host_type = get_freedesktop_os_release_id()
-            host_type = host_type.lower()
+            host_os_release_id = get_freedesktop_os_release_id()
+            host_os_version_id = get_freedesktop_os_release_version_id()
+        if host_type == "darwin":
+            host_os_release_id = "darwin"
+            host_os_version_id = get_darwin_major_version()
 
-        if host_specific_pre_requisites.get(host_type):
-            distro = host_specific_pre_requisites[host_type]
+        if host_specific_pre_requisites.get(host_os_release_id):
+            distro = host_specific_pre_requisites[host_os_release_id]
             handle_conditionals(distro.get('conditionals'), cwd)
             handle_commands(distro.get('cmds', None), cwd)
-            host_os_version_id = get_freedesktop_os_release_version_id()
-            if host_os_version_id in distro:
+
+            if distro.get(host_os_version_id):
                 os_version = distro[host_os_version_id]
                 handle_commands(os_version.get('cmds', None), cwd)
         else:
@@ -2198,9 +2232,16 @@ def activate_python_venv():
     config_folder = os.path.join(workspace, '.config')
     venv_dir = os.path.join(config_folder, 'venv')
 
-    subprocess.check_call([sys.executable, '-m', 'venv', venv_dir], stdout=subprocess.DEVNULL)
-    os.environ['PATH'] = '%s:%s' % (os.path.join(venv_dir, 'bin'), os.environ.get('PATH'))
-    
+    subprocess.check_call([os.environ['PYTHON'], '-m', 'venv', venv_dir], stdout=subprocess.DEVNULL)
+    os.environ['PATH'] = "%s:%s" % (os.path.join(venv_dir, 'bin'), os.environ.get('PATH'))
+
+    # switch python to new path
+    python_path = subprocess.check_output(['which','python3']).decode().strip()
+    os.environ['PYTHON'] = python_path
+
+    cmd = f'{python_path} -m pip install --upgrade pip'.split(' ')
+    subprocess.check_output(cmd)
+
 
 def activate_python_virtualenv():
     """Activate Python Virtual Environment using virtualenv"""
@@ -2208,11 +2249,23 @@ def activate_python_virtualenv():
     config_folder = os.path.join(workspace, '.config')
     venv_dir = os.path.join(config_folder, 'venv')
 
-    subprocess.check_call([sys.executable, '-m', 'virtualenv', venv_dir], stdout=subprocess.DEVNULL)
+    # remove potenial conflict
+    if os.environ.get('PYTHONPATH'):
+        del os.environ['PYTHONPATH']
 
+    # create virtual environment
+    subprocess.check_call([os.environ['PYTHON'], '-m', 'virtualenv', venv_dir], stdout=subprocess.DEVNULL)
+
+    # swtich to virtualenv
     activate_this_file = os.path.join(venv_dir, 'bin', 'activate_this.py')
     exec(compile(open(activate_this_file, 'rb').read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
-    subprocess.run(['which', 'python3'])
+
+    # switch to python in new path
+    python_path = subprocess.check_output(['which','python3']).decode().strip()
+    os.environ['PYTHON'] = python_path
+
+    cmd = f'{python_path} -m pip install --upgrade pip'.split(' ')
+    subprocess.check_output(cmd)
 
 
 def install_minimum_runtime_deps():
@@ -2248,16 +2301,17 @@ def install_minimum_runtime_deps():
         subprocess.run(['brew', 'update'])
         subprocess.run(['brew', 'doctor'])
 
-        packages = 'brew install git git-lfs unzip curl python3 pyenv-virtualenv'.split(' ')
+        packages = 'brew install git git-lfs unzip curl python3'.split(' ')
         subprocess.check_output(packages)
 
         # bootstrap with venv
         activate_python_venv()
 
-    activate_python_virtualenv()
+        cmd = 'python3 -m pip install virtualenv'.split(' ')
+        subprocess.check_output(cmd)
 
-    cmd = 'python3 -m pip install --upgrade pip'.split(' ')
-    subprocess.check_output(cmd)
+
+    activate_python_virtualenv()
 
     cmd = 'python3 -m pip install pycurl toml python-dotenv'.split(' ')
     subprocess.check_output(cmd)
