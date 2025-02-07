@@ -2193,11 +2193,26 @@ def get_mac_brew_path() -> str:
 
 
 def activate_python_venv():
+    """Activate Python Virtual Environment using venv"""
     workspace = get_ws_folder()
     config_folder = os.path.join(workspace, '.config')
     venv_dir = os.path.join(config_folder, 'venv')
+
     subprocess.check_call([sys.executable, '-m', 'venv', venv_dir], stdout=subprocess.DEVNULL)
     os.environ['PATH'] = '%s:%s' % (os.path.join(venv_dir, 'bin'), os.environ.get('PATH'))
+    
+
+def activate_python_virtualenv():
+    """Activate Python Virtual Environment using virtualenv"""
+    workspace = get_ws_folder()
+    config_folder = os.path.join(workspace, '.config')
+    venv_dir = os.path.join(config_folder, 'venv')
+
+    subprocess.check_call([sys.executable, '-m', 'virtualenv', venv_dir], stdout=subprocess.DEVNULL)
+
+    activate_this_file = os.path.join(venv_dir, 'bin', 'activate_this.py')
+    exec(compile(open(activate_this_file, 'rb').read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
+    subprocess.run(['which', 'python3'])
 
 
 def install_minimum_runtime_deps():
@@ -2211,15 +2226,13 @@ def install_minimum_runtime_deps():
 
         if os_release_id == 'ubuntu':
             subprocess.check_output(['sudo', 'apt', 'update', '-y'])
-            packages = 'sudo apt install --no-install-recommends -y git git-lfs unzip curl python3-pip libcurl4-openssl-dev libssl-dev libgtk-3-dev python3-venv python3-pycurl python3-toml python3-dotenv python3-pip python3-dev build-essential libcurl4-openssl-dev'.split(' ')
+            packages = 'sudo apt install --no-install-recommends -y git git-lfs unzip curl python3-dev python3-virtualenv libcurl4-openssl-dev libssl-dev libgtk-3-dev build-essential libcurl4-openssl-dev'.split(' ')
             subprocess.check_output(packages)
 
         elif os_release_id == 'fedora':
             subprocess.check_output(['sudo', 'dnf', '-y', 'update'])
-            packages = 'sudo dnf -y install dnf-plugins-core git git-lfs unzip curl python3-pip libcurl-devel openssl-devel gtk3-devel python3-virtualenv python3-pycurl python3-toml python3-dotenv python3-devel gcc libcurl-devel'.split(' ')
+            packages = 'sudo dnf -y install dnf-plugins-core git git-lfs unzip curl python3-devel python3-virtualenv libcurl-devel openssl-devel gtk3-devel gcc libcurl-devel'.split(' ')
             subprocess.check_output(packages)
-
-        activate_python_venv()
 
 
     if host_type == "darwin":
@@ -2235,16 +2248,19 @@ def install_minimum_runtime_deps():
         subprocess.run(['brew', 'update'])
         subprocess.run(['brew', 'doctor'])
 
-        packages = 'brew install git git-lfs unzip curl python3'.split(' ')
+        packages = 'brew install git git-lfs unzip curl python3 pyenv-virtualenv'.split(' ')
         subprocess.check_output(packages)
 
+        # bootstrap with venv
         activate_python_venv()
 
-        cmd = 'pip install --upgrade pip'.split(' ')
-        subprocess.check_output(cmd)
+    activate_python_virtualenv()
 
-        cmd = 'python -m pip install toml pycurl python-dotenv'.split(' ')
-        subprocess.check_output(cmd)
+    cmd = 'python3 -m pip install --upgrade pip'.split(' ')
+    subprocess.check_output(cmd)
+
+    cmd = 'python3 -m pip install pycurl toml python-dotenv'.split(' ')
+    subprocess.check_output(cmd)
 
 
 def is_repo(path):
