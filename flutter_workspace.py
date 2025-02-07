@@ -89,6 +89,9 @@ def main():
     # check python version
     check_python_version()
 
+    if os.environ.get('PYTHON') == None:
+        os.environ['PYTHON'] = sys.executable
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--clean', default=False,
                         action='store_true', help='Wipes workspace clean')
@@ -1150,6 +1153,38 @@ def get_freedesktop_os_release_version_id() -> str:
     """Returns OS Release VERSION_ID value"""
     return get_freedesktop_os_release().get('VERSION_ID').rstrip()
 
+
+def break_version(version):
+    import re
+    match = re.match(r'^(\d+)(?:\.(\d+))?(?:\.(\d+))?$', version)
+    if match:
+        major = int(match.group(1))
+        minor = int(match.group(2)) if match.group(2) else 0
+        patch = int(match.group(3)) if match.group(3) else 0
+        return major, minor, patch
+    else:
+        raise ValueError("Invalid version format")
+
+
+def get_darwin_version() -> str:
+    """Returns Darwin version value"""
+    return platform.mac_ver()[0]
+
+
+def get_darwin_major_version() -> str:
+    """Returns Darwin version value"""
+    version = get_darwin_version()
+    major, _, _ = break_version(version)
+    print_banner(f'Darwin {major}')
+    return str(major)
+
+
+def get_darwin_brew_prefix() -> str:
+    """Returns brew prefix for selected package"""
+    
+    return ""
+
+
 def get_host_type() -> str:
     """Returns host system"""
     return system().lower().rstrip()
@@ -1279,21 +1314,25 @@ def handle_pre_requisites(obj, cwd):
 
         host_type = get_host_type()
 
+        host_os_version_id = ''
+        host_os_release_id = ''
         if host_type == "linux":
-            host_type = get_freedesktop_os_release_id()
-            host_type = host_type.lower()
+            host_os_release_id = get_freedesktop_os_release_id()
+            host_os_version_id = get_freedesktop_os_release_version_id()
+        if host_type == "darwin":
+            host_os_release_id = "darwin"
+            host_os_version_id = get_darwin_major_version()
 
-        if host_specific_pre_requisites.get(host_type):
-            distro = host_specific_pre_requisites[host_type]
+        if host_specific_pre_requisites.get(host_os_release_id):
+            distro = host_specific_pre_requisites[host_os_release_id]
             handle_conditionals(distro.get('conditionals'), cwd)
             handle_commands(distro.get('cmds', None), cwd)
-            host_os_version_id = get_freedesktop_os_release_version_id()
-            if host_os_version_id in distro:
+
+            if distro.get(host_os_version_id):
                 os_version = distro[host_os_version_id]
                 handle_commands(os_version.get('cmds', None), cwd)
         else:
-            print('handle_pre_requisites: Not supported')
-            exit(1)
+            print(f'handle_pre_requisites: Not supported: [{host_os_release_id}, {host_os_version_id}]')
 
 
 def get_filename_from_url(url):
@@ -1932,7 +1971,7 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
             llvm_base_path = '/usr'
         elif host_type == 'darwin':
             prefer_llvm = None
-            llvm_base_path = '/opt/homebrew'
+            llvm_base_path = get_mac_brew_prefix('llvm')
 
         llvm_config = find_llvm_config_in_sysroot(llvm_base_path, prefer_llvm)
         if llvm_config:
@@ -2192,12 +2231,52 @@ def get_mac_brew_path() -> str:
     return result.stdout.decode('utf-8').rstrip()
 
 
+def get_mac_brew_prefix(package) -> str:
+    """ Read brew prefix for selected package """
+    result = subprocess.run(['brew', '--prefix', package], stdout=subprocess.PIPE)
+    return result.stdout.decode('utf-8').rstrip()
+
+
 def activate_python_venv():
+    """Activate Python Virtual Environment using venv"""
     workspace = get_ws_folder()
     config_folder = os.path.join(workspace, '.config')
     venv_dir = os.path.join(config_folder, 'venv')
-    subprocess.check_call([sys.executable, '-m', 'venv', venv_dir], stdout=subprocess.DEVNULL)
-    os.environ['PATH'] = '%s:%s' % (os.path.join(venv_dir, 'bin'), os.environ.get('PATH'))
+
+    subprocess.check_call([os.environ['PYTHON'], '-m', 'venv', venv_dir], stdout=subprocess.DEVNULL)
+    os.environ['PATH'] = "%s:%s" % (os.path.join(venv_dir, 'bin'), os.environ.get('PATH'))
+
+    # switch python to new path
+    python_path = subprocess.check_output(['which','python3']).decode().strip()
+    os.environ['PYTHON'] = python_path
+
+    cmd = f'{python_path} -m pip install --upgrade pip'.split(' ')
+    subprocess.check_output(cmd)
+
+
+def activate_python_virtualenv():
+    """Activate Python Virtual Environment using virtualenv"""
+    workspace = get_ws_folder()
+    config_folder = os.path.join(workspace, '.config')
+    venv_dir = os.path.join(config_folder, 'venv')
+
+    # remove potenial conflict
+    if os.environ.get('PYTHONPATH'):
+        del os.environ['PYTHONPATH']
+
+    # create virtual environment
+    subprocess.check_call([os.environ['PYTHON'], '-m', 'virtualenv', venv_dir], stdout=subprocess.DEVNULL)
+
+    # swtich to virtualenv
+    activate_this_file = os.path.join(venv_dir, 'bin', 'activate_this.py')
+    exec(compile(open(activate_this_file, 'rb').read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
+
+    # switch to python in new path
+    python_path = subprocess.check_output(['which','python3']).decode().strip()
+    os.environ['PYTHON'] = python_path
+
+    cmd = f'{python_path} -m pip install --upgrade pip'.split(' ')
+    subprocess.check_output(cmd)
 
 
 def install_minimum_runtime_deps():
@@ -2211,15 +2290,13 @@ def install_minimum_runtime_deps():
 
         if os_release_id == 'ubuntu':
             subprocess.check_output(['sudo', 'apt', 'update', '-y'])
-            packages = 'sudo apt install --no-install-recommends -y git git-lfs unzip curl python3-pip libcurl4-openssl-dev libssl-dev libgtk-3-dev python3-venv python3-pycurl python3-toml python3-dotenv python3-pip python3-dev build-essential libcurl4-openssl-dev'.split(' ')
+            packages = 'sudo apt install --no-install-recommends -y git git-lfs unzip curl python3-dev python3-virtualenv libcurl4-openssl-dev libssl-dev libgtk-3-dev build-essential libcurl4-openssl-dev'.split(' ')
             subprocess.check_output(packages)
 
         elif os_release_id == 'fedora':
             subprocess.check_output(['sudo', 'dnf', '-y', 'update'])
-            packages = 'sudo dnf -y install dnf-plugins-core git git-lfs unzip curl python3-pip libcurl-devel openssl-devel gtk3-devel python3-virtualenv python3-pycurl python3-toml python3-dotenv python3-devel gcc libcurl-devel'.split(' ')
+            packages = 'sudo dnf -y install dnf-plugins-core git git-lfs unzip curl python3-devel python3-virtualenv libcurl-devel openssl-devel gtk3-devel gcc libcurl-devel'.split(' ')
             subprocess.check_output(packages)
-
-        activate_python_venv()
 
 
     if host_type == "darwin":
@@ -2235,16 +2312,20 @@ def install_minimum_runtime_deps():
         subprocess.run(['brew', 'update'])
         subprocess.run(['brew', 'doctor'])
 
-        packages = 'brew install git git-lfs unzip curl python3'.split(' ')
+        packages = 'brew install git git-lfs unzip curl'.split(' ')
         subprocess.check_output(packages)
 
+        # bootstrap with venv
         activate_python_venv()
 
-        cmd = 'pip install --upgrade pip'.split(' ')
+        cmd = 'python3 -m pip install virtualenv'.split(' ')
         subprocess.check_output(cmd)
 
-        cmd = 'python -m pip install toml pycurl python-dotenv'.split(' ')
-        subprocess.check_output(cmd)
+
+    activate_python_virtualenv()
+
+    cmd = 'python3 -m pip install pycurl toml python-dotenv'.split(' ')
+    subprocess.check_output(cmd)
 
 
 def is_repo(path):

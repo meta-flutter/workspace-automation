@@ -45,6 +45,11 @@
         }
       },
       "x86_64": {
+        "darwin": {
+          "cmds": [
+            "brew install llvm"
+          ]
+        },
         "ubuntu": {
           "cmds": [
             "sudo apt update -y",
