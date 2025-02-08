@@ -1599,7 +1599,7 @@ def handle_qemu_obj(qemu: dict, cwd: os.path, platform_id: str, flutter_runtime:
         # terminal_cmd = cmd + " " + args
     elif host_type == "darwin":
         apple_script_filename = 'run-' + platform_id + '.scpt'
-        terminal_cmd = f'osascript "\$FLUTTER_WORKSPACE/{apple_script_filename}"'
+        terminal_cmd = f'osascript "$FLUTTER_WORKSPACE/{apple_script_filename}"'
         apple_script_file = os.path.join(
             flutter_workspace, apple_script_filename)
         with open(apple_script_file, 'w+', encoding="utf-8") as file:

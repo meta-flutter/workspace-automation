@@ -2,6 +2,7 @@
   "id": "agl-ivi-demo-flutter-qemu",
   "load": false,
   "supported_archs": [
+    "aarch64",
     "arm64",
     "x86_64"
   ],
@@ -40,8 +41,14 @@
       "arm64": {
         "darwin": {
           "cmds": [
-            "bash -c \"arch -arm64 brew install xz\"",
-            "bash -c \"arch -arm64 brew install qemu\""
+            "bash -c \"arch -arm64 brew install xz qemu\""
+          ]
+        }
+      },
+      "x86_64": {
+        "darwin": {
+          "cmds": [
+            "bash -c \"arch -arm64 brew install xz qemu\""
           ]
         }
       }
@@ -53,6 +60,14 @@
           "x86_64": [
             {
               "endpoint": "/qemux86-64/deploy/images/qemux86-64/agl-ivi-demo-flutter-qemux86-64.wic.xz"
+            }
+          ],
+          "aarch64": [
+            {
+              "endpoint": "/qemuarm64/deploy/images/qemuarm64/agl-ivi-demo-flutter-qemuarm64.ext4.xz"
+            },
+            {
+              "endpoint": "/qemuarm64/deploy/images/qemuarm64/Image-qemuarm64.bin"
             }
           ],
           "arm64": [
@@ -73,8 +88,8 @@
         "args": "-m 2048 ${QEMU_EXTRA} -hda ${QEMU_IMAGE} -cpu kvm64 -cpu qemu64,+ssse3,+sse4.1,+sse4.2,+popcnt -vga virtio -device virtio-rng-pci -serial mon:stdio -serial null -device intel-hda -device hda-duplex -device virtio-net-pci,netdev=net0,mac=${RANDOM_MAC} -netdev user,id=net0,hostfwd=tcp::${CONTAINER_SSH_PORT}-:22,hostfwd=tcp::${FLUTTER_DEBUG_PORT}-:${FLUTTER_DEBUG_PORT}"
       },
       "arm64": {
-        "kernel": "Image-qemuarm64.bin",
-        "image": "agl-demo-platform-crosssdk-qemuarm64.ext4",
+        "kernel": "artifacts/Image-qemuarm64.bin",
+        "image": "agl-ivi-demo-flutter-qemuarm64.ext4",
         "args": "-accel hvf -cpu host -M virt ${QEMU_EXTRA} -m 4096 -device virtio-gpu-pci -nographic -display cocoa,show-cursor=on -object rng-random,filename=/dev/urandom,id=rng0 -device virtio-rng-pci,rng=rng0 -device qemu-xhci -device usb-tablet -device usb-mouse -device usb-kbd -device virtio-net-pci,netdev=vnet -netdev user,id=vnet,hostfwd=tcp::${CONTAINER_SSH_PORT}-:22,hostfwd=tcp::${FLUTTER_DEBUG_PORT}-:${FLUTTER_DEBUG_PORT} -kernel ${QEMU_KERNEL} -drive file=${QEMU_IMAGE},format=raw,if=virtio -append root=/dev/vda"
       },
       "extra": {
