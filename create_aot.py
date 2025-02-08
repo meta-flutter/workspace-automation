@@ -29,25 +29,20 @@ def main():
     if args.app_path == '':
         sys.exit("Must specify value for --app-path")
 
-    #
-    # Control+C handler
-    #
-    signal.signal(signal.SIGINT, handle_ctrl_c)
-
     create_platform_aot(args.app_path, flutter_sdk_version)
 
 
-def versiontuple(v):
+def version_tuple(v):
     return tuple(map(int, (v.split("."))))
 
 
-def get_flutter_sdk_version() -> str:
+def get_flutter_sdk_version():
     import json
     import subprocess
 
     (retval, output) = subprocess.getstatusoutput('which flutter')
     if retval:
-        print_banner("failed %s (cmd was which flutter)" % (retval))
+        print_banner(f'failed {retval} (cmd was which flutter)')
         return None
 
     bin_path = os.path.dirname(output.rstrip())
@@ -128,7 +123,7 @@ def create_platform_aot(app_path: str, flutter_sdk_version: str):
         flutter_sdk_root = f'{flutter_sdk}/bin/cache/artifacts/engine/common'
 
     new_build_scheme = False
-    if versiontuple(flutter_sdk_version) >= versiontuple('3.24.0'):
+    if version_tuple(flutter_sdk_version) >= version_tuple('3.24.0'):
         print('Using new build scheme')
         new_build_scheme = True
 
@@ -252,7 +247,6 @@ def create_platform_aot(app_path: str, flutter_sdk_version: str):
 
             print_banner(gen_snapshot_variant)
 
-
             if runtime_mode != 'debug':
                 cmd = f'{gen_snapshot} \
                     {app_gen_snapshot_flags} \
@@ -261,7 +255,6 @@ def create_platform_aot(app_path: str, flutter_sdk_version: str):
                 run_command(cmd, app_path)
 
     print_banner('Complete')
-    sys.exit()
 
 
 def check_python_version():
@@ -271,5 +264,6 @@ def check_python_version():
 
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGINT, handle_ctrl_c)
     check_python_version()
     main()

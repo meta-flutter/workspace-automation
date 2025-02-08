@@ -6,11 +6,9 @@
 #
 #
 
-import errno
 import os
-import sys
 import subprocess
-
+import sys
 from platform import system
 from sys import stderr as stream
 
@@ -51,14 +49,6 @@ def run_command(cmd: str, cwd: str) -> str:
     return output.rstrip()
 
 
-def make_sure_path_exists(path: str):
-    try:
-        os.makedirs(path)
-    except OSError as exception:
-        if exception.errno != errno.EEXIST:
-            raise
-
-
 def get_md5sum(file: str) -> str:
     """Return md5sum of specified file"""
     import hashlib
@@ -76,7 +66,7 @@ def get_md5sum(file: str) -> str:
 
 
 def get_sha1sum(file: str) -> str:
-    """Return sha1sum of specified file"""
+    """Return sha1 sum of specified file"""
     import hashlib
 
     if not os.path.exists(file):
@@ -108,9 +98,9 @@ def get_sha256sum(file: str):
 
 
 def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1, sha256, redirect=False, connect_timeout=None):
-    download_filepath = os.path.join(cwd, file)
+    download_filepath = str(os.path.join(cwd, file))
 
-    sha256_file = os.path.join(cwd, file + '.sha256')
+    sha256_file = str(os.path.join(cwd, file + '.sha256'))
     if compare_sha256(download_filepath, sha256_file):
         print("%s exists, skipping download" % download_filepath)
         return True
@@ -195,7 +185,7 @@ def write_sha256_file(cwd: str, filename: str):
 
 
 def fetch_https_progress(download_t, download_d, _upload_t, _upload_d):
-    """callback function for pycurl.XFERINFOFUNCTION"""
+    """callback function for pycurl transfer info function"""
     stream.write('Progress: {}/{} kiB ({}%)\r'.format(str(int(download_d / kb)), str(int(download_t / kb)),
                                                       str(int(download_d / download_t * 100) if download_t > 0 else 0)))
     stream.flush()
@@ -306,6 +296,19 @@ def chown_workspace(username, workspace):
         subprocess.check_call(cmd, cwd=workspace, stdout=subprocess.DEVNULL)
 
 
+def break_version(version):
+    """ Break version string into major, minor, patch """
+    import re
+    match = re.match(r'^(\d+)(?:\.(\d+))?(?:\.(\d+))?$', version)
+    if match:
+        major = int(match.group(1))
+        minor = int(match.group(2)) if match.group(2) else 0
+        patch = int(match.group(3)) if match.group(3) else 0
+        return major, minor, patch
+    else:
+        raise ValueError("Invalid version format")
+
+
 def test_internet_connection() -> bool:
     """Test internet by connecting to nameserver"""
     import pycurl
@@ -319,7 +322,7 @@ def test_internet_connection() -> bool:
     c.setopt(pycurl.NOBODY, 1)
     try:
         c.perform()
-    except:
+    except pycurl.error:
         pass
 
     res = False
