@@ -40,22 +40,21 @@ import sys
 import time
 import zipfile
 from platform import system
+from shlex import quote as shlex_quote
 
 from common import check_python_version
+from common import chown_workspace
 from common import compare_sha256
 from common import download_https_file
 from common import fetch_https_binary_file
-from common import handle_ctrl_c
-from common import make_sure_path_exists
-from common import print_banner
 from common import get_ws_folder
+from common import handle_ctrl_c
+from common import print_banner
 from common import reset_sudo_timestamp
-from common import validate_sudo_user_timestamp
 from common import validate_sudo_user
-from common import chown_workspace
-
-from create_aot import get_flutter_sdk_version
+from common import validate_sudo_user_timestamp
 from create_aot import create_platform_aot
+from create_aot import get_flutter_sdk_version
 
 
 def handle_exception(exc_type, exc_value, exc_traceback):
@@ -81,16 +80,13 @@ def get_flutter_arch():
         os.environ['HOST_ARCH_GOOGLE'] = 'aarch64'
         return 'arm64'
     else:
-        print_banner(f'Unkown host arch: {host_arch}')
+        print_banner(f'Unknown host arch: {host_arch}')
         exit(1)
 
 
 def main():
     # check python version
     check_python_version()
-
-    if os.environ.get('PYTHON') == None:
-        os.environ['PYTHON'] = sys.executable
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--clean', default=False,
@@ -119,12 +115,13 @@ def main():
     parser.add_argument('--plugin-platform', default='linux', type=str, help='specify plugin platform type')
     parser.add_argument('--create-aot', default=False, action='store_true', help='Generate AOT')
     parser.add_argument('--app-path', default='', type=str, help='Specify Application path')
-    parser.add_argument('--copy-dconf-user', default=False, action='store_true', help='copy $HOME/.confi/dconf/user to $FLUTTER_WORKSPACE')
+    parser.add_argument('--copy-dconf-user', default=False, action='store_true',
+                        help='copy $HOME/.confi/dconf/user to $FLUTTER_WORKSPACE')
 
     args = parser.parse_args()
 
     print(f'Arguments {args}')
-    
+
     #
     # Generate Release/Profile AOT
     #
@@ -150,11 +147,6 @@ def main():
         flutter_analyze_git_commits()
         return
 
-    #
-    # Control+C handler
-    #
-    signal.signal(signal.SIGINT, handle_ctrl_c)
-
     user = get_process_stdout('whoami').split('\n')
     username = user[0]
     print_banner("Running as: %s" % username)
@@ -179,7 +171,7 @@ def main():
     print_banner("Setting up Flutter Workspace in: %s" % workspace)
 
     #
-    # Recursively change ownership to logged in user
+    # Recursively change ownership to logged-in user
     #
     chown_workspace(username, workspace)
 
@@ -191,7 +183,7 @@ def main():
     #
     # Create Workspace
     #
-    make_sure_path_exists(workspace)
+    os.makedirs(workspace, exist_ok=True)
 
     if os.path.exists(workspace):
         os.environ['FLUTTER_WORKSPACE'] = workspace
@@ -211,9 +203,9 @@ def main():
 
     globals_ = config.get('globals')
     if 'CMAKE_BUILD_TYPE' in globals_:
-        os.environ['CMAKE_BUILD_TYPE'] = globals_['CMAKE_BUILD_TYPE']
+        os.environ['CMAKE_BUILD_TYPE'] = globals_.get('CMAKE_BUILD_TYPE', 'MinSizeRel')
     if 'MESON_BUILD_TYPE' in globals_:
-        os.environ['MESON_BUILD_TYPE'] = globals_['MESON_BUILD_TYPE']
+        os.environ['MESON_BUILD_TYPE'] = globals_.get('MESON_BUILD_TYPE', 'minsize')
 
     platforms = config.get('platforms')
     for platform_ in platforms:
@@ -358,7 +350,7 @@ def main():
         subprocess.check_call(cmd)
 
     #
-    # Recursively change ownership to logged in user
+    # Recursively change ownership to logged-in user
     #
     chown_workspace(username, workspace)
 
@@ -382,7 +374,7 @@ def copy_dconf_user():
 
     workspace = Path(os.environ.get('FLUTTER_WORKSPACE'))
     dconf_dst = workspace.joinpath('.config', 'flutter', 'dconf')
-    make_sure_path_exists(dconf_dst)
+    os.makedirs(dconf_dst, exist_ok=True)
 
     workspace = Path(os.environ.get('FLUTTER_WORKSPACE'))
     dconf_user_src = os.path.join(os.environ.get('HOME'), '.config', 'dconf', 'user')
@@ -404,7 +396,7 @@ def get_workspace_config(path):
         for filename in sorted(glob.glob(os.path.join(path, '*.json'))):
 
             filepath = os.path.join(os.getcwd(), filename)
-            with open(filepath, 'r') as f:
+            with open(filepath, 'r', encoding="utf-8") as f:
 
                 _, tail = os.path.split(filename)
 
@@ -432,7 +424,7 @@ def get_workspace_config(path):
                         exit(1)
 
     elif os.path.isfile(path):
-        with open(path, 'r') as f:
+        with open(path, 'r', encoding="utf-8") as f:
             try:
                 data = json.load(f)
             except json.decoder.JSONDecodeError:
@@ -605,7 +597,7 @@ def get_repo(base_folder, uri, branch, rev):
 
     print_banner(f'Fetching: {repo_name}')
 
-    git_folder = os.path.join(base_folder, repo_name)
+    git_folder = str(os.path.join(base_folder, repo_name))
     git_hidden_folder = os.path.join(git_folder, '.git')
 
     # print_banner(f'Checking if file exists: {git_hidden_folder}')
@@ -623,7 +615,7 @@ def get_repo(base_folder, uri, branch, rev):
         subprocess.check_call(cmd, cwd=git_folder)
     else:
         # print_banner(f'Checking if folder exists: {git_folder}')
-        if (os.path.exists(git_folder)):
+        if os.path.exists(git_folder):
             try:
                 subprocess.run(['rm', '-rf', git_folder], cwd=base_folder, check=True)
             except subprocess.CalledProcessError:
@@ -702,7 +694,7 @@ def get_platform_ids(platforms: dict) -> list:
 def get_platform_src(src, base_folder: str):
     if src is None:
         return
-    
+
     import concurrent.futures
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -730,7 +722,7 @@ def get_flutter_settings_folder():
         settings_folder = os.path.join(
             os.environ.get('HOME'), '.config', 'flutter')
 
-    make_sure_path_exists(settings_folder)
+    os.makedirs(settings_folder, exist_ok=True)
 
     return settings_folder
 
@@ -749,7 +741,7 @@ def get_flutter_custom_devices():
     custom_config = get_flutter_custom_config_path()
     if os.path.exists(custom_config):
 
-        f = open(custom_config)
+        f = open(custom_config, encoding="utf-8")
         try:
             data = json.load(f)
         except json.decoder.JSONDecodeError:
@@ -774,7 +766,7 @@ def remove_flutter_custom_devices_id(id_):
     custom_config = get_flutter_custom_config_path()
     if os.path.exists(custom_config):
 
-        f = open(custom_config, "r")
+        f = open(custom_config, "r", encoding="utf-8")
         try:
             obj = json.load(f)
         except json.decoder.JSONDecodeError:
@@ -797,8 +789,8 @@ def remove_flutter_custom_devices_id(id_):
             os.remove(custom_config)
             return
 
-        with open(custom_config, "w") as outfile:
-            json.dump(custom_devices, outfile, indent=2)
+        with open(custom_config, "w", encoding="utf-8") as file:
+            json.dump(custom_devices, file, indent=2)
 
     return
 
@@ -817,7 +809,7 @@ def patch_custom_device_strings(devices, flutter_runtime):
 
     for device in devices:
 
-        token = '${FLUTTER_WORKSPACE}'
+        str_token = '${FLUTTER_WORKSPACE}'
 
         if device.get('label'):
             if '${MACHINE_ARCH}' in device['label']:
@@ -843,16 +835,16 @@ def patch_custom_device_strings(devices, flutter_runtime):
 
         if device.get('postBuild'):
             device['postBuild'] = patch_string_array(
-                token, workspace, device['postBuild'])
+                str_token, workspace, device['postBuild'])
 
         if device.get('runDebug'):
             device['runDebug'] = patch_string_array(
-                token, workspace, device['runDebug'])
+                str_token, workspace, device['runDebug'])
 
-        token = '${BUNDLE_FOLDER}'
+        str_token = '${BUNDLE_FOLDER}'
         if device.get('install'):
             device['install'] = patch_string_array(
-                token, bundle_folder, device['install'])
+                str_token, bundle_folder, device['install'])
 
     return devices
 
@@ -905,7 +897,7 @@ def add_flutter_custom_device(device_config, flutter_runtime):
     new_device_list = []
     if os.path.exists(custom_devices_file):
 
-        f = open(custom_devices_file, "r")
+        f = open(custom_devices_file, "r", encoding="utf-8")
         try:
             obj = json.load(f)
         except json.decoder.JSONDecodeError as e:
@@ -928,8 +920,8 @@ def add_flutter_custom_device(device_config, flutter_runtime):
     custom_devices = {'custom-devices': patched_device_list}
 
     print("custom_devices_file: %s" % custom_devices_file)
-    with open(custom_devices_file, "w+") as outfile:
-        json.dump(custom_devices, outfile, indent=4)
+    with open(custom_devices_file, "w+", encoding="utf-8") as file:
+        json.dump(custom_devices, file, indent=4)
 
     return
 
@@ -948,7 +940,7 @@ def add_flutter_custom_device_ex(custom_device):
     new_device_list = []
     if os.path.exists(custom_devices_file):
 
-        f = open(custom_devices_file, "r")
+        f = open(custom_devices_file, "r", encoding="utf-8")
         try:
             obj = json.load(f)
         except json.decoder.JSONDecodeError:
@@ -971,8 +963,8 @@ def add_flutter_custom_device_ex(custom_device):
     custom_devices = {'custom-devices': new_device_list}
 
     print("custom_devices_file: %s" % custom_devices_file)
-    with open(custom_devices_file, "w+") as outfile:
-        json.dump(custom_devices, outfile, indent=4)
+    with open(custom_devices_file, "w+", encoding="utf-8") as file:
+        json.dump(custom_devices, file, indent=4)
 
     return
 
@@ -1020,8 +1012,8 @@ def configure_flutter_sdk():
 
     settings_file = os.path.join(get_flutter_settings_folder(), 'settings')
 
-    with open(settings_file, "w+") as outfile:
-        json.dump(settings, outfile, indent=2)
+    with open(settings_file, "w+", encoding="utf-8") as file:
+        json.dump(settings, file, indent=2)
 
     cmd = ['flutter', 'config', '--no-analytics']
     subprocess.check_call(cmd)
@@ -1107,7 +1099,7 @@ def get_flutter_engine_version(flutter_sdk_path):
     if not os.path.exists(engine_version_file):
         sys.exit("Missing Flutter SDK")
 
-    with open(engine_version_file) as f:
+    with open(engine_version_file, encoding="utf-8") as f:
         engine_version = f.read()
         print(f"Engine Version: {engine_version.strip()}")
 
@@ -1116,7 +1108,7 @@ def get_flutter_engine_version(flutter_sdk_path):
 
 def get_process_stdout(cmd):
     process = subprocess.Popen(
-        cmd, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+        shlex_quote(cmd), shell=True, stdout=subprocess.PIPE, universal_newlines=True)
     ret = ""
     for line in process.stdout:
         ret += str(line)
@@ -1129,7 +1121,7 @@ def get_freedesktop_os_release() -> dict:
     if not os.path.exists("/etc/os-release"):
         return {}
 
-    with open("/etc/os-release") as f:
+    with open("/etc/os-release", encoding="utf-8") as f:
         d = {}
         for line in f:
             line = line.strip()
@@ -1181,7 +1173,7 @@ def get_darwin_major_version() -> str:
 
 def get_darwin_brew_prefix() -> str:
     """Returns brew prefix for selected package"""
-    
+
     return ""
 
 
@@ -1249,7 +1241,7 @@ def get_flutter_engine_artifacts(clean_workspace, runtime, arch):
 
     if not compare_sha256(archive_file, sha256_file):
         print_banner("Downloading Engine artifact")
-        make_sure_path_exists(cwd_engine)
+        os.makedirs(cwd_engine, exist_ok=True)
         if not download_https_file(cwd_engine, base_url, filename,
                                    None, None, None, None, None, True):
             print_banner("Engine artifact not available")
@@ -1258,7 +1250,7 @@ def get_flutter_engine_artifacts(clean_workspace, runtime, arch):
         print_banner("Skipping Engine artifact download")
 
     restore_folder = os.path.join(cwd_engine, f'engine-sdk-{runtime}-{arch}')
-    make_sure_path_exists(restore_folder)
+    os.makedirs(restore_folder, exist_ok=True)
     subprocess.check_call(['tar', '-xzf', archive_file, '-C', restore_folder])
 
     if clean_workspace:
@@ -1266,14 +1258,16 @@ def get_flutter_engine_artifacts(clean_workspace, runtime, arch):
             subprocess.check_output(["rm", "-rf", bundle_folder], cwd=cwd)
 
     data_folder = os.path.join(bundle_folder, 'data')
-    make_sure_path_exists(data_folder)
+    os.makedirs(data_folder, exist_ok=True)
 
-    icudtl_src = os.path.join(restore_folder, 'src', 'out', f'linux_{runtime}_{arch}', 'engine-sdk', 'data', 'icudtl.dat')
+    icudtl_src = os.path.join(restore_folder, 'src', 'out', f'linux_{runtime}_{arch}', 'engine-sdk', 'data',
+                              'icudtl.dat')
 
     lib_folder = os.path.join(bundle_folder, 'lib')
-    make_sure_path_exists(lib_folder)
+    os.makedirs(lib_folder, exist_ok=True)
 
-    libflutter_engine_src = os.path.join(restore_folder, 'src', 'out', f'linux_{runtime}_{arch}', 'engine-sdk', 'lib', 'libflutter_engine.so')
+    libflutter_engine_src = os.path.join(restore_folder, 'src', 'out', f'linux_{runtime}_{arch}', 'engine-sdk', 'lib',
+                                         'libflutter_engine.so')
 
     subprocess.check_call(["cp", icudtl_src, f'{data_folder}'])
     subprocess.check_call(["cp", libflutter_engine_src, f'{lib_folder}'])
@@ -1356,7 +1350,7 @@ def check_netrc_for_str(pattern):
         print_banner("~/.netrc does not exist")
         return False
 
-    file = open(netrc, "r")
+    file = open(netrc, "r", encoding="utf-8")
     for line in file:
         if pattern in line:
             file.close()
@@ -1414,7 +1408,7 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
 
                 futures.append(executor.submit(download_https_file, cwd, base_url, filename, cookie_file,
                                                netrc, artifact.get('md5'), artifact.get('sha1'),
-                                               artifact.get('sha256'), True))
+                                               artifact.get('sha256'), True, None))
                 validate_sudo_user()
 
             for future in concurrent.futures.as_completed(futures):
@@ -1457,7 +1451,7 @@ def handle_commands_obj(cmd_list, cwd):
 
         if 'cwd' in obj:
             cwd = os.path.expandvars(obj.get('cwd'))
-            make_sure_path_exists(cwd)
+            os.makedirs(cwd, exist_ok=True)
 
         shell_ = False
         if 'shell' in obj:
@@ -1492,6 +1486,7 @@ def docker_compose_stop(docker_compose_yml_dir):
 
     subprocess.check_call(["docker-compose", "stop"],
                           cwd=docker_compose_yml_dir)
+
 
 def handle_docker_obj(obj, _, cwd):
     if not obj:
@@ -1600,25 +1595,23 @@ def handle_qemu_obj(qemu: dict, cwd: os.path, platform_id: str, flutter_runtime:
     terminal_cmd = ''
     host_type = get_host_type()
     if host_type == "linux":
-        terminal_cmd = format(
-            'gnome-terminal -- bash -c \"%s %s\"' % (cmd, args))
+        terminal_cmd = f'gnome-terminal -- bash -c "{cmd} {args}"'
         # terminal_cmd = cmd + " " + args
     elif host_type == "darwin":
         apple_script_filename = 'run-' + platform_id + '.scpt'
-        terminal_cmd = format(
-            'osascript ${FLUTTER_WORKSPACE}/%s' % apple_script_filename)
+        terminal_cmd = f'osascript "\$FLUTTER_WORKSPACE/{apple_script_filename}"'
         apple_script_file = os.path.join(
             flutter_workspace, apple_script_filename)
-        with open(apple_script_file, 'w+') as f:
-            f.write(format(env_qemu_applescript % (cmd, args)))
+        with open(apple_script_file, 'w+', encoding="utf-8") as file:
+            file.write(env_qemu_applescript % (cmd, args))
 
     # Use SSH port from qemu config or environment, with a default value of 2222
     container_ssh_port = qemu.get('ssh_port') or os.environ.get('CONTAINER_SSH_PORT', "2222")
     # Store the SSH port in environment for other components to use
     os.environ['CONTAINER_SSH_PORT'] = container_ssh_port
-    
+
     env_script = os.path.join(flutter_workspace, 'setup_env.sh')
-    with open(env_script, 'a') as f:
+    with open(env_script, 'a', encoding="utf-8") as f:
         f.write(env_qemu % (
             platform_id,
             platform_id,
@@ -1689,7 +1682,7 @@ def handle_artifacts_obj(obj, host_machine_arch, cwd, git_token, cookie_file):
         return
 
     artifacts = os.path.join(cwd, 'artifacts')
-    make_sure_path_exists(artifacts)
+    os.makedirs(artifacts, exist_ok=True)
     os.environ['ARTIFACTS_DIR'] = artifacts
     cwd = artifacts
 
@@ -1738,7 +1731,7 @@ def get_platform_working_dir(platform_id):
     os.environ["PLATFORM_ID_DIR_RELATIVE"] = '.' + platform_id
     os.environ["PLATFORM_ID_DIR"] = str(cwd)
     print(f'Working Directory: {cwd}')
-    make_sure_path_exists(cwd)
+    os.makedirs(cwd, exist_ok=True)
     return cwd
 
 
@@ -1749,12 +1742,12 @@ def create_platform_config_file(obj, cwd):
         return
 
     toml_config = toml.dumps(obj)
-    
+
     cwd = Path(cwd)
     default_config_filepath = cwd.joinpath('config.toml')
     if not default_config_filepath.exists():
-        make_sure_path_exists(default_config_filepath.parent)
-    with open(default_config_filepath, 'w+') as f:
+        os.makedirs(default_config_filepath.parent, exist_ok=True)
+    with open(default_config_filepath, 'w+', encoding="utf-8") as f:
         f.write(toml_config)
 
 
@@ -1768,7 +1761,7 @@ def create_gclient_config_file(obj):
 
     gclient_path = obj['path']
     gclient_path = os.path.expandvars(gclient_path)
-    make_sure_path_exists(gclient_path)
+    os.makedirs(gclient_path, exist_ok=True)
 
     del obj['path']
     gclient_config = json.dumps(obj)
@@ -1779,7 +1772,7 @@ def create_gclient_config_file(obj):
     gclient_config = gclient_config + ']'
 
     gclient_config_file = os.path.join(gclient_path, '.gclient')
-    with open(gclient_config_file, 'w+') as f:
+    with open(gclient_config_file, 'w+', encoding="utf-8") as f:
         f.write(gclient_config)
 
 
@@ -1804,13 +1797,13 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app
 
     # setup environmental variable to use in later occuring CMake configs
     if 'load' in platform_ and 'id' in platform_:
-        id = platform_['id']
-        id_conv = id.replace('-','_')
+        platform_id = platform_['id']
+        id_conv = platform_id.replace('-', '_')
         id_upper = id_conv.upper()
 
-        if id in disable or id in plex:
+        if platform_id in disable or platform_id in plex:
             value = "OFF"
-        elif id in enable or platform_['load']:
+        elif platform_id in enable or platform_['load']:
             value = "ON"
         else:
             value = "OFF"
@@ -1822,9 +1815,9 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app
         if value == "OFF":
             print_banner("Skipping - %s" % platform_['id'])
             return
-        
+
     get_platform_src(platform_.get('src', None), app_folder)
-    
+
     # if platform_['type'] == 'docker':
     runtime = platform_['runtime']
 
@@ -1942,7 +1935,6 @@ def get_hardware_threads():
 
 
 def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, app_folder):
-
     hw_threads = get_hardware_threads()
     if not os.getenv('GITHUB_ACTIONS'):
         if hw_threads > 1:
@@ -1952,12 +1944,12 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
     platform_['type'] = 'dependency'
     setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app_folder)
     platform_['type'] = 'toolchain'
-    
+
     if not 'toolchain' in platform_:
         print_banner("Toolchain key not specified")
         return
-    
-    if (platform_['toolchain'] == 'llvm'):
+
+    if platform_['toolchain'] == 'llvm':
         prefer_llvm = os.environ.get('PREFER_LLVM', None)
         if not prefer_llvm:
             if 'prefer_llvm' in platform_:
@@ -1967,9 +1959,8 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
 
         host_type = get_host_type()
 
-        if host_type == 'linux':
-            llvm_base_path = '/usr'
-        elif host_type == 'darwin':
+        llvm_base_path = '/usr'
+        if host_type == 'darwin':
             prefer_llvm = None
             llvm_base_path = get_mac_brew_prefix('llvm')
 
@@ -2008,27 +1999,27 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
 def get_toolchains(platforms):
     """Returns a list of toolchains from the platforms."""
     toolchains = []
-    for platform in platforms:
-        if platform['type'] == 'toolchain':
-            toolchains.append(platform)
+    for platform_ in platforms:
+        if platform_['type'] == 'toolchain':
+            toolchains.append(platform_)
     return toolchains
 
 
 def get_dependencies(platforms):
     """Returns a list of dependencies from the platforms."""
     dependencies = []
-    for platform in platforms:
-        if platform['type'] == 'dependency':
-            dependencies.append(platform)
+    for platform_ in platforms:
+        if platform_['type'] == 'dependency':
+            dependencies.append(platform_)
     return dependencies
 
 
 def get_not_dependencies(platforms):
     """Returns a list of platforms that are not dependencies."""
     not_dependencies = []
-    for platform in platforms:
-        if platform['type'] != 'dependency':
-            not_dependencies.append(platform)
+    for platform_ in platforms:
+        if platform_['type'] != 'dependency':
+            not_dependencies.append(platform_)
     return not_dependencies
 
 
@@ -2138,7 +2129,7 @@ def get_workspace_tmp_folder() -> str:
     """ Gets tmp folder path located in workspace"""
     workspace = os.getenv("FLUTTER_WORKSPACE")
     tmp_folder = os.path.join(workspace, '.config', 'flutter_workspace', 'tmp')
-    make_sure_path_exists(tmp_folder)
+    os.makedirs(tmp_folder, exist_ok=True)
     return tmp_folder
 
 
@@ -2148,7 +2139,7 @@ def get_github_artifact(token: str, url: str, filename: str) -> str:
     tmp_file = "%s/%s" % (get_workspace_tmp_folder(), filename)
 
     headers = ['Authorization: token %s' % token]
-    if fetch_https_binary_file(url, tmp_file, True, headers, None, False):
+    if fetch_https_binary_file(url, tmp_file, True, headers, None, False, None):
         return tmp_file
 
     return ''
@@ -2158,7 +2149,7 @@ def ubuntu_is_pkg_installed(package: str) -> bool:
     """Ubuntu - checks if package is installed"""
 
     cmd = "dpkg-query -W --showformat='${Status}' %s" % package
-    ps = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    ps = subprocess.Popen(shlex_quote(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     result = ps.communicate()[0]
 
     if isinstance(result, bytes):
@@ -2185,7 +2176,7 @@ def get_dnf_installed(filter_: str) -> str:
     """Returns dnf package list if present, None otherwise"""
 
     cmd = 'dnf list installed |grep %s' % filter_
-    ps = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    ps = subprocess.Popen(shlex_quote(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     result = ps.communicate()[0]
 
     if isinstance(result, bytes):
@@ -2218,7 +2209,7 @@ def is_linux_host_kvm_capable() -> bool:
     """Determine if CPU supports HW Hypervisor support"""
     cmd = 'cat /proc/cpuinfo |egrep "vmx|svm"'
     ps = subprocess.Popen(
-        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        shlex_quote(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     output = ps.communicate()[0]
     if len(output):
         return True
@@ -2243,11 +2234,12 @@ def activate_python_venv():
     config_folder = os.path.join(workspace, '.config')
     venv_dir = os.path.join(config_folder, 'venv')
 
-    subprocess.check_call([os.environ['PYTHON'], '-m', 'venv', venv_dir], stdout=subprocess.DEVNULL)
+    python_path = os.environ['PYTHON']
+    subprocess.check_call([python_path, '-m', 'venv', venv_dir], stdout=subprocess.DEVNULL)
     os.environ['PATH'] = "%s:%s" % (os.path.join(venv_dir, 'bin'), os.environ.get('PATH'))
 
     # switch python to new path
-    python_path = subprocess.check_output(['which','python3']).decode().strip()
+    python_path = subprocess.check_output(['which', 'python3']).decode().strip()
     os.environ['PYTHON'] = python_path
 
     cmd = f'{python_path} -m pip install --upgrade pip'.split(' ')
@@ -2265,14 +2257,15 @@ def activate_python_virtualenv():
         del os.environ['PYTHONPATH']
 
     # create virtual environment
-    subprocess.check_call([os.environ['PYTHON'], '-m', 'virtualenv', venv_dir], stdout=subprocess.DEVNULL)
+    python_path = os.environ['PYTHON']
+    subprocess.check_call([python_path, '-m', 'virtualenv', venv_dir], stdout=subprocess.DEVNULL)
 
-    # swtich to virtualenv
+    # switch to virtualenv
     activate_this_file = os.path.join(venv_dir, 'bin', 'activate_this.py')
     exec(compile(open(activate_this_file, 'rb').read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
 
     # switch to python in new path
-    python_path = subprocess.check_output(['which','python3']).decode().strip()
+    python_path = subprocess.check_output(['which', 'python3']).decode().strip()
     os.environ['PYTHON'] = python_path
 
     cmd = f'{python_path} -m pip install --upgrade pip'.split(' ')
@@ -2283,21 +2276,21 @@ def install_minimum_runtime_deps():
     """Install minimum runtime deps to run this script"""
     host_type = get_host_type()
 
-
     if host_type == "linux":
 
         os_release_id = get_freedesktop_os_release_id()
 
         if os_release_id == 'ubuntu':
             subprocess.check_output(['sudo', 'apt', 'update', '-y'])
-            packages = 'sudo apt install --no-install-recommends -y git git-lfs unzip curl python3-dev python3-virtualenv libcurl4-openssl-dev libssl-dev libgtk-3-dev build-essential libcurl4-openssl-dev'.split(' ')
+            packages = 'sudo apt install --no-install-recommends -y git git-lfs unzip curl python3-dev python3-virtualenv libcurl4-openssl-dev libssl-dev libgtk-3-dev build-essential libcurl4-openssl-dev'.split(
+                ' ')
             subprocess.check_output(packages)
 
         elif os_release_id == 'fedora':
             subprocess.check_output(['sudo', 'dnf', '-y', 'update'])
-            packages = 'sudo dnf -y install dnf-plugins-core git git-lfs unzip curl python3-devel python3-virtualenv libcurl-devel openssl-devel gtk3-devel gcc libcurl-devel'.split(' ')
+            packages = 'sudo dnf -y install dnf-plugins-core git git-lfs unzip curl python3-devel python3-virtualenv libcurl-devel openssl-devel gtk3-devel gcc libcurl-devel'.split(
+                ' ')
             subprocess.check_output(packages)
-
 
     if host_type == "darwin":
 
@@ -2320,7 +2313,6 @@ def install_minimum_runtime_deps():
 
         cmd = 'python3 -m pip install virtualenv'.split(' ')
         subprocess.check_output(cmd)
-
 
     activate_python_virtualenv()
 
@@ -2378,7 +2370,7 @@ def write_env_script_header(workspace):
     """ Create environmental variable bash script """
     environment_script = os.path.join(workspace, 'setup_env.sh')
 
-    with open(environment_script, 'w+') as script:
+    with open(environment_script, 'w+', encoding="utf-8") as script:
         script.write(env_prefix)
 
 
@@ -2433,9 +2425,9 @@ def create_vscode_launch_file(repos: dict, device_ids: list):
                     launch_objs.append(obj)
 
         launch = {'version': '0.2.0', 'configurations': launch_objs}
-        make_sure_path_exists(vscode_folder)
-        with open(launch_file, 'w+') as f:
-            json.dump(launch, f, indent=4)
+        os.makedirs(vscode_folder, exist_ok=True)
+        with open(launch_file, 'w+', encoding="utf-8") as file:
+            json.dump(launch, file, indent=4)
 
 
 def update_image_by_fastboot(device_id: str, cwd: os.path, artifacts: dict):
@@ -2546,6 +2538,7 @@ def flash_fastboot(platform_id: str, device_id: str, platforms: dict):
             validate_fastboot_req(device_id, platform_)
             break
 
+
 def flash_mask_rom(platform_id: str, _: str, platforms: dict):
     print_banner("Flash with Mask ROM")
     if not platform_id:
@@ -2594,4 +2587,6 @@ def flutter_analyze_git_commits():
 
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGINT, handle_ctrl_c)
+    os.environ['PYTHON'] = sys.executable
     main()
