@@ -1,0 +1,54 @@
+{
+  "id": "weston-pi-zero2w",
+  "load": false,
+  "supported_archs": [
+    "aarch64",
+    "arm64",
+    "x86_64"
+  ],
+  "supported_host_types": [
+    "darwin",
+    "fedora",
+    "ubuntu"
+  ],
+  "type": "remote",
+  "env": {
+    "DEVICE_HOSTNAME": "raspberrypi0-2w-64.local",
+    "SCP_PREFIX": "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+    "SSH_PREFIX": "ssh -t -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o BatchMode=yes",
+    "PING_CMD": "ping -c 1 -w 400 ${DEVICE_HOSTNAME}",
+    "DELETE_USER_PWD": "${SSH_PREFIX} weston@${DEVICE_HOSTNAME} passwd -d weston",
+    "DELETE_APP_FOLDER": "${SSH_PREFIX} weston@${DEVICE_HOSTNAME} rm -rf /tmp/${appName}",
+    "FLUTTER_AUTO_EXE": "flutter-auto -b /tmp/${appName}",
+    "CREATE_BUNDLE_FOLDER": "${SSH_PREFIX} weston@${DEVICE_HOSTNAME} mkdir -p /tmp/${appName}/data",
+    "COPY_ASSETS_TO_DEVICE": "${SCP_PREFIX} -r ${localPath}/* weston@${DEVICE_HOSTNAME}:/tmp/${appName}/data/flutter_assets",
+    "COPY_PLATFORM_ID_CONFIG_TO_DEVICE": "${SCP_PREFIX} ${PLATFORM_ID_DIR}/config.toml ${COMPOSITOR_USER}@${DEVICE_HOSTNAME}:/tmp/${appName}/"
+  },
+  "runtime": {
+    "config": {
+      "view": [
+        {
+          "cursor_theme": "DMZ-White",
+          "fullscreen": true
+        }
+      ]
+    }
+  },
+  "overwrite-existing": true,
+  "custom-device": {
+    "id": "pi-zero2w-weston",
+    "label": "Raspberry Pi Zero 2W",
+    "sdkNameAndVersion": "Raspberry Pi Zero 2W (flutter-auto)",
+    "platform": "linux-x64",
+    "enabled": true,
+    "ping": "bash -c \"${PING_CMD}\"",
+    "pingSuccessRegex": "1 packets transmitted, 1 received",
+    "postBuild": "bash -c \"${DELETE_USER_PWD}\"",
+    "install": "bash -c \"${CREATE_BUNDLE_FOLDER} && ${COPY_PLATFORM_ID_CONFIG_TO_DEVICE} && ${COPY_ASSETS_TO_DEVICE}\"",
+    "uninstall": "bash -c \"${DELETE_APP_FOLDER}\"",
+    "runDebug": "bash -c \"${SSH_PREFIX} weston@${DEVICE_HOSTNAME} ${FLUTTER_AUTO_EXE}\"",
+    "forwardPort": "bash -c \"${SSH_PREFIX} -o ExitOnForwardFailure=yes -L 127.0.0.1:${hostPort}:127.0.0.1:${devicePort} weston@${DEVICE_HOSTNAME} echo 'Port forwarding success'; read\"",
+    "forwardPortSuccessRegex": "Port forwarding success",
+    "screenshot": null
+  }
+}

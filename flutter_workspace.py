@@ -1171,12 +1171,6 @@ def get_darwin_major_version() -> str:
     return str(major)
 
 
-def get_darwin_brew_prefix() -> str:
-    """Returns brew prefix for selected package"""
-
-    return ""
-
-
 def get_host_type() -> str:
     """Returns host system"""
     return system().lower().rstrip()
