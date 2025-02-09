@@ -8,8 +8,8 @@
   ],
   "supported_host_types": [
     "darwin",
-    "ubuntu",
-    "fedora"
+    "fedora",
+    "ubuntu"
   ],
   "type": "qemu",
   "env": {
@@ -19,23 +19,41 @@
     "FLUTTER_OBSERVATORY_HOST": "0.0.0.0",
     "CONTAINER_SSH_PORT": "2222",
     "DEVICE_HOSTNAME": "localhost",
-    "FLUTTER_AUTO_EXE": "flutter-auto --j=/tmp/${appName}/default_config.json --b=/tmp/${appName}",
+    "COMPOSITOR_USER": "agl-driver",
+    "SERVICE_NAME": "flutter-ics-homescreen",
+    "SCP_PREFIX": "scp -P ${CONTAINER_SSH_PORT} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+    "SSH_PREFIX": "ssh -p ${CONTAINER_SSH_PORT} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o BatchMode=yes",
+    "FLUTTER_AUTO_EXE": "flutter-auto -b /tmp/${appName}",
     "PING_CMD": "(echo >/dev/tcp/localhost/${CONTAINER_SSH_PORT}) &>/dev/null && echo open || echo closed",
-    "DELETE_USER_PWD": "ssh -p ${CONTAINER_SSH_PORT} -t -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -oBatchMode=yes root@${DEVICE_HOSTNAME} passwd -d agl-driver",
-    "CREATE_BUNDLE_FOLDER": "ssh -p ${CONTAINER_SSH_PORT} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o BatchMode=yes agl-driver@${DEVICE_HOSTNAME} mkdir -p /tmp/${appName}/data",
-    "COPY_PLATFORM_ID_TO_DEVICE": "scp -P ${CONTAINER_SSH_PORT} -r ${PLATFORM_ID_DIR}/default_config.json agl-driver@${DEVICE_HOSTNAME}:/tmp/${appName}/",
-    "COPY_ASSETS_TO_DEVICE": "scp -P ${CONTAINER_SSH_PORT} -r ${localPath}/* agl-driver@${DEVICE_HOSTNAME}:/tmp/${appName}/data/flutter_assets",
-    "DELETE_APP_FOLDER": "ssh -p ${CONTAINER_SSH_PORT} -o BatchMode=yes agl-driver@${DEVICE_HOSTNAME} rm -rf /tmp/${appName}"
+    "DELETE_USER_PWD": "${SSH_PREFIX} -t root@${DEVICE_HOSTNAME} passwd -d ${COMPOSITOR_USER}",
+    "STOP_SERVICE": "${SSH_PREFIX} -t root@${DEVICE_HOSTNAME} systemctl stop ${SERVICE_NAME}",
+    "DELETE_APP_FOLDER": "${SSH_PREFIX} -t ${COMPOSITOR_USER}@${DEVICE_HOSTNAME} rm -rf /tmp/${appName}",
+    "CREATE_BUNDLE_DATA_FOLDER": "${SSH_PREFIX} -t ${COMPOSITOR_USER}@${DEVICE_HOSTNAME} mkdir -p /tmp/${appName}/data",
+    "CREATE_BUNDLE_LIB_FOLDER": "${SSH_PREFIX} -t ${COMPOSITOR_USER}@${DEVICE_HOSTNAME} mkdir -p /tmp/${appName}/lib",
+    "CREATE_BUNDLE_ICUDTL_SYMLINK": "${SSH_PREFIX} -t ${COMPOSITOR_USER}@${DEVICE_HOSTNAME} ln -sf /usr/share/flutter/*/debug/data/icudtl.dat /tmp/${appName}/data/icudtl.dat",
+    "CREATE_BUNDLE_ENGINE_SYMLINK": "${SSH_PREFIX} -t ${COMPOSITOR_USER}@${DEVICE_HOSTNAME} ln -sf /usr/share/flutter/*/debug/lib/libflutter_engine.so /tmp/${appName}/lib/libflutter_engine.so",
+    "CREATE_BUNDLE_FOLDER": "${CREATE_BUNDLE_DATA_FOLDER} && ${CREATE_BUNDLE_LIB_FOLDER} && ${CREATE_BUNDLE_ICUDTL_SYMLINK} && ${CREATE_BUNDLE_ENGINE_SYMLINK}",
+    "COPY_PLATFORM_ID_CONFIG_TO_DEVICE": "${SCP_PREFIX} ${PLATFORM_ID_DIR}/config.toml ${COMPOSITOR_USER}@${DEVICE_HOSTNAME}:/tmp/${appName}/",
+    "COPY_ASSETS_TO_DEVICE": "${SCP_PREFIX} -r ${localPath}/* ${COMPOSITOR_USER}@${DEVICE_HOSTNAME}:/tmp/${appName}/data/flutter_assets"
   },
   "runtime": {
     "config": {
-      "view": [
-        {
-          "window_type": "BG",
-          "width": 1920,
-          "height": 1080
-        }
-      ]
+      "global": {
+        "cursor_theme": "DMZ-White",
+        "app_id": "agl-qemu-salmon"
+      },
+      "view": {
+        "window_type": "BG",
+        "width": 1080,
+        "height": 1920,
+        "fullscreen": true
+      },
+      "window_activation_area": {
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 1920
+      }
     },
     "pre-requisites": {
       "arm64": {
@@ -117,10 +135,10 @@
     "enabled": true,
     "ping": "bash -c \"${PING_CMD}\"",
     "pingSuccessRegex": "open",
-    "postBuild": "bash -c \"${DELETE_USER_PWD}\"",
-    "install": "bash -c \"${CREATE_BUNDLE_FOLDER} && ${COPY_PLATFORM_ID_TO_DEVICE} && ${COPY_ASSETS_TO_DEVICE}\"",
+    "postBuild": "bash -c \"${STOP_SERVICE} && ${DELETE_USER_PWD}\"",
+    "install": "bash -c \"${CREATE_BUNDLE_FOLDER} && ${COPY_PLATFORM_ID_CONFIG_TO_DEVICE} && ${COPY_ASSETS_TO_DEVICE}\"",
     "uninstall": "bash -c \"${DELETE_APP_FOLDER}\"",
-    "runDebug": "bash -c \"ssh -t -t -o BatchMode=yes agl-driver@${DEVICE_HOSTNAME} ${FLUTTER_AUTO_EXE}\"",
+    "runDebug": "bash -c \"${SSH_PREFIX} ${COMPOSITOR_USER}@${DEVICE_HOSTNAME} ${FLUTTER_AUTO_EXE}\"",
     "forwardPort": null,
     "forwardPortSuccessRegex": null,
     "screenshot": null
