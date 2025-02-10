@@ -107,6 +107,8 @@ def main():
     parser.add_argument('--plex', default='', type=str, help='Platform Load Excludes')
     parser.add_argument('--enable', default='', type=str, help='Platform Load Enable Override')
     parser.add_argument('--disable', default='', type=str, help='Platform Load Disable Override')
+    parser.add_argument('--enable-plugin', default='', type=str, help='Plugin Enable')
+    parser.add_argument('--disable-plugin', default='', type=str, help='Plugin Disable')
     parser.add_argument('--fastboot', default='', type=str, help='Update the selected platform using fastboot')
     parser.add_argument('--mask-rom', default='', type=str, help='Update the selected platform using Mask ROM')
     parser.add_argument('--device-id', default='', type=str, help='device id for flashing')
@@ -340,7 +342,7 @@ def main():
     if args.cookie_file:
         cookie_file = args.cookie_file
 
-    setup_platforms(platforms, github_token, cookie_file, args.plex, args.enable, args.disable, app_folder)
+    setup_platforms(platforms, github_token, cookie_file, args.plex, args.enable, args.disable, args.enable_plugin, args.disable_plugin, app_folder)
 
     #
     # Display the custom devices list
@@ -1782,7 +1784,26 @@ def is_host_type_supported(host_types):
     return True
 
 
-def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app_folder):
+def handle_plugin_variables(enable_plugin, disable_plugin):
+    """ Set plugin environmental variables """
+    plugins = []
+
+    if enable_plugin:
+        for it in enable_plugin:
+            plugins.append(f' -DBUILD_PLUGIN_{it.upper()}=ON')
+
+    if disable_plugin:
+        for it in disable_plugin:
+            plugins.append(f' -DBUILD_PLUGIN_{it.upper()}=OFF')
+
+    plugins = "".join(plugins)
+
+    os.environ['CMD_LINE_CMAKE_PLUGIN_ARGS'] = plugins
+
+    print_banner('CMD_LINE_CMAKE_PLUGIN_ARGS=' + os.environ.get('CMD_LINE_CMAKE_PLUGIN_ARGS','Not Set'))
+
+
+def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder):
     """ Sets up platform """
 
     if 'type' in platform_:
@@ -1843,6 +1864,7 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app
     handle_artifacts_obj(runtime.get('artifacts'),
                          host_machine_arch, cwd, git_token, cookie_file)
     validate_sudo_user()
+    handle_plugin_variables(enable_plugin, disable_plugin)
     handle_pre_requisites(runtime.get('pre-requisites'), cwd)
     validate_sudo_user()
     handle_docker_obj(runtime.get('docker'), host_machine_arch, cwd)
@@ -1928,7 +1950,7 @@ def get_hardware_threads():
         return multiprocessing.cpu_count()
 
 
-def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, app_folder):
+def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder):
     hw_threads = get_hardware_threads()
     if not os.getenv('GITHUB_ACTIONS'):
         if hw_threads > 1:
@@ -1936,7 +1958,7 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, ap
     os.environ['HARDWARE_THREADS'] = str(hw_threads)
 
     platform_['type'] = 'dependency'
-    setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app_folder)
+    setup_platform(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder)
     platform_['type'] = 'toolchain'
 
     if not 'toolchain' in platform_:
@@ -2017,7 +2039,7 @@ def get_not_dependencies(platforms):
     return not_dependencies
 
 
-def setup_platforms(platforms, git_token, cookie_file, plex, enable, disable, app_folder):
+def setup_platforms(platforms, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder):
     """ Sets up each occurring platform defined """
 
     if plex:
@@ -2029,19 +2051,25 @@ def setup_platforms(platforms, git_token, cookie_file, plex, enable, disable, ap
     if disable:
         disable = disable.split(',')
 
+    if enable_plugin:
+        enable_plugin = enable_plugin.split(',')
+
+    if disable_plugin:
+        disable_plugin = disable_plugin.split(',')
+
     for toolchain in get_toolchains(platforms):
-        setup_toolchain(toolchain, git_token, cookie_file, plex, enable, disable, app_folder)
+        setup_toolchain(toolchain, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder)
 
     # iterate over dependencies first
     for dependency in get_dependencies(platforms):
-        setup_platform(dependency, git_token, cookie_file, plex, enable, disable, app_folder)
+        setup_platform(dependency, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder)
 
         # reset sudo timeout
         validate_sudo_user()
 
     # iterate over non-dependencies
     for platform_ in get_not_dependencies(platforms):
-        setup_platform(platform_, git_token, cookie_file, plex, enable, disable, app_folder)
+        setup_platform(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder)
 
         # reset sudo timeout
         validate_sudo_user()
