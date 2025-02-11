@@ -28,13 +28,12 @@
     "DELETE_USER_PWD": "${SSH_PREFIX} -t root@${DEVICE_HOSTNAME} passwd -d ${COMPOSITOR_USER}",
     "STOP_SERVICE": "${SSH_PREFIX} -t root@${DEVICE_HOSTNAME} systemctl stop ${SERVICE_NAME}",
     "DELETE_APP_FOLDER": "${SSH_PREFIX} -t ${COMPOSITOR_USER}@${DEVICE_HOSTNAME} rm -rf /tmp/${appName}",
-    "CREATE_BUNDLE_DATA_FOLDER": "${SSH_PREFIX} -t ${COMPOSITOR_USER}@${DEVICE_HOSTNAME} mkdir -p /tmp/${appName}/data",
-    "CREATE_BUNDLE_LIB_FOLDER": "${SSH_PREFIX} -t ${COMPOSITOR_USER}@${DEVICE_HOSTNAME} mkdir -p /tmp/${appName}/lib",
+    "CREATE_BUNDLE_FOLDERS": "${SSH_PREFIX} -t ${COMPOSITOR_USER}@${DEVICE_HOSTNAME} mkdir -p /tmp/${appName}/data/flutter_assets /tmp/${appName}/lib",
     "CREATE_BUNDLE_ICUDTL_SYMLINK": "${SSH_PREFIX} -t ${COMPOSITOR_USER}@${DEVICE_HOSTNAME} ln -sf /usr/share/flutter/*/debug/data/icudtl.dat /tmp/${appName}/data/icudtl.dat",
     "CREATE_BUNDLE_ENGINE_SYMLINK": "${SSH_PREFIX} -t ${COMPOSITOR_USER}@${DEVICE_HOSTNAME} ln -sf /usr/share/flutter/*/debug/lib/libflutter_engine.so /tmp/${appName}/lib/libflutter_engine.so",
-    "CREATE_BUNDLE_FOLDER": "${CREATE_BUNDLE_DATA_FOLDER} && ${CREATE_BUNDLE_LIB_FOLDER} && ${CREATE_BUNDLE_ICUDTL_SYMLINK} && ${CREATE_BUNDLE_ENGINE_SYMLINK}",
+    "CREATE_BUNDLE_FOLDER": "${CREATE_BUNDLE_FOLDERS} && ${CREATE_BUNDLE_ICUDTL_SYMLINK} && ${CREATE_BUNDLE_ENGINE_SYMLINK}",
     "COPY_PLATFORM_ID_CONFIG_TO_DEVICE": "${SCP_PREFIX} ${PLATFORM_ID_DIR}/config.toml ${COMPOSITOR_USER}@${DEVICE_HOSTNAME}:/tmp/${appName}/",
-    "COPY_ASSETS_TO_DEVICE": "${SCP_PREFIX} -r ${localPath}/* ${COMPOSITOR_USER}@${DEVICE_HOSTNAME}:/tmp/${appName}/data/flutter_assets"
+    "COPY_ASSETS_TO_DEVICE": "${SCP_PREFIX} -r ${localPath}/* ${COMPOSITOR_USER}@${DEVICE_HOSTNAME}:/tmp/${appName}/data/flutter_assets/"
   },
   "runtime": {
     "config": {
