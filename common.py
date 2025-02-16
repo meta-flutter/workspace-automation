@@ -37,7 +37,7 @@ def run_command(cmd: str, cwd: str) -> str:
     import re
     import subprocess
 
-    # replace all consecutive whitespace characters (tabs, newlines etc.) with a single space
+    # replace all consecutive whitespace characters (tabs, newlines, etc.) with a single space
     cmd = re.sub('\\s{2,}', ' ', cmd)
 
     print('Running [%s] in %s' % (cmd, cwd))
@@ -50,7 +50,7 @@ def run_command(cmd: str, cwd: str) -> str:
 
 
 def get_md5sum(file: str) -> str:
-    """Return md5sum of specified file"""
+    """Return file md5sum"""
     import hashlib
 
     if not os.path.exists(file):
@@ -66,7 +66,7 @@ def get_md5sum(file: str) -> str:
 
 
 def get_sha1sum(file: str) -> str:
-    """Return sha1 sum of specified file"""
+    """Return file sha1 sum"""
     import hashlib
 
     if not os.path.exists(file):
@@ -82,7 +82,7 @@ def get_sha1sum(file: str) -> str:
 
 
 def get_sha256sum(file: str):
-    """Return sha256sum of specified file"""
+    """Return file sha256sum"""
     import hashlib
 
     if not os.path.exists(file):
@@ -192,7 +192,7 @@ def fetch_https_progress(download_t, download_d, _upload_t, _upload_d):
 
 
 def fetch_https_binary_file(url, filename, redirect, headers, cookie_file, netrc, connect_timeout) -> bool:
-    """Fetches binary file via HTTPS"""
+    """Fetches file via HTTPS as binary"""
     import pycurl
     import time
 
@@ -297,7 +297,7 @@ def chown_workspace(username, workspace):
 
 
 def break_version(version):
-    """ Break version string into major, minor, patch """
+    """ Break version string into major, minor, and patch """
     import re
     match = re.match(r'^(\d+)(?:\.(\d+))?(?:\.(\d+))?$', version)
     if match:
@@ -310,7 +310,7 @@ def break_version(version):
 
 
 def test_internet_connection() -> bool:
-    """Test internet by connecting to nameserver"""
+    """Test internet connection by connecting to nameserver"""
     import pycurl
 
     c = pycurl.Curl()

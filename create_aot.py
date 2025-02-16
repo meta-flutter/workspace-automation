@@ -64,7 +64,7 @@ def get_flutter_sdk_version():
 
 
 def get_yaml_obj(filepath: str):
-    """ Returns python object of yaml file """
+    """ Returns python object of YAML file """
     import yaml
 
     if not os.path.exists(filepath):
