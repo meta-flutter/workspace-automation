@@ -51,6 +51,7 @@ from common import get_ws_folder
 from common import handle_ctrl_c
 from common import print_banner
 from common import reset_sudo_timestamp
+from common import run_command
 from common import validate_sudo_user
 from common import validate_sudo_user_timestamp
 from create_aot import create_platform_aot
@@ -85,7 +86,6 @@ def get_flutter_arch():
 
 
 def main():
-    # check python version
     check_python_version()
 
     parser = argparse.ArgumentParser()
@@ -143,7 +143,7 @@ def main():
         return
 
     #
-    # Find GIT Commit where flutter analyze returns true
+    # Find GIT Commit where `flutter analyze` returns true
     #
     if args.find_working_commit:
         flutter_analyze_git_commits()
@@ -306,7 +306,7 @@ def main():
     print("XDG_CONFIG_HOME=%s" % os.environ.get('XDG_CONFIG_HOME'))
 
     #
-    # Trigger upgrade on Channel if version is all letters
+    # Trigger upgrade on Channel if `version` is all letters
     #
     if flutter_version.isalpha():
         print_banner("Setting channel to `%s`" % flutter_version)
@@ -342,7 +342,8 @@ def main():
     if args.cookie_file:
         cookie_file = args.cookie_file
 
-    setup_platforms(platforms, github_token, cookie_file, args.plex, args.enable, args.disable, args.enable_plugin, args.disable_plugin, app_folder)
+    setup_platforms(platforms, github_token, cookie_file, args.plex, args.enable, args.disable, args.enable_plugin,
+                    args.disable_plugin, app_folder)
 
     #
     # Display the custom devices list
@@ -716,7 +717,7 @@ def get_platform_src(src, base_folder: str):
 
 
 def get_flutter_settings_folder():
-    """ Returns the path of the Custom Config json file """
+    """ Returns the path of the Custom Config JSON file """
 
     if "XDG_CONFIG_HOME" in os.environ:
         settings_folder = os.path.join(os.environ.get('XDG_CONFIG_HOME'))
@@ -730,7 +731,7 @@ def get_flutter_settings_folder():
 
 
 def get_flutter_custom_config_path():
-    """ Returns the path of the Flutter Custom Config json file """
+    """ Returns the path of the Flutter Custom Config JSON file """
 
     folder = get_flutter_settings_folder()
     # print("folder: %s" % folder)
@@ -747,7 +748,7 @@ def get_flutter_custom_devices():
         try:
             data = json.load(f)
         except json.decoder.JSONDecodeError:
-            # in case json is invalid
+            # in case JSON is invalid
             print("Invalid JSON in %s" % custom_config)
             exit(1)
         f.close()
@@ -773,7 +774,7 @@ def remove_flutter_custom_devices_id(id_):
             obj = json.load(f)
         except json.decoder.JSONDecodeError:
             print_banner("Invalid JSON in %s" %
-                         custom_config)  # in case json is invalid
+                         custom_config)  # in case JSON is invalid
             exit(1)
         f.close()
 
@@ -887,7 +888,7 @@ def fixup_custom_device(obj):
 
 
 def add_flutter_custom_device(device_config, flutter_runtime):
-    """ Add a single Flutter custom device from json string """
+    """ Add a single Flutter custom device from JSON string """
 
     if not validate_custom_device_config(device_config):
         exit(1)
@@ -929,7 +930,7 @@ def add_flutter_custom_device(device_config, flutter_runtime):
 
 
 def add_flutter_custom_device_ex(custom_device):
-    """ Add a single Flutter custom device from json string """
+    """ Add a single Flutter custom device from JSON string """
 
     if not validate_custom_device_config(custom_device):
         sys.exit("Invalid Custom Device configuration")
@@ -947,7 +948,7 @@ def add_flutter_custom_device_ex(custom_device):
             obj = json.load(f)
         except json.decoder.JSONDecodeError:
             print_banner("Invalid JSON in %s" %
-                         custom_devices_file)  # in case json is invalid
+                         custom_devices_file)  # in case JSON is invalid
             exit(1)
         f.close()
 
@@ -1055,7 +1056,7 @@ def patch_flutter_sdk(flutter_sdk_folder):
         subprocess.check_call(cmd, cwd=flutter_sdk_folder)
 
 
-# Check for flutter SDK path. Pull if exists. Create dir and clone sdk if not.
+# Check if the flutter SDK path exists. Pull if exists. Create dir and clone sdk if not.
 def get_flutter_sdk(version):
     """ Get Flutter SDK clone """
 
@@ -1094,6 +1095,16 @@ def get_flutter_sdk(version):
 
 def get_flutter_engine_version(flutter_sdk_path):
     """ Get Engine Commit from Flutter SDK """
+
+    # check if mono repo
+    engine_folder = os.path.join(flutter_sdk_path, 'engine')
+    os.environ['MONO_REPO'] = "0"
+    if os.path.isdir(engine_folder):
+        os.environ['MONO_REPO'] = "1"
+        stdout = run_command('git rev-parse --verify HEAD', cwd=flutter_sdk_path)
+        print_banner(f'git rev-parse --verify HEAD : {stdout}')
+        engine_version = stdout.split('\n')[0]
+        return engine_version.strip()
 
     engine_version_file = os.path.join(
         flutter_sdk_path, 'bin/internal/engine.version')
@@ -1253,17 +1264,28 @@ def get_flutter_engine_artifacts(clean_workspace, runtime, arch):
         if os.path.exists(bundle_folder):
             subprocess.check_output(["rm", "-rf", bundle_folder], cwd=cwd)
 
+    # stage bundle layout
     data_folder = os.path.join(bundle_folder, 'data')
     os.makedirs(data_folder, exist_ok=True)
-
-    icudtl_src = os.path.join(restore_folder, 'src', 'out', f'linux_{runtime}_{arch}', 'engine-sdk', 'data',
-                              'icudtl.dat')
 
     lib_folder = os.path.join(bundle_folder, 'lib')
     os.makedirs(lib_folder, exist_ok=True)
 
-    libflutter_engine_src = os.path.join(restore_folder, 'src', 'out', f'linux_{runtime}_{arch}', 'engine-sdk', 'lib',
-                                         'libflutter_engine.so')
+    # mono repo builds include two additional folders in path
+    if (os.environ['MONO_REPO'] == "1"):
+        icudtl_src = os.path.join(restore_folder, 'flutter', 'engine', 'src', 'out', f'linux_{runtime}_{arch}', 'engine-sdk', 'data',
+                                  'icudtl.dat')
+
+        libflutter_engine_src = os.path.join(restore_folder, 'flutter', 'engine', 'src', 'out', f'linux_{runtime}_{arch}', 'engine-sdk',
+                                             'lib',
+                                             'libflutter_engine.so')
+    else:
+        icudtl_src = os.path.join(restore_folder, 'src', 'out', f'linux_{runtime}_{arch}', 'engine-sdk', 'data',
+                                  'icudtl.dat')
+
+        libflutter_engine_src = os.path.join(restore_folder, 'src', 'out', f'linux_{runtime}_{arch}', 'engine-sdk',
+                                             'lib',
+                                             'libflutter_engine.so')
 
     subprocess.check_call(["cp", icudtl_src, f'{data_folder}'])
     subprocess.check_call(["cp", libflutter_engine_src, f'{lib_folder}'])
@@ -1800,7 +1822,7 @@ def handle_plugin_variables(enable_plugin, disable_plugin):
 
     os.environ['CMD_LINE_CMAKE_PLUGIN_ARGS'] = plugins
 
-    print_banner('CMD_LINE_CMAKE_PLUGIN_ARGS=' + os.environ.get('CMD_LINE_CMAKE_PLUGIN_ARGS','Not Set'))
+    print_banner('CMD_LINE_CMAKE_PLUGIN_ARGS=' + os.environ.get('CMD_LINE_CMAKE_PLUGIN_ARGS', 'Not Set'))
 
 
 def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder):
@@ -1950,7 +1972,8 @@ def get_hardware_threads():
         return multiprocessing.cpu_count()
 
 
-def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder):
+def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin,
+                    app_folder):
     hw_threads = get_hardware_threads()
     if not os.getenv('GITHUB_ACTIONS'):
         if hw_threads > 1:
@@ -2039,7 +2062,8 @@ def get_not_dependencies(platforms):
     return not_dependencies
 
 
-def setup_platforms(platforms, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder):
+def setup_platforms(platforms, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin,
+                    app_folder):
     """ Sets up each occurring platform defined """
 
     if plex:
@@ -2058,18 +2082,21 @@ def setup_platforms(platforms, git_token, cookie_file, plex, enable, disable, en
         disable_plugin = disable_plugin.split(',')
 
     for toolchain in get_toolchains(platforms):
-        setup_toolchain(toolchain, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder)
+        setup_toolchain(toolchain, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin,
+                        app_folder)
 
     # iterate over dependencies first
     for dependency in get_dependencies(platforms):
-        setup_platform(dependency, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder)
+        setup_platform(dependency, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin,
+                       app_folder)
 
         # reset sudo timeout
         validate_sudo_user()
 
     # iterate over non-dependencies
     for platform_ in get_not_dependencies(platforms):
-        setup_platform(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder)
+        setup_platform(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin,
+                       app_folder)
 
         # reset sudo timeout
         validate_sudo_user()
