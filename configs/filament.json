@@ -25,10 +25,6 @@
             "uri": "https://github.com/google/filament.git",
             "branch": "release",
             "rev": "v1.56.8"
-        },
-        {
-            "uri": "https://github.com/meta-flutter/playx-3d-scene.git",
-            "branch": "main"
         }
     ],
     "runtime": {
