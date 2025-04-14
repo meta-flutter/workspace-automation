@@ -1101,10 +1101,6 @@ def get_flutter_engine_version(flutter_sdk_path):
     os.environ['MONO_REPO'] = "0"
     if os.path.isdir(engine_folder):
         os.environ['MONO_REPO'] = "1"
-        stdout = run_command('git rev-parse --verify HEAD', cwd=flutter_sdk_path)
-        print_banner(f'git rev-parse --verify HEAD : {stdout}')
-        engine_version = stdout.split('\n')[0]
-        return engine_version.strip()
 
     engine_version_file = os.path.join(
         flutter_sdk_path, 'bin/internal/engine.version')
