@@ -241,7 +241,6 @@ def fetch_https_binary_file(url, filename, redirect, headers, cookie_file, netrc
     status = c.getinfo(pycurl.HTTP_CODE)
 
     c.close()
-    os.sync()
 
     if not redirect and status == 302:
         print_banner("Download Status: %d" % status)
