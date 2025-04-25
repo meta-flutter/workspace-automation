@@ -34,8 +34,10 @@ import json
 import os
 import platform
 import shlex
+import shutil
 import signal
 import subprocess
+import stat
 import sys
 import time
 import zipfile
@@ -74,7 +76,13 @@ def get_flutter_arch():
     if host_arch == 'x86_64':
         os.environ['HOST_ARCH_GOOGLE'] = 'x64'
         return 'x64'
+    elif host_arch == 'AMD64':
+        os.environ['HOST_ARCH_GOOGLE'] = 'x64'
+        return 'x64'
     elif host_arch == 'arm64':
+        os.environ['HOST_ARCH_GOOGLE'] = 'arm64'
+        return 'arm64'
+    elif host_arch == 'ARM64':
         os.environ['HOST_ARCH_GOOGLE'] = 'arm64'
         return 'arm64'
     elif host_arch == 'aarch64':
@@ -295,15 +303,19 @@ def main():
     # Configure Workspace
     #
 
-    os.environ['PATH'] = '%s:%s' % (os.environ.get('PATH'), flutter_bin_path)
+    os.environ['PATH'] = f"{flutter_bin_path}{os.pathsep}{os.environ.get('PATH')}"
+    print("PATH=%s" % os.environ.get('PATH'))
+
     os.environ['PUB_CACHE'] = os.path.join(os.environ.get('FLUTTER_WORKSPACE'), '.config', 'flutter_workspace',
                                            'pub_cache')
-    os.environ['XDG_CONFIG_HOME'] = os.path.join(
-        os.environ.get('FLUTTER_WORKSPACE'), '.config', 'flutter')
-
-    print("PATH=%s" % os.environ.get('PATH'))
     print("PUB_CACHE=%s" % os.environ.get('PUB_CACHE'))
-    print("XDG_CONFIG_HOME=%s" % os.environ.get('XDG_CONFIG_HOME'))
+
+    if sys.platform.startswith('win'):
+        print("APPDATA=%s" % os.environ.get('APPDATA'))
+    else:
+        os.environ['XDG_CONFIG_HOME'] = os.path.join(
+            os.environ.get('FLUTTER_WORKSPACE'), '.config', 'flutter')
+        print("XDG_CONFIG_HOME=%s" % os.environ.get('XDG_CONFIG_HOME'))
 
     #
     # Trigger upgrade on Channel if `version` is all letters
@@ -365,14 +377,12 @@ def main():
 
 def clear_folder(dir_):
     """ Clears folder specified """
-    import shutil
     if os.path.exists(dir_):
         shutil.rmtree(dir_)
 
 
 def copy_dconf_user():
     """ Copies $HOME/.config/dconf/user to workspace """
-    import shutil
     from pathlib import Path
 
     workspace = Path(os.environ.get('FLUTTER_WORKSPACE'))
@@ -717,16 +727,20 @@ def get_platform_src(src, base_folder: str):
 
 
 def get_flutter_settings_folder():
-    """ Returns the path of the Custom Config JSON file """
-
-    if "XDG_CONFIG_HOME" in os.environ:
+    """ Returns the path where .flutter_settings should be stored """
+    if sys.platform.startswith('win'):
+        appdata = os.environ.get('APPDATA')
+        if appdata:
+            return os.path.join(appdata, 'flutter')
+        else:
+            print_banner("APPDATA is not set.")
+            exit(1)
+    elif "XDG_CONFIG_HOME" in os.environ:
         settings_folder = os.path.join(os.environ.get('XDG_CONFIG_HOME'))
     else:
-        settings_folder = os.path.join(
-            os.environ.get('HOME'), '.config', 'flutter')
+        settings_folder = os.path.join(os.environ.get('HOME'), '.config', 'flutter')
 
     os.makedirs(settings_folder, exist_ok=True)
-
     return settings_folder
 
 
@@ -735,6 +749,9 @@ def get_flutter_custom_config_path():
 
     folder = get_flutter_settings_folder()
     # print("folder: %s" % folder)
+    if sys.platform.startswith('win'):
+        return os.path.join(folder, '.flutter_custom_devices.json')
+    
     return os.path.join(folder, 'custom_devices.json')
 
 
@@ -976,6 +993,7 @@ def handle_custom_devices(platform_):
     """ Updates the custom_devices.json with platform config """
 
     if "custom-device" not in platform_:
+        print_banner("No custom-device key in platform config")
         return
 
     custom_devices = get_flutter_custom_devices()
@@ -996,33 +1014,39 @@ def handle_custom_devices(platform_):
 
 
 def configure_flutter_sdk():
-    settings = {"enable-web": False, "enable-android": False, "enable-ios": False, "enable-fuchsia": False,
-                "enable-custom-devices": True}
+    """ Configure Flutter SDK """
+    # Mux flutter and dart commands based on platform
+    if sys.platform.startswith('win'):
+        flutter_cmd = 'flutter.bat'
+        dart_cmd = 'dart.bat'
+    else:
+        flutter_cmd = 'flutter'
+        dart_cmd = 'dart'
+
+    cmd = [flutter_cmd, 'config', '--no-analytics', '--no-enable-web', '--no-enable-android', '--no-enable-ios', '--no-enable-fuchsia', '--enable-custom-devices']
 
     host = get_host_type()
     if host == 'darwin':
-        settings['enable-linux-desktop'] = False
-        settings['enable-macos-desktop'] = True
-        settings['enable-windows-desktop'] = False
+        cmd.append('--enable-macos-desktop')
+        cmd.append('--no-enable-linux-desktop')
+        cmd.append('--no-enable-windows-desktop')
     elif host == 'linux':
-        settings['enable-linux-desktop'] = True
-        settings['enable-macos-desktop'] = False
-        settings['enable-windows-desktop'] = False
+        cmd.append('--enable-linux-desktop')
+        cmd.append('--no-enable-macos-desktop')
+        cmd.append('--no-enable-windows-desktop')
     elif host == 'windows':
-        settings['enable-linux-desktop'] = False
-        settings['enable-macos-desktop'] = False
-        settings['enable-windows-desktop'] = True
+        cmd.append('--enable-windows-desktop')
+        cmd.append('--no-enable-linux-desktop')
+        cmd.append('--no-enable-macos-desktop')
 
-    settings_file = os.path.join(get_flutter_settings_folder(), 'settings')
-
-    with open(settings_file, "w+", encoding="utf-8") as file:
-        json.dump(settings, file, indent=2)
-
-    cmd = ['flutter', 'config', '--no-analytics']
     subprocess.check_call(cmd)
-    cmd = ['dart', '--disable-analytics']
+
+    cmd = [flutter_cmd, 'config', '--list']
     subprocess.check_call(cmd)
-    cmd = ['flutter', 'doctor']
+
+    cmd = [dart_cmd, '--disable-analytics']
+    subprocess.check_call(cmd)
+    cmd = [flutter_cmd, 'doctor', '-v']
     subprocess.check_call(cmd)
 
 
@@ -1032,9 +1056,7 @@ def force_tool_rebuild(flutter_sdk_folder):
 
     if os.path.exists(tool_script):
         print_banner("Cleaning Flutter Tool")
-
-        cmd = ["rm", tool_script]
-        subprocess.check_call(cmd, cwd=flutter_sdk_folder)
+        os.remove(tool_script)
 
 
 def patch_flutter_sdk(flutter_sdk_folder):
@@ -1180,6 +1202,16 @@ def get_darwin_major_version() -> str:
     return str(major)
 
 
+def get_windows_major_version() -> str:
+    """Returns Windows major version value as string"""
+    version = platform.version()
+    # Example: '10.0.22621'
+    parts = version.split('.')
+    if parts:
+        return parts[0]
+    return ""
+
+
 def get_host_type() -> str:
     """Returns host system"""
     return system().lower().rstrip()
@@ -1258,7 +1290,7 @@ def get_flutter_engine_artifacts(clean_workspace, runtime, arch):
 
     if clean_workspace:
         if os.path.exists(bundle_folder):
-            subprocess.check_output(["rm", "-rf", bundle_folder], cwd=cwd)
+            shutil.rmtree(bundle_folder)
 
     # stage bundle layout
     data_folder = os.path.join(bundle_folder, 'data')
@@ -1283,8 +1315,8 @@ def get_flutter_engine_artifacts(clean_workspace, runtime, arch):
                                              'lib',
                                              'libflutter_engine.so')
 
-    subprocess.check_call(["cp", icudtl_src, f'{data_folder}'])
-    subprocess.check_call(["cp", libflutter_engine_src, f'{lib_folder}'])
+    shutil.copy(icudtl_src, data_folder)
+    shutil.copy(libflutter_engine_src, lib_folder)
 
 
 def get_flutter_engine_runtime(clean_workspace, arch):
@@ -1327,9 +1359,12 @@ def handle_pre_requisites(obj, cwd):
         if host_type == "linux":
             host_os_release_id = get_freedesktop_os_release_id()
             host_os_version_id = get_freedesktop_os_release_version_id()
-        if host_type == "darwin":
+        elif host_type == "darwin":
             host_os_release_id = "darwin"
             host_os_version_id = get_darwin_major_version()
+        elif host_type == "windows":
+            host_os_release_id = "windows"
+            host_os_version_id = get_windows_major_version()
 
         if host_specific_pre_requisites.get(host_os_release_id):
             distro = host_specific_pre_requisites[host_os_release_id]
@@ -1680,7 +1715,7 @@ def handle_github_obj(obj, cwd, token):
                     with zipfile.ZipFile(downloaded_file, "r") as zip_ref:
                         zip_ref.extractall(str(cwd))
 
-                    cmd = ["rm", downloaded_file]
+                    shutil.remove(downloaded_file)
                     subprocess.check_output(cmd)
                     continue
 
@@ -2023,7 +2058,7 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
             print(f"CXX: {os.environ['CXX']}")
         else:
             print_banner(f'Failed to find llvm-config in {llvm_base_path}.')
-            exit(1)
+            return
 
     elif platform_['toolchain'] == 'common':
         return
@@ -2281,7 +2316,8 @@ def activate_python_venv():
 
     python_path = os.environ['PYTHON']
     subprocess.check_call([python_path, '-m', 'venv', venv_dir], stdout=subprocess.DEVNULL)
-    os.environ['PATH'] = "%s:%s" % (os.path.join(venv_dir, 'bin'), os.environ.get('PATH'))
+    os.environ['PATH'] = f"{os.path.join(venv_dir, 'bin')}{os.pathsep}{os.environ.get('PATH', '')}"
+
 
     # switch python to new path
     python_path = subprocess.check_output(['which', 'python3']).decode().strip()
@@ -2305,17 +2341,26 @@ def activate_python_virtualenv():
     python_path = os.environ['PYTHON']
     subprocess.check_call([python_path, '-m', 'virtualenv', venv_dir], stdout=subprocess.DEVNULL)
 
+    # Determine the correct scripts folder based on platform
+    if sys.platform.startswith('win'):
+        scripts_folder = 'Scripts'
+    else:
+        scripts_folder = 'bin'
+
     # switch to virtualenv
-    activate_this_file = os.path.join(venv_dir, 'bin', 'activate_this.py')
+    activate_this_file = os.path.join(venv_dir, scripts_folder, 'activate_this.py')
     exec(compile(open(activate_this_file, 'rb').read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
 
     # switch to python in new path
-    python_path = subprocess.check_output(['which', 'python3']).decode().strip()
+    if sys.platform.startswith('win'):
+        python_path = os.path.join(venv_dir, scripts_folder, 'python.exe')
+    else:
+        python_path = subprocess.check_output(['which', 'python3']).decode().strip()
     os.environ['PYTHON'] = python_path
 
     cmd = f'{python_path} -m pip install --upgrade pip'.split(' ')
     subprocess.check_output(cmd)
-
+    
 
 def install_minimum_runtime_deps():
     """Install minimum runtime deps to run this script"""
@@ -2410,14 +2455,42 @@ flutter doctor -v
 flutter custom-devices list
 '''
 
+env_prefix_win = r'''# PowerShell version of setup_env.sh for Windows
+
+# Get the directory of this script
+$SCRIPT_PATH = Split-Path -Parent $MyInvocation.MyCommand.Definition
+
+# Remove trailing backslash if present
+if ($SCRIPT_PATH.EndsWith('\')) {
+    $SCRIPT_PATH = $SCRIPT_PATH.Substring(0, $SCRIPT_PATH.Length)
+}
+
+$env:FLUTTER_WORKSPACE = $SCRIPT_PATH
+$env:PATH = "$env:FLUTTER_WORKSPACE\\flutter\\bin;$env:PATH"
+$env:PUB_CACHE = "$env:FLUTTER_WORKSPACE\\.config\\flutter_workspace\\pub_cache"
+
+Write-Host "********************************************"
+Write-Host "* Setting FLUTTER_WORKSPACE to:"
+Write-Host "* $env:FLUTTER_WORKSPACE"
+Write-Host "********************************************"
+
+flutter doctor -v
+flutter custom-devices list
+'''
 
 def write_env_script_header(workspace):
     """ Create environmental variable bash script """
-    environment_script = os.path.join(workspace, 'setup_env.sh')
-
-    with open(environment_script, 'w+', encoding="utf-8") as script:
-        script.write(env_prefix)
-
+    if sys.platform.startswith('win'):
+        environment_script = os.path.join(workspace, 'setup_env.ps1')
+        with open(environment_script, 'w+', encoding="utf-8") as script:
+            script.write(env_prefix_win)
+    else:
+        environment_script = os.path.join(workspace, 'setup_env.sh')
+        with open(environment_script, 'w+', encoding="utf-8") as script:
+            script.write(env_prefix)
+        # Add execute permission for user
+        st = os.stat(environment_script)
+        os.chmod(environment_script, st.st_mode | stat.S_IXUSR)
 
 def get_engine_commit(version, hash_):
     """Get matching engine commit hash."""

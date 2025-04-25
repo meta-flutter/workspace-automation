@@ -139,6 +139,7 @@ dmypy.json
 .tmp
 .vscode
 setup_env.sh
+setup_env.ps1
 flutter
 app
 flutter_*.log
