@@ -1,19 +1,47 @@
 #!/usr/bin/env python3
 #
-# SPDX-FileCopyrightText: (C) 2020-2023 Joel Winarske
+# SPDX-FileCopyrightText: (C) 2020-2025 workspace-automation contributors
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-#
 
 import os
+import platform
 import subprocess
 import sys
+
 from platform import system
 from sys import stderr as stream
 
 # use kiB's
 kb = 1024
+
+
+def get_host_machine_arch():
+    os.environ['HOST_ARCH'] = platform.machine()
+    return platform.machine()
+
+
+def get_flutter_arch():
+    host_arch = get_host_machine_arch()
+    if host_arch == 'x86_64':
+        os.environ['HOST_ARCH_GOOGLE'] = 'x64'
+        return 'x64'
+    elif host_arch == 'AMD64':
+        os.environ['HOST_ARCH_GOOGLE'] = 'x64'
+        return 'x64'
+    elif host_arch == 'arm64':
+        os.environ['HOST_ARCH_GOOGLE'] = 'arm64'
+        return 'arm64'
+    elif host_arch == 'ARM64':
+        os.environ['HOST_ARCH_GOOGLE'] = 'arm64'
+        return 'arm64'
+    elif host_arch == 'aarch64':
+        os.environ['HOST_ARCH_GOOGLE'] = 'aarch64'
+        return 'arm64'
+    else:
+        print_banner(f'Unknown host arch: {host_arch}')
+        exit(1)
 
 
 def check_python_version():

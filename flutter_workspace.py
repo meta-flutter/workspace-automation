@@ -41,6 +41,7 @@ import stat
 import sys
 import time
 import zipfile
+
 from platform import system
 from shlex import quote as shlex_quote
 
@@ -49,13 +50,15 @@ from common import chown_workspace
 from common import compare_sha256
 from common import download_https_file
 from common import fetch_https_binary_file
+from common import get_flutter_arch
+from common import get_host_machine_arch
 from common import get_ws_folder
 from common import handle_ctrl_c
 from common import print_banner
 from common import reset_sudo_timestamp
-from common import run_command
 from common import validate_sudo_user
 from common import validate_sudo_user_timestamp
+
 from create_aot import create_platform_aot
 from create_aot import get_flutter_sdk_version
 
@@ -64,33 +67,6 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     if issubclass(exc_type, KeyboardInterrupt):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         return
-
-
-def get_host_machine_arch():
-    os.environ['HOST_ARCH'] = platform.machine()
-    return platform.machine()
-
-
-def get_flutter_arch():
-    host_arch = get_host_machine_arch()
-    if host_arch == 'x86_64':
-        os.environ['HOST_ARCH_GOOGLE'] = 'x64'
-        return 'x64'
-    elif host_arch == 'AMD64':
-        os.environ['HOST_ARCH_GOOGLE'] = 'x64'
-        return 'x64'
-    elif host_arch == 'arm64':
-        os.environ['HOST_ARCH_GOOGLE'] = 'arm64'
-        return 'arm64'
-    elif host_arch == 'ARM64':
-        os.environ['HOST_ARCH_GOOGLE'] = 'arm64'
-        return 'arm64'
-    elif host_arch == 'aarch64':
-        os.environ['HOST_ARCH_GOOGLE'] = 'aarch64'
-        return 'arm64'
-    else:
-        print_banner(f'Unknown host arch: {host_arch}')
-        exit(1)
 
 
 def main():
@@ -278,6 +254,12 @@ def main():
     get_workspace_repos(app_folder, config)
 
     #
+    # Prepend depot_tools to PATH
+    #
+    depot_tools_path = os.path.join(workspace, 'app', 'depot_tools')
+    os.environ['PATH'] = f"{depot_tools_path}{os.pathsep}{os.environ.get('PATH')}"
+
+    #
     # Get Flutter SDK
     #
     if args.flutter_version:
@@ -311,8 +293,24 @@ def main():
     print("PUB_CACHE=%s" % os.environ.get('PUB_CACHE'))
 
     if sys.platform.startswith('win'):
+        os.environ['GCLIENT'] = 'gclient.bat'
+        os.environ['AUTONINJA'] = 'autoninja.bat'
+        os.environ['NINJA'] = 'ninja.bat'
+        os.environ['GN'] = 'gn.bat'
+        os.environ['REMOVE_TREE'] = 'rmdir /s /q'
+        os.environ['MAKE_DIR'] = 'mkdir'
+        os.environ['COPY'] = 'copy'
+        os.environ['RET_TRUE'] = '2>nul'
         print("APPDATA=%s" % os.environ.get('APPDATA'))
     else:
+        os.environ['GCLIENT'] = 'gclient'
+        os.environ['AUTONINJA'] = 'autoninja'
+        os.environ['NINJA'] = 'ninja'
+        os.environ['GN'] = 'gn'
+        os.environ['REMOVE_TREE'] = 'rm -rf'
+        os.environ['MAKE_DIR'] = 'mkdir -p'
+        os.environ['COPY'] = 'cp'
+        os.environ['RET_TRUE'] = '|true'
         os.environ['XDG_CONFIG_HOME'] = os.path.join(
             os.environ.get('FLUTTER_WORKSPACE'), '.config', 'flutter')
         print("XDG_CONFIG_HOME=%s" % os.environ.get('XDG_CONFIG_HOME'))
@@ -872,34 +870,35 @@ def patch_custom_device_strings(devices, flutter_runtime):
 def fixup_custom_device(obj):
     """ Patch custom device string environmental variables to use literal values """
 
+    is_posix = not sys.platform.startswith('win')
     obj['id'] = os.path.expandvars(obj['id'])
     obj['label'] = os.path.expandvars(obj['label'])
     obj['sdkNameAndVersion'] = os.path.expandvars(obj['sdkNameAndVersion'])
     obj['platform'] = os.path.expandvars(obj['platform'])
     obj['ping'] = os.path.expandvars(obj['ping'])
-    obj['ping'] = shlex.split(obj['ping'])
+    obj['ping'] = shlex.split(obj['ping'], posix=is_posix)
     obj['pingSuccessRegex'] = os.path.expandvars(obj['pingSuccessRegex'])
     if obj['postBuild']:
         obj['postBuild'] = os.path.expandvars(obj['postBuild'])
-        obj['postBuild'] = shlex.split(obj['postBuild'])
+        obj['postBuild'] = shlex.split(obj['postBuild'], posix=is_posix)
     if obj['install']:
         obj['install'] = os.path.expandvars(obj['install'])
-        obj['install'] = shlex.split(obj['install'])
+        obj['install'] = shlex.split(obj['install'], posix=is_posix)
     if obj['uninstall']:
         obj['uninstall'] = os.path.expandvars(obj['uninstall'])
-        obj['uninstall'] = shlex.split(obj['uninstall'])
+        obj['uninstall'] = shlex.split(obj['uninstall'], posix=is_posix)
     if obj['runDebug']:
         obj['runDebug'] = os.path.expandvars(obj['runDebug'])
-        obj['runDebug'] = shlex.split(obj['runDebug'])
+        obj['runDebug'] = shlex.split(obj['runDebug'], posix=is_posix)
     if obj['forwardPort']:
         obj['forwardPort'] = os.path.expandvars(obj['forwardPort'])
-        obj['forwardPort'] = shlex.split(obj['forwardPort'])
+        obj['forwardPort'] = shlex.split(obj['forwardPort'], posix=is_posix)
     if obj['forwardPortSuccessRegex']:
         obj['forwardPortSuccessRegex'] = os.path.expandvars(
             obj['forwardPortSuccessRegex'])
     if obj['screenshot']:
         obj['screenshot'] = os.path.expandvars(obj['screenshot'])
-        obj['screenshot'] = shlex.split(obj['screenshot'])
+        obj['screenshot'] = shlex.split(obj['screenshot'], posix=is_posix)
 
     return obj
 
@@ -1331,14 +1330,14 @@ def handle_conditionals(conditionals, cwd):
 
     print(conditionals)
     for condition in conditionals:
-        path = os.path.expandvars(condition['path'])
+        path = os.path.normpath(os.path.expandvars(condition['path']))
         print(path)
 
         if not os.path.exists(path):
             print("** Conditionals **")
             for cmd_str in condition['cmds']:
-                cmd_str = os.path.expandvars(cmd_str)
-                cmd_arr = shlex.split(cmd_str)
+                cmd_str = os.path.normpath(os.path.expandvars(cmd_str))
+                cmd_arr = shlex.split(cmd_str, posix=not sys.platform.startswith('win'))
                 print(cmd_arr)
                 subprocess.call(cmd_arr, cwd=cwd)
 
@@ -1464,15 +1463,43 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
                 future.result()
                 validate_sudo_user()
 
+            for artifact in host_specific_artifacts:
+                handle_post_cmds(artifact.get('post_cmds'))
+
 
 def handle_commands(cmds, cwd):
     if cmds:
         for cmd in cmds:
+            print_banner(f'cmd: {cmd}')
             expanded_cmd = os.path.expandvars(cmd)
-            cmd_arr = shlex.split(expanded_cmd)
+            cmd_arr = shlex.split(expanded_cmd, posix=not sys.platform.startswith('win'))
+            for i, arg in enumerate(cmd_arr):
+                # Only normalize if the argument is a path to an existing file or directory, or looks like a path
+                # Exclude arguments that start with 'http://' or 'https://'
+                # Preserve leading '.' if arg starts with './' or '.\\'
+                if (os.path.sep in arg or '/' in arg or '\\' in arg) and not arg.startswith('-') and not (arg.startswith('http://') or arg.startswith('https://')):
+                    if arg.startswith('./') or arg.startswith('.\\'):
+                        # Normalize but preserve leading .
+                        norm = os.path.normpath(arg[2:])
+                        cmd_arr[i] = '.' + os.path.sep + norm
+                    else:
+                        cmd_arr[i] = os.path.normpath(arg)
             print(f'cmd_arr: {cmd_arr}')
             print(f'cwd: {cwd}')
             subprocess.check_call(cmd_arr, cwd=cwd)
+
+
+def handle_post_cmds(post_cmds):
+    if not post_cmds:
+        return
+
+    for post_cmd in post_cmds:
+        cwd = post_cmd.get('cwd')
+        if not cwd:
+            print_banner("Warning: Missing `cwd` key in post_cmds, using current working directory")
+            cwd = os.getcwd()
+
+        handle_commands_obj(post_cmd.get('cmds'), cwd)
 
 
 def handle_commands_obj(cmd_list, cwd):
@@ -1499,17 +1526,20 @@ def handle_commands_obj(cmd_list, cwd):
             handle_env(obj.get('env'), local_env)
 
         if 'cwd' in obj:
-            cwd = os.path.expandvars(obj.get('cwd'))
+            cwd = os.path.normpath(os.path.expandvars(obj.get('cwd')))
             os.makedirs(cwd, exist_ok=True)
 
         shell_ = False
         if 'shell' in obj:
             shell_ = obj.get('shell')
 
+        print(f'local_env: {local_env}')
+
         cmds = obj.get('cmds')
         for cmd in cmds:
-            expanded_cmd = os.path.expandvars(cmd)
-            cmd_arr = shlex.split(expanded_cmd)
+            expanded_cmd = os.path.normpath(os.path.expandvars(cmd))
+            cmd_arr = shlex.split(expanded_cmd, posix=not sys.platform.startswith('win'))
+            print(f'cwd: {cwd}')
             print(f'cmd: {cmd_arr}')
             subprocess.check_call(cmd_arr, cwd=cwd, env=local_env, shell=shell_)
 
@@ -1553,7 +1583,7 @@ def handle_docker_obj(obj, _, cwd):
         if Path(docker_compose_yml_abs).exists():
             docker_compose_stop(docker_compose_yml_abs)
 
-    handle_commands(obj.get('post_cmds'), cwd)
+    handle_post_cmds(obj.get('post_cmds'))
     handle_conditionals(obj.get('conditionals'), cwd)
 
 
@@ -1721,8 +1751,8 @@ def handle_github_obj(obj, cwd, token):
 
         if post_process:
             for cmd in post_process:
-                expanded_cmd = os.path.expandvars(cmd)
-                cmd_arr = shlex.split(expanded_cmd)
+                expanded_cmd = os.path.normpath(os.path.expandvars(cmd))
+                cmd_arr = shlex.split(expanded_cmd, posix=not sys.platform.startswith('win'))
                 subprocess.call(cmd_arr, cwd=cwd, env=os.environ)
 
 
@@ -1766,11 +1796,24 @@ def handle_env(env_variables, local_env):
 
     for k, v in env_variables.items():
         if local_env:
-            local_env[k] = os.path.expandvars(v)
-            print(f'local: {k} = {local_env[k]}')
+            if 'PATH_PREPEND' in k:
+                local_env['PATH'] = os.path.normpath(os.path.expandvars(v)) + os.pathsep + local_env['PATH']
+                continue
+            if 'PATH_APPEND' in k:
+                local_env['PATH'] = local_env['PATH'] + os.pathsep + os.path.normpath(os.path.expandvars(v))
+                continue
+
+            local_env[k] = os.path.normpath(os.path.expandvars(v))
         else:
-            os.environ[k] = os.path.expandvars(v)
-            # print(f'global: {k} = {os.environ[k]}')
+            if 'PATH_PREPEND' in k:
+                os.environ['PATH'] = os.path.normpath(os.path.expandvars(v)) + os.pathsep + os.environ['PATH']
+                continue
+            if 'PATH_APPEND' in k:
+                os.environ['PATH'] = os.environ['PATH'] + os.pathsep + os.path.normpath(os.path.expandvars(v))
+                continue
+
+        os.environ[k] = os.path.normpath(os.path.expandvars(v)) 
+        # print(f'global: {k} = {os.environ[k]}')
 
 
 def get_platform_working_dir(platform_id):
@@ -1874,6 +1917,15 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, ena
         elif platform_id in enable or platform_['load']:
             value = "ON"
         else:
+            value = "OFF"
+
+        # skip if distro not supported
+        if not is_host_type_supported(platform_['supported_host_types']):
+            value = "OFF"
+
+        # skip if architecture not supported
+        host_machine_arch = get_host_machine_arch()
+        if host_machine_arch not in platform_['supported_archs']:
             value = "OFF"
 
         key = f'FLUTTER_WORKSPACE_{id_upper}_LOAD'

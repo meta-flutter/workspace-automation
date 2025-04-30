@@ -13,15 +13,53 @@ This script reads a configuration folder of JSON files, or a single JSON configu
 
     sudo apt install -y apt-utils python3
 
+* Windows
+
+- Install Visual Studio
+- Install CMake
+- Install python3 from the Windows Store - enable for cmd.exe
+
+-Install the python virtualenv module
+
+    python3 -m pip install virtualenv
+
+-Requirements to build `flutter-engine-windows`
+  
+  -Enable long path support for git
+
+      git config --global core.longpaths true
+
+  -Enable Developer Mode to allow symlink creation without Admin rights
+
+    On Windows 10/11, enabling Developer Mode allows non-admin users to create symlinks
+
+    Go to Settings > Search for developer settings
+    Turn on Developer Mode
+    Restart your terminal
+
+  -Install Windows 10 SDK from Visual Studio installer
+
+   if ARM64 Windows machine copy `C:\Program Files (x86)\Windows Kits\10\Debuggers\arm64` to `C:\Program Files (x86)\Windows Kits\10\Debuggers\arm64` to appease flutter/tools/gen.bat
+
+  -Install ninja and add to path after depot_tools
+
+  -Optional install WinDgb - AKA Wind-Bag
+  
+    winget install Microsoft.WinDbg
+
+  -Running setup_env.ps1
+
+    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+    .\setup_env.ps1
+
 ### create_aot.py
 
-create AOT is used to create libapp.so for use on a device.
+create AOT is used to create libapp.so for use on a device.  It requires an active FLUTTER_WORKSPACE.
 
 Example use:
 
+    source ./setup_env.sh
     ./create_aot --path <path that holds a pubspec.yaml>
-
-Expects to be run from an active FLUTTER_WORKSPACE.  Meaning you need to source you environment first.
 
 #### Environmental variables used by script
 
@@ -55,11 +93,12 @@ flutter_workspace.py does the following tasks automatically for you
   * Each type uses a specific configuration
 * Create setup_env.sh
 * 
-* Tested on Linux and Mac
+* Tested on Linux, Mac, and Windows
   * Ubuntu 20 (x86_64)
   * Ubuntu 22 (x86_64)
   * Fedora 37 (x86_64)
   * Mac M1/M2 (arm64)
+  * Windows Surface Elite X (arm64)
 
 #### Environmental Variables
 
