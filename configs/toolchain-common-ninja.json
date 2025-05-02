@@ -3,17 +3,20 @@
     "load": true,
     "supported_archs": [
         "aarch64",
-        "x86_64"
+        "x86_64",
+        "ARM64",
+        "AMD64"
     ],
     "supported_host_types": [
         "fedora",
-        "ubuntu"
+        "ubuntu",
+        "windows"
     ],
     "type": "toolchain",
     "toolchain": "common",
     "env": {
         "VERSION": "1.12.1",
-        "ARCHIVE_FILE": "ninja-${VERSION}"
+        "ARCHIVE_FILE": "ninja-${VERSION}.zip"
     },
     "runtime": {
         "artifacts": {
@@ -22,29 +25,66 @@
                 "artifacts": {
                     "x86_64": [
                         {
-                            "filename": "${ARCHIVE_FILE}.zip",
+                            "filename": "${ARCHIVE_FILE}",
                             "endpoint": "/releases/download/v${VERSION}/ninja-linux.zip",
-                            "sha1": "0adea0f99aceafdac3361d091bc90b9dab722f2b"
+                            "sha1": "0adea0f99aceafdac3361d091bc90b9dab722f2b",
+                            "post_cmds": [
+                                {
+                                    "cwd": "${PLATFORM_ID_DIR}",
+                                    "cmds": [
+                                        "python3 -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" ."
+                                    ]
+                                }
+                            ]
                         }
                     ],
                     "aarch64": [
                         {
-                            "filename": "${ARCHIVE_FILE}.zip",
+                            "filename": "${ARCHIVE_FILE}",
                             "endpoint": "/releases/download/v${VERSION}/ninja-linux-aarch64.zip",
-                            "sha1": "31ce26f7fc77df4dcbc6ca56cc3b9794778e4ea5"
+                            "sha1": "31ce26f7fc77df4dcbc6ca56cc3b9794778e4ea5",
+                            "post_cmds": [
+                                {
+                                    "cwd": "${PLATFORM_ID_DIR}",
+                                    "cmds": [
+                                        "python3 -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" ."
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "AMD64": [
+                        {
+                            "filename": "${ARCHIVE_FILE}",
+                            "endpoint": "/releases/download/v${VERSION}/ninja-win.zip",
+                            "sha256": "f550fec705b6d6ff58f2db3c374c2277a37691678d6aba463adcbb129108467a",
+                            "post_cmds": [
+                                {
+                                    "cwd": "${PLATFORM_ID_DIR}",
+                                    "cmds": [
+                                        "python3.exe -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" ."
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "ARM64": [
+                        {
+                            "filename": "${ARCHIVE_FILE}",
+                            "endpoint": "/releases/download/v${VERSION}/ninja-winarm64.zip",
+                            "sha256": "79c96a50e0deafec212cfa85aa57c6b74003f52d9d1673ddcd1eab1c958c5900",
+                            "post_cmds": [
+                                {
+                                    "cwd": "${PLATFORM_ID_DIR}",
+                                    "cmds": [
+                                        "python3.exe -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" ."
+                                    ]
+                                }
+                            ]
                         }
                     ]
                 }
             }
-        },
-        "post_cmds": [
-            {
-                "cwd": "${PLATFORM_ID_DIR}",
-                "cmds": [
-                    "bash -c \"rm ninja | true\"",
-                    "unzip ${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}.zip -d ."
-                ]
-            }
-        ]
+        }
     }
 }

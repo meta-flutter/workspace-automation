@@ -1,0 +1,89 @@
+{
+    "id": "flutter-engine-windows",
+    "load": false,
+    "supported_archs": [
+        "AMD64",
+        "ARM64"
+    ],
+    "supported_host_types": [
+        "windows"
+    ],
+    "type": "dependency",
+    "env": {
+        "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools:${PATH}",
+        "RUNTIME_MODE": "debug",
+        "ENGINE_ROOT": "${FLUTTER_WORKSPACE}/flutter",
+        "VPYTHON_VIRTUALENV_ROOT": "${ENGINE_ROOT}/.vpython",
+        "ENGINE_SRC_DIR_RELATIVE": "engine/src",
+        "ENGINE_SRC_DIR": "${ENGINE_ROOT}/${ENGINE_SRC_DIR_RELATIVE}",
+        "ENGINE_BUILD_FLAGS": "--unoptimized --runtime-mode ${RUNTIME_MODE} --windows-cpu ${HOST_ARCH_GOOGLE} --build-engine-artifacts --no-build-glfw-shell --no-build-embedder-examples --no-prebuilt-dart-sdk --embedder-for-target --no-build-embedder-examples --enable-impeller-3d --no-lto --no-goma --no-rbe --no-stripped",
+        "ENGINE_BUILD_DIR": "${ENGINE_SRC_DIR}/out/host_debug_unopt",
+        "GN_ARGS_FILE": "${ENGINE_BUILD_DIR}_${HOST_ARCH_GOOGLE}/args.gn",
+        "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/flutter-engine-mono",
+        "DEPOT_TOOLS_WIN_TOOLCHAIN": "0"
+    },
+    "src": [],
+    "runtime": {
+        "gclient_config": {
+            "path": "${ENGINE_ROOT}",
+            "managed": false,
+            "name": ".",
+            "url": "https://github.com/flutter/flutter.git",
+            "custom_deps": {},
+            "custom_vars": {
+                "download_android_deps": false,
+                "download_windows_deps": true,
+                "download_linux_deps": false,
+                "download_emsdk": false
+            },
+            "deps_file": "DEPS",
+            "safesync_url": ""
+        },
+        "post_cmds": [
+            {
+                "cwd": "${ENGINE_SRC_DIR}",
+                "cmds": [
+                    "git reset --hard",
+                    "git apply ${PATCH_FOLDER}/0001-clang-toolchain.patch"
+                ]
+            },
+            {
+                "cwd": "${ENGINE_ROOT}",
+                "cmds": [
+                    "${GCLIENT} sync -D -R -j${HARDWARE_THREADS} -v",
+                    "${GCLIENT} runhooks"
+                ]
+            },
+            {
+                "cwd": "${ENGINE_SRC_DIR}\\flutter",
+                "cmds": [
+                    "git reset --hard"
+                ]
+            },
+            {
+                "cwd": "${ENGINE_SRC_DIR}",
+                "cmds": [
+                    "${ENGINE_SRC_DIR}/flutter/tools/${GN} ${ENGINE_BUILD_FLAGS}",
+                    "${AUTONINJA} -C ${ENGINE_BUILD_DIR}_${HOST_ARCH_GOOGLE}"
+                ]
+            },
+            {
+                "cwd": "${ENGINE_BUILD_DIR}_${HOST_ARCH_GOOGLE}",
+                "cmds": [
+                    "${MAKE_DIR} ${PLATFORM_ID_DIR}/bundle/data/",
+                    "${MAKE_DIR} ${PLATFORM_ID_DIR}/bundle/lib/",
+                    "${COPY} ${ENGINE_BUILD_DIR}_${HOST_ARCH_GOOGLE}/icudtl.dat ${PLATFORM_ID_DIR}/bundle/data/",
+                    "${COPY} ${ENGINE_BUILD_DIR}_${HOST_ARCH_GOOGLE}/flutter_engine.dll ${PLATFORM_ID_DIR}/bundle/lib/"
+                ]
+            }
+        ],
+        "do_clean": [
+            {
+                "cwd": "${ENGINE_BUILD_DIR}_${HOST_ARCH_GOOGLE}",
+                "cmds": [
+                    "${NINJA} -t clean"
+                ]
+            }
+        ]
+    }
+}

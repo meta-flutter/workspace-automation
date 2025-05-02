@@ -31,8 +31,9 @@ jobs:
 
       - name: Create workspace
         run: |
-          python3 -m pip install virtualenv
-          python3 ./flutter_workspace.py
+          python3.exe -m pip install --upgrade pip
+          python3.exe -m pip install virtualenv
+          ./flutter_workspace.ps1
 
       - name: Test workspace
         run: |

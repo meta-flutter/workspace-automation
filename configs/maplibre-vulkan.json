@@ -12,8 +12,8 @@
     ],
     "type": "dependency",
     "env": {
-        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
-        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/lib",
+        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.7/bin:$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.7/lib",
         "MAPLIBRE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native",
         "MAPLIBRE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native/build",
         "MAPLIBRE_CMAKE_ARGS": "-DBUILD_SHARED_LIBS=OFF -DMLN_WITH_WERROR=OFF -DMLN_WITH_VULKAN=ON -DMLN_DRAWABLE_RENDERER=ON -DMLN_LEGACY_RENDERER=OFF -DMLN_WITH_EGL=OFF -DMLN_WITH_OPENGL=OFF",

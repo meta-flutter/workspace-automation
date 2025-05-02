@@ -13,8 +13,8 @@
     "type": "dependency",
     "env": {
         "VERSION": "0.8.4",
-        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/bin:$PATH",
-        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.0/lib",
+        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.7/bin:$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.7/lib",
         "RIVE_TEXT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/rive-common",
         "RIVE_TEXT_BUILD_DIR": "${RIVE_TEXT_SRC_DIR}/build",
         "RIVE_TEXT_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DENABLE_LTO=ON"
