@@ -53,10 +53,6 @@
       "branch": "v2.0"
     },
     {
-      "uri": "https://github.com/toyota-connected/tcna-packages",
-      "branch": "main"
-    },
-    {
       "uri": "https://github.com/mogol/flutter_secure_storage.git",
       "branch": "develop",
       "pubspec_path": "flutter_secure_storage/flutter_secure_storage/example"
@@ -163,9 +159,10 @@
       {
         "cwd": "${HOMESCREEN_BUILD_DIR}",
         "cmds": [
-          "bash -c \"rm -rf * | true\"",
+          "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
           "cmake -G Ninja ${HOMESCREEN_CMAKE_ARGS} -S ${HOMESCREEN_SRC_DIR} -B ${HOMESCREEN_BUILD_DIR}",
-          "ninja -j${HARDWARE_THREADS}",
+          "cmake --build ${HOMESCREEN_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target clean --parallel",
+          "cmake --build ${HOMESCREEN_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target homescreen --parallel",
           "${LLVM_STRIP} shell/homescreen"
         ]
       }
@@ -174,7 +171,7 @@
       {
         "cwd": "${HOMESCREEN_BUILD_DIR}",
         "cmds": [
-          "ninja -t clean"
+          "cmake --build ${HOMESCREEN_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target clean --parallel"
         ]
       }
     ]

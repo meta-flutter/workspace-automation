@@ -17,7 +17,7 @@
         "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.7/lib",
         "RIVE_TEXT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/rive-common",
         "RIVE_TEXT_BUILD_DIR": "${RIVE_TEXT_SRC_DIR}/build",
-        "RIVE_TEXT_CMAKE_ARGS": "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DENABLE_LTO=ON"
+        "RIVE_TEXT_CMAKE_ARGS": "-D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -D ENABLE_LTO=ON"
     },
     "src": [
         {
@@ -35,9 +35,10 @@
             {
                 "cwd": "${RIVE_TEXT_BUILD_DIR}",
                 "cmds": [
-                    "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
-                    "cmake -G Ninja ${RIVE_TEXT_CMAKE_ARGS} -S ${RIVE_TEXT_SRC_DIR} -B ${RIVE_TEXT_BUILD_DIR}",
-                    "ninja -j${HARDWARE_THREADS}",
+                    "bash -c \"rm -rf * | true\"",
+                    "cmake -G Ninja -S ${RIVE_TEXT_SRC_DIR} -B ${RIVE_TEXT_BUILD_DIR} ${RIVE_TEXT_CMAKE_ARGS}",
+                    "cmake --build ${RIVE_TEXT_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target clean --parallel",
+                    "cmake --build ${RIVE_TEXT_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target rive_text --parallel",
                     "${LLVM_STRIP} librive_text.so.${VERSION}"
                 ]
             }
@@ -46,7 +47,7 @@
             {
                 "cwd": "${RIVE_TEXT_BUILD_DIR}",
                 "cmds": [
-                    "ninja -t clean"
+                    "cmake --build ${RIVE_TEXT_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target clean --parallel"
                 ]
             }
         ]

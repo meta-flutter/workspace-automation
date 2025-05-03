@@ -104,7 +104,7 @@
                 "cmds": [
                     "bash -c \"rm -rf ${SEATD_BUILD_DIR} | true\"",
                     "meson setup ${SEATD_BUILD_DIR} ${SEATD_MESON_ARGS}",
-                    "ninja -C ${SEATD_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                    "${AUTONINJA} -C ${SEATD_BUILD_DIR} install"
                 ]
             },
             {
@@ -112,7 +112,7 @@
                 "cmds": [
                     "bash -c \"rm -rf ${WAYLAND_BUILD_DIR} | true\"",
                     "meson setup ${WAYLAND_BUILD_DIR} ${WAYLAND_MESON_ARGS}",
-                    "ninja -C ${WAYLAND_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                    "${AUTONINJA} -C ${WAYLAND_BUILD_DIR} install"
                 ]
             },
             {
@@ -125,7 +125,7 @@
                 "cmds": [
                     "bash -c \"rm -rf ${WAYLAND_PROTOCOLS_BUILD_DIR} | true\"",
                     "meson setup ${WAYLAND_PROTOCOLS_BUILD_DIR} ${WAYLAND_PROTOCOLS_MESON_ARGS}",
-                    "ninja -C ${WAYLAND_PROTOCOLS_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                    "${AUTONINJA} -C ${WAYLAND_PROTOCOLS_BUILD_DIR} install"
                 ]
             },
             {
@@ -138,7 +138,7 @@
                 "cmds": [
                     "bash -c \"rm -rf ${WESTON_BUILD_DIR} | true\"",
                     "meson setup ${WESTON_BUILD_DIR} ${WESTON_MESON_ARGS}",
-                    "ninja -C ${WESTON_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                    "${AUTONINJA} -C ${WESTON_BUILD_DIR} install"
                 ]
             },
             {
@@ -151,7 +151,7 @@
                 "cmds": [
                     "bash -c \"rm -rf ${AGL_COMPOSITOR_BUILD_DIR} | true\"",
                     "meson setup ${AGL_COMPOSITOR_BUILD_DIR} ${AGL_COMPOSITOR_MESON_ARGS}",
-                    "ninja -C ${AGL_COMPOSITOR_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                    "${AUTONINJA} -C ${AGL_COMPOSITOR_BUILD_DIR} install"
                 ]
             },
             {
@@ -164,7 +164,7 @@
                 "cmds": [
                     "bash -c \"rm -rf ${WAYPP_BUILD_DIR} | true\"",
                     "cmake -G Ninja ${WAYPP_CMAKE_ARGS} -S ${WAYPP_SRC_DIR} -B ${WAYPP_BUILD_DIR}",
-                    "ninja -C ${WAYPP_BUILD_DIR} -j${HARDWARE_THREADS}"
+                    "${AUTONINJA} -C ${WAYPP_BUILD_DIR}"
                 ]
             }
         ]

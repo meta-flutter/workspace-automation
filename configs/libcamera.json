@@ -61,7 +61,7 @@
             {
                 "cwd": "${CAMERA_BUILD_DIR}",
                 "cmds": [
-                    "ninja -C ${CAMERA_BUILD_DIR} install -j${HARDWARE_THREADS}",
+                    "${AUTONINJA} -C ${CAMERA_BUILD_DIR} install",
                     "find ${INSTALL_PREFIX} -name \"lib*.so.0.4.0\" -exec ${LLVM_STRIP} {} \\;"
                 ]
             }

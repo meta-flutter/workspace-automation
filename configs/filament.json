@@ -72,8 +72,8 @@
             {
                 "cwd": "${FILAMENT_BUILD_DIR}",
                 "cmds": [
-                    "cmake -GNinja ${FILAMENT_CMAKE_ARGS} -S ${FILAMENT_SRC_DIR} -B ${FILAMENT_BUILD_DIR}",
-                    "ninja install -j${HARDWARE_THREADS}"
+                    "cmake -G Ninja -S ${FILAMENT_SRC_DIR} -B ${FILAMENT_BUILD_DIR} ${FILAMENT_CMAKE_ARGS}",
+                    "cmake --build . --config Release --target install --parallel"
                 ]
             }
         ],
@@ -81,7 +81,7 @@
             {
                 "cwd": "${FILAMENT_BUILD_DIR}",
                 "cmds": [
-                    "ninja -t clean"
+                    "cmake --build . --config Release --target clean --parallel"
                 ]
             }
         ]

@@ -38,6 +38,7 @@ import shutil
 import signal
 import subprocess
 import stat
+import string
 import sys
 import time
 import zipfile
@@ -1368,11 +1369,11 @@ def handle_pre_requisites(obj, cwd):
         if host_specific_pre_requisites.get(host_os_release_id):
             distro = host_specific_pre_requisites[host_os_release_id]
             handle_conditionals(distro.get('conditionals'), cwd)
-            handle_commands(distro.get('cmds', None), cwd)
+            handle_commands_obj(distro, cwd)
 
             if distro.get(host_os_version_id):
                 os_version = distro[host_os_version_id]
-                handle_commands(os_version.get('cmds', None), cwd)
+                handle_commands_obj(os_version, cwd)
         else:
             print(f'handle_pre_requisites: Not supported: [{host_os_release_id}, {host_os_version_id}]')
 
@@ -1467,28 +1468,6 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
                 handle_post_cmds(artifact.get('post_cmds'))
 
 
-def handle_commands(cmds, cwd):
-    if cmds:
-        for cmd in cmds:
-            print_banner(f'cmd: {cmd}')
-            expanded_cmd = os.path.expandvars(cmd)
-            cmd_arr = shlex.split(expanded_cmd, posix=not sys.platform.startswith('win'))
-            for i, arg in enumerate(cmd_arr):
-                # Only normalize if the argument is a path to an existing file or directory, or looks like a path
-                # Exclude arguments that start with 'http://' or 'https://'
-                # Preserve leading '.' if arg starts with './' or '.\\'
-                if (os.path.sep in arg or '/' in arg or '\\' in arg) and not arg.startswith('-') and not (arg.startswith('http://') or arg.startswith('https://')):
-                    if arg.startswith('./') or arg.startswith('.\\'):
-                        # Normalize but preserve leading .
-                        norm = os.path.normpath(arg[2:])
-                        cmd_arr[i] = '.' + os.path.sep + norm
-                    else:
-                        cmd_arr[i] = os.path.normpath(arg)
-            print(f'cmd_arr: {cmd_arr}')
-            print(f'cwd: {cwd}')
-            subprocess.check_call(cmd_arr, cwd=cwd)
-
-
 def handle_post_cmds(post_cmds):
     if not post_cmds:
         return
@@ -1499,49 +1478,79 @@ def handle_post_cmds(post_cmds):
             print_banner("Warning: Missing `cwd` key in post_cmds, using current working directory")
             cwd = os.getcwd()
 
-        handle_commands_obj(post_cmd.get('cmds'), cwd)
+        handle_commands_obj(post_cmd, cwd)
 
 
-def handle_commands_obj(cmd_list, cwd):
-    if not cmd_list:
+def handle_commands_obj(obj, cwd):
+    if not obj:
         return
+    
+    print_banner(f'Handling commands object: {obj}')
 
-    for obj in cmd_list:
-        if 'cmds' not in obj:
-            continue
+    host_type = get_host_type()
+    if host_type == 'linux':
+        host_type = get_freedesktop_os_release_id()
 
-        host_type = get_host_type()
-        if host_type == 'linux':
-            host_type = get_freedesktop_os_release_id()
+    print(f'host_type: {host_type}')
 
-        # sandbox variables to commands
-        if host_type in obj:
-            cmds = obj[host_type]
-            if 'env' in cmds:
-                handle_env(cmds.get('env'), None)
+    # sandbox variables to commands
+    if host_type in obj:
+        cmds = obj[host_type]
+        if 'env' in cmds:
+            handle_env(cmds.get('env'), None)
 
-        local_env = os.environ.copy()
+    local_env = os.environ.copy()
+    if 'env' in obj:
+        handle_env(obj.get('env'), local_env)
 
-        if 'env' in obj:
-            handle_env(obj.get('env'), local_env)
+    print(f'local_env: {local_env}')
 
-        if 'cwd' in obj:
-            cwd = os.path.normpath(os.path.expandvars(obj.get('cwd')))
-            os.makedirs(cwd, exist_ok=True)
+    orig_env = os.environ.copy()
+    os.environ.update(local_env)
 
-        shell_ = False
-        if 'shell' in obj:
-            shell_ = obj.get('shell')
+    if 'cwd' in obj:
+        cwd = obj.get('cwd')
 
-        print(f'local_env: {local_env}')
+    if cwd:
+        print(f'cwd raw: {cwd}')
+        cwd = os.path.expanduser(cwd)
+        print(f'cwd expanduser: {cwd}')
+        cwd = string.Template(cwd).safe_substitute(local_env)
+        print(f'cwd safe_substitute: {cwd}')
+        cwd = os.path.normpath(cwd)
+        print(f'cwd normpath: {cwd}')
+        os.makedirs(cwd, exist_ok=True)
 
-        cmds = obj.get('cmds')
-        for cmd in cmds:
-            expanded_cmd = os.path.normpath(os.path.expandvars(cmd))
-            cmd_arr = shlex.split(expanded_cmd, posix=not sys.platform.startswith('win'))
-            print(f'cwd: {cwd}')
-            print(f'cmd: {cmd_arr}')
-            subprocess.check_call(cmd_arr, cwd=cwd, env=local_env, shell=shell_)
+    shell_ = False
+    if 'shell' in obj:
+        shell_ = obj.get('shell')
+
+    posix = not host_type == 'windows'
+
+    cmds = obj.get('cmds', [])
+    for cmd in cmds:
+        print(f'cmd raw: {cmd}')
+        cmd = os.path.expanduser(cmd)
+        print(f'cmd expanduser: {cmd}')
+        cmd = string.Template(cmd).safe_substitute(local_env)
+        print(f'cmd safe_substitute: {cmd}')
+
+        if host_type == 'windows':
+            cmd = os.path.normpath(cmd)
+            print(f'cmd normpath: {cmd}')
+
+            if cmd.startswith('python') or cmd.startswith('cmake') or cmd.startswith('git') and host_type == 'windows':
+                cmd = cmd.replace('\\', '/')
+                posix = True
+                print(f'cmd: {cmd}')
+
+        cmd_arr = shlex.split(cmd, posix=posix)
+        print(f'cmd: {cmd_arr}')
+
+        subprocess.check_call(cmd_arr, cwd=cwd, env=local_env, shell=shell_)
+
+    os.environ.clear()
+    os.environ.update(orig_env)
 
 
 def handle_docker_registry(obj):
@@ -1979,7 +1988,7 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, ena
     handle_qemu_obj(runtime.get('qemu'), cwd, platform_[
         'id'], 'debug')
     validate_sudo_user()
-    handle_commands_obj(runtime.get('post_cmds'), cwd)
+    handle_post_cmds(runtime.get('post_cmds'))
 
     handle_custom_devices(platform_)
 

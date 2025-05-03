@@ -58,8 +58,8 @@
                 "cwd": "${MAPLIBRE_BUILD_DIR}",
                 "cmds": [
                     "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
-                    "cmake -G Ninja ${MAPLIBRE_CMAKE_ARGS} -S ${MAPLIBRE_SRC_DIR} -B ${MAPLIBRE_BUILD_DIR}",
-                    "ninja -j${HARDWARE_THREADS}"
+                    "cmake -GNinja ${MAPLIBRE_CMAKE_ARGS} -S ${MAPLIBRE_SRC_DIR} -B ${MAPLIBRE_BUILD_DIR}",
+                    "${AUTONINJA}"
                 ]
             }
         ],

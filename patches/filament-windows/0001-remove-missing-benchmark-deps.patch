@@ -1,0 +1,95 @@
+From 7c44a633254c9b0cb07a39558c4324eeb43bb8ee Mon Sep 17 00:00:00 2001
+From: Joel Winarske <joel.winarske@outlook.com>
+Date: Tue, 6 May 2025 19:58:41 -0700
+Subject: [PATCH] remove missing benchmark deps
+
+Signed-off-by: Joel Winarske <joel.winarske@outlook.com>
+---
+ CMakeLists.txt            |  2 +-
+ filament/CMakeLists.txt   |  1 -
+ libs/math/CMakeLists.txt  | 15 ---------------
+ libs/utils/CMakeLists.txt | 26 --------------------------
+ 4 files changed, 1 insertion(+), 43 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f9de5b2a5..189c06615 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -766,7 +766,7 @@ add_subdirectory(${EXTERNAL}/civetweb/tnt)
+ add_subdirectory(${EXTERNAL}/imgui/tnt)
+ add_subdirectory(${EXTERNAL}/robin-map/tnt)
+ add_subdirectory(${EXTERNAL}/smol-v/tnt)
+-add_subdirectory(${EXTERNAL}/benchmark/tnt)
++#add_subdirectory(${EXTERNAL}/benchmark/tnt)
+ add_subdirectory(${EXTERNAL}/meshoptimizer/tnt)
+ add_subdirectory(${EXTERNAL}/mikktspace)
+ add_subdirectory(${EXTERNAL}/cgltf/tnt)
+diff --git a/filament/CMakeLists.txt b/filament/CMakeLists.txt
+index 9f0364f94..21c1a471d 100644
+--- a/filament/CMakeLists.txt
++++ b/filament/CMakeLists.txt
+@@ -660,4 +660,3 @@ install(FILES "../LICENSE" DESTINATION .)
+ # ==================================================================================================
+ add_subdirectory(backend)
+ add_subdirectory(test)
+-add_subdirectory(benchmark)
+diff --git a/libs/math/CMakeLists.txt b/libs/math/CMakeLists.txt
+index 838aa2d53..06820f756 100644
+--- a/libs/math/CMakeLists.txt
++++ b/libs/math/CMakeLists.txt
+@@ -61,18 +61,3 @@ add_executable(test_${TARGET}
+ )
+ target_link_libraries(test_${TARGET} PRIVATE math gtest)
+ set_target_properties(test_${TARGET} PROPERTIES FOLDER Tests)
+-
+-# ==================================================================================================
+-# Benchmarks
+-# ==================================================================================================
+-
+-set(BENCHMARK_SRCS
+-        benchmarks/benchmark_fast.cpp include/math/mathfwd.h)
+-
+-add_executable(benchmark_${TARGET} ${BENCHMARK_SRCS})
+-
+-target_compile_options(benchmark_${TARGET} PRIVATE ${OPTIMIZATION_FLAGS})
+-
+-target_link_libraries(benchmark_${TARGET} PRIVATE benchmark_main utils math)
+-
+-set_target_properties(benchmark_${TARGET} PROPERTIES FOLDER Benchmarks)
+diff --git a/libs/utils/CMakeLists.txt b/libs/utils/CMakeLists.txt
+index 72558167b..21f360d8d 100644
+--- a/libs/utils/CMakeLists.txt
++++ b/libs/utils/CMakeLists.txt
+@@ -185,29 +185,3 @@ add_executable(test_${TARGET} ${TEST_SRCS})
+ 
+ target_link_libraries(test_${TARGET} PRIVATE gtest utils tsl math)
+ set_target_properties(test_${TARGET} PROPERTIES FOLDER Tests)
+-
+-# ==================================================================================================
+-# Benchmarks
+-# ==================================================================================================
+-
+-if (NOT WEBGL)
+-
+-    add_library(benchmark_${TARGET}_callee SHARED benchmark/benchmark_callee.cpp)
+-    set_target_properties(benchmark_${TARGET}_callee PROPERTIES FOLDER Benchmarks)
+-
+-    set(BENCHMARK_SRCS
+-            benchmark/benchmark_allocators.cpp
+-            benchmark/benchmark_binary_search.cpp
+-            benchmark/benchmark_calls.cpp
+-            benchmark/benchmark_JobSystem.cpp
+-            benchmark/benchmark_mutex.cpp
+-            benchmark/benchmark_memcpy.cpp)
+-
+-
+-    add_executable(benchmark_${TARGET} ${BENCHMARK_SRCS})
+-
+-    target_link_libraries(benchmark_${TARGET} PRIVATE benchmark_main utils benchmark_${TARGET}_callee)
+-
+-    set_target_properties(benchmark_${TARGET} PROPERTIES FOLDER Benchmarks)
+-
+-endif()
+-- 
+2.49.0.windows.1
+

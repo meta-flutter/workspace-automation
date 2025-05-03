@@ -23,7 +23,7 @@ This script reads a configuration folder of JSON files, or a single JSON configu
 
     python3 -m pip install virtualenv
 
--Requirements to build `flutter-engine-windows`
+-Requirements to build `filament-windows/flutter-engine-windows`
   
   -Enable long path support for git
 
@@ -46,6 +46,11 @@ This script reads a configuration folder of JSON files, or a single JSON configu
   -Optional install WinDgb - AKA Wind-Bag
   
     winget install Microsoft.WinDbg
+
+  -Running
+
+    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+    .\flutter_workspace.ps1 --enable "filament-windows,flutter-engine-windows"
 
   -Running setup_env.ps1
 
