@@ -88,7 +88,7 @@
                 "cmds": [
                     "./flutter/tools/gn ${ENGINE_BUILD_FLAGS}",
                     "echo ${GN_ARGS_APPEND} >> ${GN_ARGS_FILE}",
-                    "autoninja -C ${ENGINE_BUILD_DIR}"
+                    "${AUTONINJA} -C ${ENGINE_BUILD_DIR}"
                 ]
             },
             {

@@ -79,7 +79,7 @@
                 "cmds": [
                     "bash -c \"rm -rf ${AMD_ACS_WAYLAND_BUILD_DIR} | true\"",
                     "meson setup ${AMD_ACS_WAYLAND_BUILD_DIR} ${AMD_ACS_WAYLAND_MESON_ARGS}",
-                    "ninja -C ${AMD_ACS_WAYLAND_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                    "${AUTONINJA} -C ${AMD_ACS_WAYLAND_BUILD_DIR} install"
                 ]
             },
             {
@@ -92,7 +92,7 @@
                 "cmds": [
                     "bash -c \"rm -rf ${AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR} | true\"",
                     "meson setup ${AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR} ${AMD_ACS_WAYLAND_PROTOCOLS_MESON_ARGS}",
-                    "ninja -C ${AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                    "${AUTONINJA} -C ${AMD_ACS_WAYLAND_PROTOCOLS_BUILD_DIR} install"
                 ]
             },
             {
@@ -105,7 +105,7 @@
                 "cmds": [
                     "bash -c \"rm -rf ${AMD_ACS_WESTON_BUILD_DIR} | true\"",
                     "meson setup ${AMD_ACS_WESTON_BUILD_DIR} ${AMD_ACS_WESTON_MESON_ARGS}",
-                    "ninja -C ${AMD_ACS_WESTON_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                    "${AUTONINJA} -C ${AMD_ACS_WESTON_BUILD_DIR} install"
                 ]
             }
         ],

@@ -76,7 +76,7 @@
                 "cmds": [
                     "bash -c \"rm -rf ${WAYLAND_PROTOCOLS_IMX_BUILD_DIR} | true\"",
                     "meson setup ${WAYLAND_PROTOCOLS_IMX_BUILD_DIR} ${WAYLAND_PROTOCOLS_IMX_MESON_ARGS}",
-                    "ninja -C ${WAYLAND_PROTOCOLS_IMX_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                    "${AUTONINJA} -C ${WAYLAND_PROTOCOLS_IMX_BUILD_DIR} install"
                 ]
             },
             {
@@ -89,7 +89,7 @@
                 "cmds": [
                     "bash -c \"rm -rf ${WESTON_IMX_BUILD_DIR} | true\"",
                     "meson setup ${WESTON_IMX_BUILD_DIR} ${WESTON_IMX_MESON_ARGS}",
-                    "ninja -C ${WESTON_IMX_BUILD_DIR} install -j${HARDWARE_THREADS}"
+                    "${AUTONINJA} -C ${WESTON_IMX_BUILD_DIR} install"
                 ]
             }
         ],

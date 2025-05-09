@@ -82,7 +82,7 @@
                     "go version",
                     "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
                     "cmake -GNinja ${FIREBASE_CMAKE_ARGS} -S ${FIREBASE_SRC_DIR} -B .",
-                    "ninja -j${HARDWARE_THREADS}"
+                    "${AUTONINJA}"
                 ]
             }
         ],

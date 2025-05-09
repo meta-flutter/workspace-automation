@@ -29,9 +29,9 @@
                             "sha256": "14e15d0b445dbeac686acc13fe13b3135e8307f69ccf4c5c91403996ce5aa2d4",
                             "post_cmds": [
                                 {
-                                    "cwd": "${PLATFORM_ID_DIR}/${FILENAME}",
+                                    "cwd": "${PLATFORM_ID_DIR}",
                                     "cmds": [
-                                        "tar --strip-components=1 -xzf ${PLATFORM_ID_DIR}\\artifacts\\cmake-${VERSION}.7-linux-${HOST_ARCH}.tar.gz -C ."
+                                        "tar --strip-components=1 -xzf ${PLATFORM_ID_DIR}/artifacts/cmake-${VERSION}.7-linux-${HOST_ARCH}.tar.gz -C ."
                                     ]
                                 }
                             ]
@@ -44,9 +44,9 @@
                             "sha256": "e5b2dc2aefdca10afe09c8fa4ee2bbb4e732665943a94322f99c118781910c3c",
                             "post_cmds": [
                                 {
-                                    "cwd": "${PLATFORM_ID_DIR}/${FILENAME}",
+                                    "cwd": "${PLATFORM_ID_DIR}",
                                     "cmds": [
-                                        "tar --strip-components=1 -xzf ${PLATFORM_ID_DIR}\\artifacts\\cmake-${VERSION}.7-linux-${HOST_ARCH}.tar.gz -C ."
+                                        "tar --strip-components=1 -xzf ${PLATFORM_ID_DIR}/artifacts/cmake-${VERSION}.7-linux-${HOST_ARCH}.tar.gz -C ."
                                     ]
                                 }
                             ]
@@ -54,14 +54,15 @@
                     ],
                     "AMD64": [
                         {
-                            "filename": "cmake-${VERSION}.7-windows-arm64.zip",
+                            "filename": "cmake-${VERSION}.7-windows-x86_64.zip",
                             "endpoint": "/v${VERSION}/cmake-${VERSION}.7-windows-x86_64.zip",
                             "sha256": "ab1c7f46a1b1314f9fcb766c2573148679af599d94c5566bc12b8b35bb563362",
                             "post_cmds": [
                                 {
-                                    "cwd": "${PLATFORM_ID_DIR}/${FILENAME}",
+                                    "cwd": "${PLATFORM_ID_DIR}",
                                     "cmds": [
-                                        "python3.exe -m zipfile -e \"${PLATFORM_ID_DIR}\\artifacts\\cmake-${VERSION}.7-windows-x86_64.zip\" ."
+                                        "ls ${PLATFORM_ID_DIR}/artifacts",
+                                        "python3 -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/cmake-${VERSION}.7-windows-x86_64.zip\" ."
                                     ]
                                 }
                             ]
@@ -74,9 +75,9 @@
                             "sha256": "5b72d0dcd66dadbbb90789c70789db92302342cc7b91df62059a26e230544f05",
                             "post_cmds": [
                                 {
-                                    "cwd": "${PLATFORM_ID_DIR}/${FILENAME}",
+                                    "cwd": "${PLATFORM_ID_DIR}",
                                     "cmds": [
-                                        "python3.exe -m zipfile -e \"${PLATFORM_ID_DIR}\\artifacts\\cmake-${VERSION}.7-windows-arm64.zip\" ."
+                                        "python3 -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/cmake-${VERSION}.7-windows-arm64.zip\" ."
                                     ]
                                 }
                             ]

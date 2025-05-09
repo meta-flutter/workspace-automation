@@ -82,7 +82,7 @@
             {
                 "cwd": "${PDFIUM_SRC_DIR}",
                 "cmds": [
-                    "autoninja -C ${PDFIUM_BUILD_DIR} pdfium",
+                    "${AUTONINJA} -C ${PDFIUM_BUILD_DIR} pdfium",
                     "${LLVM_STRIP} ${PDFIUM_BUILD_DIR}/libpdfium.so"
                 ]
             }

@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ windows-11-arm ]
+        os: [ windows-2019, windows-2022, windows-2025, windows-11-arm ]
 
     runs-on: ${{ matrix.os }}
 
@@ -31,9 +31,10 @@ jobs:
 
       - name: Create workspace
         run: |
+          git config --global core.longpaths true
           python3.exe -m pip install --upgrade pip
           python3.exe -m pip install virtualenv
-          ./flutter_workspace.ps1
+          ./flutter_workspace.ps1 --enable "filament-windows"
 
       - name: Test workspace
         run: |

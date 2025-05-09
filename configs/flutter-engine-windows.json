@@ -10,15 +10,15 @@
     ],
     "type": "dependency",
     "env": {
-        "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools:${PATH}",
+        "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools;${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja;${PATH}",
         "RUNTIME_MODE": "debug",
         "ENGINE_ROOT": "${FLUTTER_WORKSPACE}/flutter",
         "VPYTHON_VIRTUALENV_ROOT": "${ENGINE_ROOT}/.vpython",
         "ENGINE_SRC_DIR_RELATIVE": "engine/src",
         "ENGINE_SRC_DIR": "${ENGINE_ROOT}/${ENGINE_SRC_DIR_RELATIVE}",
-        "ENGINE_BUILD_FLAGS": "--unoptimized --runtime-mode ${RUNTIME_MODE} --windows-cpu ${HOST_ARCH_GOOGLE} --build-engine-artifacts --no-build-glfw-shell --no-build-embedder-examples --no-prebuilt-dart-sdk --embedder-for-target --no-build-embedder-examples --enable-impeller-3d --no-lto --no-goma --no-rbe --no-stripped",
-        "ENGINE_BUILD_DIR": "${ENGINE_SRC_DIR}/out/host_debug_unopt",
-        "GN_ARGS_FILE": "${ENGINE_BUILD_DIR}_${HOST_ARCH_GOOGLE}/args.gn",
+        "ENGINE_BUILD_FLAGS": "--unoptimized --runtime-mode ${RUNTIME_MODE} --windows-cpu ${HOST_ARCH_GOOGLE} --build-engine-artifacts --no-build-glfw-shell --no-build-embedder-examples --no-prebuilt-dart-sdk --embedder-for-target --no-build-embedder-examples --enable-impeller-3d --no-enable-unittests --no-lto --no-goma --no-rbe --no-stripped",
+        "ENGINE_BUILD_DIR": "${ENGINE_SRC_DIR}/out/host_debug_unopt_${HOST_ARCH_GOOGLE}",
+        "GN_ARGS_FILE": "${ENGINE_BUILD_DIR}/args.gn",
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/flutter-engine-mono",
         "DEPOT_TOOLS_WIN_TOOLCHAIN": "0"
     },
@@ -50,12 +50,11 @@
             {
                 "cwd": "${ENGINE_ROOT}",
                 "cmds": [
-                    "${GCLIENT} sync -D -R -j${HARDWARE_THREADS} -v",
-                    "${GCLIENT} runhooks"
+                    "${GCLIENT} sync -D -R -j${HARDWARE_THREADS} -v"
                 ]
             },
             {
-                "cwd": "${ENGINE_SRC_DIR}\\flutter",
+                "cwd": "${ENGINE_SRC_DIR}/flutter",
                 "cmds": [
                     "git reset --hard"
                 ]
@@ -64,22 +63,22 @@
                 "cwd": "${ENGINE_SRC_DIR}",
                 "cmds": [
                     "${ENGINE_SRC_DIR}/flutter/tools/${GN} ${ENGINE_BUILD_FLAGS}",
-                    "${AUTONINJA} -C ${ENGINE_BUILD_DIR}_${HOST_ARCH_GOOGLE}"
+                    "${AUTONINJA} -C ${ENGINE_BUILD_DIR}"
                 ]
             },
             {
-                "cwd": "${ENGINE_BUILD_DIR}_${HOST_ARCH_GOOGLE}",
+                "cwd": "${ENGINE_BUILD_DIR}",
                 "cmds": [
-                    "${MAKE_DIR} ${PLATFORM_ID_DIR}/bundle/data/",
-                    "${MAKE_DIR} ${PLATFORM_ID_DIR}/bundle/lib/",
-                    "${COPY} ${ENGINE_BUILD_DIR}_${HOST_ARCH_GOOGLE}/icudtl.dat ${PLATFORM_ID_DIR}/bundle/data/",
-                    "${COPY} ${ENGINE_BUILD_DIR}_${HOST_ARCH_GOOGLE}/flutter_engine.dll ${PLATFORM_ID_DIR}/bundle/lib/"
+                    "python3 -c \"import os; os.makedirs('${PLATFORM_ID_DIR}/bundle/data', exist_ok=True)\"",
+                    "python3 -c \"import os; os.makedirs('${PLATFORM_ID_DIR}/bundle/lib', exist_ok=True)\"",
+                    "python3 -c \"import shutil; shutil.copy('${ENGINE_BUILD_DIR}/icudtl.dat', '${PLATFORM_ID_DIR}/bundle/data/')\"",
+                    "python3 -c \"import shutil; shutil.copy('${ENGINE_BUILD_DIR}/flutter_engine.dll', '${PLATFORM_ID_DIR}/bundle/lib/')\""
                 ]
             }
         ],
         "do_clean": [
             {
-                "cwd": "${ENGINE_BUILD_DIR}_${HOST_ARCH_GOOGLE}",
+                "cwd": "${ENGINE_BUILD_DIR}",
                 "cmds": [
                     "${NINJA} -t clean"
                 ]

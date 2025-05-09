@@ -71,7 +71,7 @@
             {
                 "cwd": "${LIBWEBRTC_SRC_DIR}",
                 "cmds": [
-                    "autoninja -C ${LIBWEBRTC_BUILD_DIR} libwebrtc",
+                    "${AUTONINJA} -C ${LIBWEBRTC_BUILD_DIR} libwebrtc",
                     "${LLVM_STRIP} ${LIBWEBRTC_BUILD_DIR}/libwebrtc.so"
                 ]
             }

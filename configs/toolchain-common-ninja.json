@@ -32,7 +32,8 @@
                                 {
                                     "cwd": "${PLATFORM_ID_DIR}",
                                     "cmds": [
-                                        "python3 -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" ."
+                                        "python3 -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" .",
+                                        "chmod +x ninja"
                                     ]
                                 }
                             ]
@@ -47,7 +48,8 @@
                                 {
                                     "cwd": "${PLATFORM_ID_DIR}",
                                     "cmds": [
-                                        "python3 -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" ."
+                                        "python3 -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" .",
+                                        "chmod +x ninja"
                                     ]
                                 }
                             ]
