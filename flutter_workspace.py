@@ -2393,6 +2393,7 @@ def activate_python_virtualenv():
     workspace = get_ws_folder()
     config_folder = os.path.join(workspace, '.config')
     venv_dir = os.path.join(config_folder, 'venv')
+    shutil.rmtree(venv_dir, ignore_errors=True)
 
     # remove potenial conflict
     if os.environ.get('PYTHONPATH'):
@@ -2405,23 +2406,29 @@ def activate_python_virtualenv():
     # Determine the correct scripts folder based on platform
     if sys.platform.startswith('win'):
         scripts_folder = 'Scripts'
+
+        # switch to virtualenv
+        activate_this_file = os.path.join(venv_dir, scripts_folder, 'activate.bat')
+        subprocess.check_output(activate_this_file)
+
     else:
         scripts_folder = 'bin'
 
-    # switch to virtualenv
-    activate_this_file = os.path.join(venv_dir, scripts_folder, 'activate_this.py')
-    exec(compile(open(activate_this_file, 'rb').read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
+        # switch to virtualenv
+        activate_this_file = os.path.join(venv_dir, scripts_folder, 'activate_this.py')
+        exec(compile(open(activate_this_file, 'rb').read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
 
     # switch to python in new path
     if sys.platform.startswith('win'):
         python_path = os.path.join(venv_dir, scripts_folder, 'python.exe')
     else:
         python_path = subprocess.check_output(['which', 'python3']).decode().strip()
+
     os.environ['PYTHON'] = python_path
+    print_banner(f'Python: {python_path}')
 
     cmd = f'{python_path} -m pip install --upgrade pip'.split(' ')
     subprocess.check_output(cmd)
-    
 
 def install_minimum_runtime_deps():
     """Install minimum runtime deps to run this script"""
@@ -2443,7 +2450,7 @@ def install_minimum_runtime_deps():
                 ' ')
             subprocess.check_output(packages)
 
-    if host_type == "darwin":
+    elif host_type == "darwin":
 
         brew_path = get_mac_brew_path()
         if brew_path == '':
@@ -2503,7 +2510,7 @@ popd  > '/dev/null'
 echo SCRIPT_PATH=$SCRIPT_PATH
 
 export FLUTTER_WORKSPACE=$SCRIPT_PATH
-export PATH=$FLUTTER_WORKSPACE/flutter/bin:$PATH
+export PATH=$FLUTTER_WORKSPACE/app/depot_tools:$FLUTTER_WORKSPACE/flutter/bin:$PATH
 export PUB_CACHE=$FLUTTER_WORKSPACE/.config/flutter_workspace/pub_cache
 export XDG_CONFIG_HOME=$FLUTTER_WORKSPACE/.config/flutter
 
@@ -2527,7 +2534,7 @@ if ($SCRIPT_PATH.EndsWith('\')) {
 }
 
 $env:FLUTTER_WORKSPACE = $SCRIPT_PATH
-$env:PATH = "$env:FLUTTER_WORKSPACE\\flutter\\bin;$env:PATH"
+$env:PATH = "$env:FLUTTER_WORKSPACE\\app\\depot_tools;$env:FLUTTER_WORKSPACE\\flutter\\bin;$env:PATH"
 $env:PUB_CACHE = "$env:FLUTTER_WORKSPACE\\.config\\flutter_workspace\\pub_cache"
 
 Write-Host "********************************************"
