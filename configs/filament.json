@@ -27,7 +27,7 @@
         {
             "uri": "https://github.com/google/filament.git",
             "branch": "release",
-            "rev": "v1.56.8"
+            "rev": "v1.60.1"
         }
     ],
     "runtime": {
@@ -66,8 +66,7 @@
                     "git apply ${PATCH_FOLDER}/filament/0001-disable-backend-tests.patch",
                     "git apply ${PATCH_FOLDER}/filament/0002-install-required-files.patch",
                     "git apply ${PATCH_FOLDER}/filament/0003-move-include-contents-to-include-filament.patch",
-                    "git apply ${PATCH_FOLDER}/filament/0004-move-libraries-so-they-install.patch",
-                    "git apply ${PATCH_FOLDER}/filament/0001-descset-fix-lights-UBO-size-on-setBuffer.patch"
+                    "git apply ${PATCH_FOLDER}/filament/0004-move-libraries-so-they-install.patch"
                 ]
             },
             {

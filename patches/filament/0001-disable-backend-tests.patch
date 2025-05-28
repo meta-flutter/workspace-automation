@@ -1,21 +1,11 @@
-From 01ca901f190bc00de10defe056a3926d0a6aaec0 Mon Sep 17 00:00:00 2001
-From: Joel Winarske <joel.winarske@gmail.com>
-Date: Sun, 26 Jan 2025 10:33:47 -0800
-Subject: [PATCH 1/5] disable backend tests
-
-Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
----
- filament/backend/CMakeLists.txt | 133 --------------------------------
- 1 file changed, 133 deletions(-)
-
 diff --git a/filament/backend/CMakeLists.txt b/filament/backend/CMakeLists.txt
-index 2fcdfc619..dd26a470c 100644
+index 6669898..24cc789 100644
 --- a/filament/backend/CMakeLists.txt
 +++ b/filament/backend/CMakeLists.txt
-@@ -423,136 +423,3 @@ set(INSTALL_TYPE ARCHIVE)
- install(TARGETS ${TARGET} ${INSTALL_TYPE} DESTINATION lib/${DIST_DIR})
- install(TARGETS vkshaders ${INSTALL_TYPE} DESTINATION lib/${DIST_DIR})
- install(DIRECTORY ${PUBLIC_HDR_DIR}/backend DESTINATION include)
+@@ -498,146 +498,3 @@ install(DIRECTORY ${PUBLIC_HDR_DIR}/backend DESTINATION include)
+ if (FILAMENT_SUPPORTS_WEBGPU)
+     install(TARGETS webgpu_dawn ${INSTALL_TYPE} DESTINATION lib/${DIST_DIR})
+ endif()
 -
 -# ==================================================================================================
 -# Test
@@ -28,6 +18,12 @@ index 2fcdfc619..dd26a470c 100644
 -        test/ShaderGenerator.cpp
 -        test/TrianglePrimitive.cpp
 -        test/Arguments.cpp
+-        test/ImageExpectations.cpp
+-        test/Lifetimes.cpp
+-        test/PlatformRunner.cpp
+-        test/Shader.cpp
+-        test/SharedShaders.cpp
+-        test/Skip.cpp
 -        test/test_FeedbackLoops.cpp
 -        test/test_Blit.cpp
 -        test/test_MissingRequiredAttributes.cpp
@@ -43,6 +39,7 @@ index 2fcdfc619..dd26a470c 100644
 -        test/test_Handles.cpp
 -    )
 -    set(BACKEND_TEST_LIBS
+-        absl::str_format
 -        backend
 -        getopt
 -        gtest
@@ -50,17 +47,20 @@ index 2fcdfc619..dd26a470c 100644
 -        filamat
 -        SPIRV
 -        spirv-cross-glsl)
+-    # Create input/output directories for test result images.
+-    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/images/actual_images)
+-    file(COPY test/expected_images DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/images)
 -endif()
 -
--if (APPLE)
+-# TODO: Disabling IOS test due to breakage wrt glslang update
+-if (APPLE AND NOT IOS)
 -    # TODO: we should expand this test to Linux and other platforms.
 -    list(APPEND BACKEND_TEST_SRC
 -         test/test_RenderExternalImage.cpp)
 -    add_library(backend_test STATIC ${BACKEND_TEST_SRC})
--    target_link_libraries(backend_test PRIVATE ${BACKEND_TEST_LIBS})
+-    target_link_libraries(backend_test PUBLIC ${BACKEND_TEST_LIBS})
 -
 -    set(BACKEND_TEST_DEPS
--            OGLCompiler
 -            OSDependent
 -            SPIRV
 -            SPIRV-Tools
@@ -149,6 +149,3 @@ index 2fcdfc619..dd26a470c 100644
 -set_target_properties(metal_utils_test PROPERTIES FOLDER Tests)
 -
 -endif()
--- 
-2.48.1
-

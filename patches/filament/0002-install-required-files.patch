@@ -24,7 +24,7 @@ index 47544655b..7169da462 100644
 +# Installation
 +# ==================================================================================================
 +install(TARGETS ${TARGET} ARCHIVE DESTINATION lib/${DIST_DIR})
-+install(DIRECTORY ${PUBLIC_HDR_DIR}/imageio DESTINATION include)
++install(DIRECTORY ${PUBLIC_HDR_DIR}/imageio DESTINATION include/filament)
 diff --git a/third_party/libpng/tnt/CMakeLists.txt b/third_party/libpng/tnt/CMakeLists.txt
 index cd5a033f5..4925a0474 100644
 --- a/third_party/libpng/tnt/CMakeLists.txt
@@ -43,7 +43,7 @@ index 0c25061c0..563a2604d 100644
  set_target_properties(${TARGET} PROPERTIES FOLDER ThirdParty)
  
  install(TARGETS stb ARCHIVE DESTINATION lib/${DIST_DIR})
-+install(FILES ${PUBLIC_HDRS} DESTINATION include)
++install(FILES ${PUBLIC_HDRS} DESTINATION include/filament)
 diff --git a/third_party/tinyexr/tnt/CMakeLists.txt b/third_party/tinyexr/tnt/CMakeLists.txt
 index 20955b77b..ffe7cdfe1 100644
 --- a/third_party/tinyexr/tnt/CMakeLists.txt
@@ -56,7 +56,7 @@ index 20955b77b..ffe7cdfe1 100644
 \ No newline at end of file
 +set_target_properties(${TARGET} PROPERTIES FOLDER ThirdParty)
 +
-+install(FILES ${PUBLIC_HDRS} DESTINATION include)
++install(FILES ${PUBLIC_HDRS} DESTINATION include/filament)
 +install(TARGETS ${TARGET} ARCHIVE DESTINATION lib/${DIST_DIR})
 -- 
 2.48.1

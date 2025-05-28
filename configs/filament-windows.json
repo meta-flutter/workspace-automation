@@ -23,7 +23,7 @@
         {
             "uri": "https://github.com/google/filament.git",
             "branch": "release",
-            "rev": "v1.56.8"
+            "rev": "v1.60.1"
         }
     ],
     "runtime": {
