@@ -10,6 +10,7 @@
     ],
     "supported_host_types": [
         "ubuntu",
+        "rhel",
         "fedora"
     ],
     "type": "dependency",

@@ -9,6 +9,7 @@
   "supported_host_types": [
     "darwin",
     "fedora",
+    "rhel",
     "ubuntu"
   ],
   "type": "toolchain",
@@ -69,6 +70,13 @@
             "sudo dnf -y update",
             "sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libglapi mesa-libxatracker",
             "sudo dnf -y install llvm-devel clang clang-tools-extra lldb lld libcxx-devel libcxx-static libcxxabi-devel libcxxabi-static"
+          ]
+        },
+        "rhel": {
+          "cmds": [
+            "sudo dnf -y update",
+            "sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libglapi mesa-libxatracker",
+            "sudo dnf -y install llvm-devel clang clang-tools-extra lldb lld"
           ]
         }
       }
