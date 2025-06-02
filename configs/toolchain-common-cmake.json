@@ -9,6 +9,7 @@
     ],
     "supported_host_types": [
         "fedora",
+        "rhel",
         "ubuntu",
         "windows"
     ],

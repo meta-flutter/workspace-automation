@@ -1164,17 +1164,17 @@ def get_freedesktop_os_release() -> dict:
 
 def get_freedesktop_os_release_name() -> str:
     """Returns OS Release NAME value"""
-    return get_freedesktop_os_release().get('NAME').lower().rstrip()
+    return get_freedesktop_os_release().get('NAME','').lower().rstrip()
 
 
 def get_freedesktop_os_release_id() -> str:
     """Returns OS Release ID value"""
-    return get_freedesktop_os_release().get('ID').rstrip()
+    return get_freedesktop_os_release().get('ID','').lower().rstrip()
 
 
 def get_freedesktop_os_release_version_id() -> str:
     """Returns OS Release VERSION_ID value"""
-    return get_freedesktop_os_release().get('VERSION_ID').rstrip()
+    return get_freedesktop_os_release().get('VERSION_ID','').rstrip()
 
 
 def break_version(version):
