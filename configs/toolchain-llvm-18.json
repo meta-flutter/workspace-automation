@@ -69,7 +69,7 @@
           "cmds": [
             "sudo dnf -y update",
             "sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libxatracker",
-            "sudo dnf -y install llvm-devel clang clang-tools-extra lldb lld libcxx-devel libcxx-static libcxxabi-devel libcxxabi-static"
+            "sudo dnf -y install llvm18-devel clang18 clang18-tools-extra lldb lld18 libcxx-devel libcxx-static libcxxabi-devel libcxxabi-static"
           ]
         },
         "rhel": {
