@@ -29,6 +29,13 @@ jobs:
         with:
           fetch-depth: 1
 
+      # Cache dependencies
+      - name: Cache chocolatey packages
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-chocolatey-${{ github.event.pull_request.number }}
+          path: C:\ProgramData\chocolatey
+
       - name: Create workspace
         run: |
           git config --global core.longpaths true

@@ -10,10 +10,10 @@
     ],
     "type": "dependency",
     "env": {
-        "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools;${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.7/bin;C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/Llvm/X64/bin/;$PATH",
-        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.7/lib",
+        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.7/bin;C:/Program Files/LLVM/bin;$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.7/lib;C:/Program Files/LLVM/lib",
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/filament-windows",
-        "COMPILER_ARGS": "-DCMAKE_C_COMPILER=clang.exe -DCMAKE_CXX_COMPILER=clang++.exe",
+        "COMPILER_ARGS": "-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++",
         "FILAMENT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/filament",
         "FILAMENT_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/filament/cmake-build-release",
         "FILAMENT_STAGING_DIR": "${FILAMENT_BUILD_DIR}/staging/release",
@@ -54,7 +54,7 @@
             {
                 "cwd": "${FILAMENT_BUILD_DIR}",
                 "cmds": [
-                    "cmake ${COMPILER_ARGS} ${FILAMENT_CMAKE_ARGS} -S \"${FILAMENT_SRC_DIR}\" -B \"${FILAMENT_BUILD_DIR}\"",
+                    "cmake -G\"Ninja\" ${COMPILER_ARGS} ${FILAMENT_CMAKE_ARGS} -S \"${FILAMENT_SRC_DIR}\" -B \"${FILAMENT_BUILD_DIR}\"",
                     "cmake --build . --config Release --target install --parallel"
                 ]
             }

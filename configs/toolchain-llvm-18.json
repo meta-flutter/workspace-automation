@@ -4,19 +4,23 @@
   "supported_archs": [
     "aarch64",
     "arm64",
-    "x86_64"
+    "x86_64",
+    "ARM64",
+    "AMD64"
   ],
   "supported_host_types": [
     "darwin",
     "fedora",
     "rhel",
-    "ubuntu"
+    "ubuntu",
+    "windows"
   ],
   "type": "toolchain",
   "toolchain": "llvm",
   "prefer_llvm": "18",
   "env": {
     "VERSION": "18",
+    "VERSION_FULL": "18.1.8",
     "NONINTERACTIVE": "1"
   },
   "runtime": {
@@ -77,6 +81,22 @@
             "sudo dnf -y update",
             "sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libxatracker",
             "sudo dnf -y install llvm-devel clang clang-tools-extra lldb lld"
+          ]
+        }
+      },
+      "ARM64": {
+        "windows": {
+          "cmds": [
+            "choco install llvm --version ${VERSION_FULL} --params '/InstallDir:C:\\\\Program Files\\\\LLVM' -y --allow-downgrade",
+            "clang --version"
+          ]
+        }
+      },
+      "AMD64": {
+        "windows": {
+          "cmds": [
+            "choco install llvm --version ${VERSION_FULL} --params '/InstallDir:C:\\\\Program Files\\\\LLVM' -y --allow-downgrade",
+            "clang --version"
           ]
         }
       }

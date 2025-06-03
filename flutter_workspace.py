@@ -255,12 +255,6 @@ def main():
     get_workspace_repos(app_folder, config)
 
     #
-    # Prepend depot_tools to PATH
-    #
-    depot_tools_path = os.path.join(workspace, 'app', 'depot_tools')
-    os.environ['PATH'] = f"{depot_tools_path}{os.pathsep}{os.environ.get('PATH')}"
-
-    #
     # Get Flutter SDK
     #
     if args.flutter_version:

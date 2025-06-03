@@ -55,36 +55,26 @@
                                 }
                             ]
                         }
-                    ],
-                    "AMD64": [
-                        {
-                            "filename": "${ARCHIVE_FILE}",
-                            "endpoint": "/releases/download/v${VERSION}/ninja-win.zip",
-                            "sha256": "f550fec705b6d6ff58f2db3c374c2277a37691678d6aba463adcbb129108467a",
-                            "post_cmds": [
-                                {
-                                    "cwd": "${PLATFORM_ID_DIR}",
-                                    "cmds": [
-                                        "python3.exe -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" ."
-                                    ]
-                                }
-                            ]
-                        }
-                    ],
-                    "ARM64": [
-                        {
-                            "filename": "${ARCHIVE_FILE}",
-                            "endpoint": "/releases/download/v${VERSION}/ninja-winarm64.zip",
-                            "sha256": "79c96a50e0deafec212cfa85aa57c6b74003f52d9d1673ddcd1eab1c958c5900",
-                            "post_cmds": [
-                                {
-                                    "cwd": "${PLATFORM_ID_DIR}",
-                                    "cmds": [
-                                        "python3.exe -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" ."
-                                    ]
-                                }
-                            ]
-                        }
+                    ]
+                }
+            }
+        },
+        "pre-requisites": {
+            "ARM64": {
+                "windows": {
+                    "cmds": [
+                        "choco install ninja --version ${VERSION} -y --allow-downgrade",
+                        "which ninja",
+                        "ninja --version"
+                    ]
+                }
+            },
+            "AMD64": {
+                "windows": {
+                    "cmds": [
+                        "choco install ninja --version ${VERSION} -y --allow-downgrade",
+                        "which ninja",
+                        "ninja --version"
                     ]
                 }
             }
