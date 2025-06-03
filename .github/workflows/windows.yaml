@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ windows-2019, windows-2022, windows-2025, windows-11-arm ]
+        os: [ windows-2022, windows-2025, windows-11-arm ]
 
     runs-on: ${{ matrix.os }}
 
