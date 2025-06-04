@@ -3,15 +3,12 @@
     "load": true,
     "supported_archs": [
         "aarch64",
-        "x86_64",
-        "ARM64",
-        "AMD64"
+        "x86_64"
     ],
     "supported_host_types": [
         "fedora",
         "rhel",
-        "ubuntu",
-        "windows"
+        "ubuntu"
     ],
     "type": "toolchain",
     "toolchain": "common",
@@ -55,26 +52,6 @@
                                 }
                             ]
                         }
-                    ]
-                }
-            }
-        },
-        "pre-requisites": {
-            "ARM64": {
-                "windows": {
-                    "cmds": [
-                        "choco install ninja --version ${VERSION} -y --allow-downgrade",
-                        "which ninja",
-                        "ninja --version"
-                    ]
-                }
-            },
-            "AMD64": {
-                "windows": {
-                    "cmds": [
-                        "choco install ninja --version ${VERSION} -y --allow-downgrade",
-                        "which ninja",
-                        "ninja --version"
                     ]
                 }
             }
