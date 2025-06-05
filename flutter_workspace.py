@@ -338,11 +338,6 @@ def main():
     get_flutter_engine_runtime(clean_workspace, get_flutter_arch())
 
     #
-    # Create environmental setup script
-    #
-    write_env_script_header(workspace)
-
-    #
     # Setup Platform(s)
     #
     github_token = globals_.get('github_token')
@@ -355,6 +350,11 @@ def main():
 
     setup_platforms(platforms, github_token, cookie_file, args.plex, args.enable, args.disable, args.enable_plugin,
                     args.disable_plugin, app_folder)
+
+    #
+    # Create environmental setup script
+    #
+    write_env_script_header(workspace)
 
     #
     # Display the custom devices list
@@ -2083,10 +2083,18 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
     if platform_['toolchain'] == 'llvm':
         prefer_llvm = os.environ.get('PREFER_LLVM', None)
         if not prefer_llvm:
-            if 'prefer_llvm' in platform_:
-                prefer_llvm = platform_['prefer_llvm']
+            # If not set by ENV variable, get default from platform config
+            if 'VERSION' in platform_['env']:
+                prefer_llvm = platform_['env']['VERSION']
                 os.environ['PREFER_LLVM'] = prefer_llvm
                 print(f'PREFER_LLVM: {prefer_llvm}')
+        else:
+            # If manually set by user, override the platform config
+            platform_['env']['VERSION'] = prefer_llvm
+
+        # Failsafe
+        if not prefer_llvm:
+            sys.exit("PREFER_LLVM is not set and no prefer_llvm key present in toolchain config")
 
         host_type = get_host_type()
 
@@ -2501,6 +2509,22 @@ cd \"$( dirname -- \"$SCRIPT_PATH\"; )\" > '/dev/null'
 SCRIPT_PATH=\"$( pwd; )\"
 popd  > '/dev/null'
 echo SCRIPT_PATH=$SCRIPT_PATH
+
+# LLVM/Clang environment variables
+export CC=''' + os.environ.get('CC', 'clang') + '''
+export CXX=''' + os.environ.get('CXX', 'clang++') + '''
+export LLVM_CONFIG=''' + os.environ.get('LLVM_CONFIG', 'llvm-config') + '''
+export LLVM_PREFIX=''' + os.environ.get('LLVM_PREFIX', '/usr') + '''
+export LLVM_VERSION=''' + os.environ.get('LLVM_VERSION', '') + '''
+export LLVM_CMAKEDIR=''' + os.environ.get('LLVM_CMAKEDIR', '') + '''
+export LLVM_STRIP=''' + os.environ.get('LLVM_STRIP', '/usr/bin/llvm-strip') + '''
+export PREFER_LLVM=''' + os.environ.get('PREFER_LLVM', '') + '''
+# (alias clang tools to match version)
+alias clang=clang-${LLVM_VERSION}
+alias clang++=clang++-${LLVM_VERSION}
+alias clang-tidy=${LLVM_PREFIX}/bin/clang-tidy
+alias clang-format=${LLVM_PREFIX}/bin/clang-format
+alias llvm-config=${LLVM_CONFIG}
 
 export FLUTTER_WORKSPACE=$SCRIPT_PATH
 export PATH=$FLUTTER_WORKSPACE/flutter/bin:$PATH
