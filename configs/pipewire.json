@@ -1,0 +1,15 @@
+{
+    "id": "pipewire",
+    "load": false,
+    "supported_archs": [
+        "aarch64",
+        "arm64",
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "ubuntu",
+        "fedora"
+    ],
+    "type": "dependency",
+    "runtime": {}
+}
