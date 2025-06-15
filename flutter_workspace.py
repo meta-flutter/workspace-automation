@@ -1949,7 +1949,7 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, ena
 
         if value == "OFF":
             print_banner("Skipping - %s" % platform_['id'])
-            return
+            return -1
 
     get_platform_src(platform_.get('src', None), app_folder)
 
@@ -1960,13 +1960,13 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, ena
     host_machine_arch = get_host_machine_arch()
     if host_machine_arch not in platform_['supported_archs']:
         print_banner("\"%s\" not supported on this machine" % platform_['id'])
-        return
+        return -1
 
     # skip if distro not supported
     if not is_host_type_supported(platform_['supported_host_types']):
         print_banner("\"%s\" not supported on this host type" %
                      platform_['id'])
-        return
+        return -1
 
     print_banner("Setting up Platform %s - %s" %
                  (platform_['id'], host_machine_arch))
@@ -1997,6 +1997,7 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, ena
     handle_post_cmds(runtime.get('post_cmds'))
 
     handle_custom_devices(platform_)
+    return 0
 
 
 def find_llvm_config_in_sysroot(sysroot, prefer_llvm_config):
@@ -2079,7 +2080,9 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
     os.environ['HARDWARE_THREADS'] = str(hw_threads)
 
     platform_['type'] = 'dependency'
-    setup_platform(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder)
+    do_continue = setup_platform(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder)
+    if do_continue != 0:
+        return
     platform_['type'] = 'toolchain'
 
     if not 'toolchain' in platform_:
