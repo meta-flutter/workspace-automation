@@ -1,4 +1,4 @@
-name: ubuntu-workspace-automation
+name: ubuntu
 
 on:
   pull_request:
@@ -15,7 +15,7 @@ on:
 
 jobs:
 
-  workspace-automation:
+  run:
 
     strategy:
       matrix:

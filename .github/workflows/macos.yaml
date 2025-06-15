@@ -1,4 +1,4 @@
-name: macos-workspace-automation
+name: macos
 
 on:
   pull_request:
@@ -15,7 +15,7 @@ on:
 
 jobs:
 
-  workspace-automation:
+  run:
 
     env:
       NONINTERACTIVE: 1
