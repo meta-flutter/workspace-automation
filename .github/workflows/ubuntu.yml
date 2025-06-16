@@ -1,9 +1,11 @@
-name: ubuntu-workspace-automation
+name: ubuntu
 
 on:
   pull_request:
     types: [ opened, synchronize, reopened, closed ]
     paths-ignore:
+      - .github/workflows/macos.yaml
+      - .github/workflows/windows.yaml
       - .github/workflows/fedora.yml
   release:
     types: [ published, created, edited ]
@@ -14,13 +16,15 @@ on:
 
 jobs:
 
-  workspace-automation:
+  run:
 
     strategy:
       matrix:
         os: [ubuntu-22.04, ubuntu-22.04-arm, ubuntu-24.04, ubuntu-24.04-arm]
 
     runs-on: ${{ matrix.os }}
+
+    if: "!contains(github.event.head_commit.message, '[skip ubuntu]')"
 
     steps:
       - uses: actions/checkout@v4

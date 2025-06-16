@@ -1,9 +1,11 @@
-name: macos-workspace-automation
+name: macos
 
 on:
   pull_request:
     types: [ opened, synchronize, reopened, closed ]
     paths-ignore:
+      - .github/workflows/windows.yaml
+      - .github/workflows/ubuntu.yml
       - .github/workflows/fedora.yml
   release:
     types: [ published, created, edited ]
@@ -14,7 +16,7 @@ on:
 
 jobs:
 
-  workspace-automation:
+  run:
 
     env:
       NONINTERACTIVE: 1
@@ -25,6 +27,8 @@ jobs:
         os: [ macos-13, macos-14, macos-15 ]
 
     runs-on: ${{ matrix.os }}
+
+    if: "!contains(github.event.head_commit.message, '[skip macos]')"
 
     steps:
       - uses: actions/checkout@v4
