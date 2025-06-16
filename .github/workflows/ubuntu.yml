@@ -42,12 +42,7 @@ jobs:
       - name: Create workspace
         # If llvm != 18, do --disable=toolchain-llvm-18
         run: |
-          if [ "${{ matrix.llvm }}" != "18" ]; then
-            sudo apt-get purge --auto-remove llvm python3-lldb-14 llvm-14
-            PREFER_LLVM=14 ./flutter_workspace.py --disable=toolchain-llvm-18 --enable=toolchain-llvm-${{ matrix.llvm }}
-          else
-            ./flutter_workspace.py
-          fi
+          PREFER_LLVM=${{ matrix.llvm }} ./flutter_workspace.py
 
       - name: Test workspace
         run: |

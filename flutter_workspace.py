@@ -2073,11 +2073,29 @@ def get_hardware_threads():
 
 def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin,
                     app_folder):
+    if not 'toolchain' in platform_:
+        print_banner("Toolchain key not specified")
+        return
+
     hw_threads = get_hardware_threads()
     if not os.getenv('GITHUB_ACTIONS'):
         if hw_threads > 1:
             hw_threads = hw_threads - 1
     os.environ['HARDWARE_THREADS'] = str(hw_threads)
+
+    # Get LLVM version
+    if platform_['toolchain'] == 'llvm':
+        prefer_llvm = os.environ.get('PREFER_LLVM', None)
+        if not prefer_llvm:
+            # If not set by ENV variable, get default from platform config
+            if 'DEFAULT_VERSION' in platform_['env']:
+                prefer_llvm = platform_['env']['DEFAULT_VERSION']
+                os.environ['PREFER_LLVM'] = prefer_llvm
+                print(f'PREFER_LLVM: {prefer_llvm}')
+
+        # Failsafe
+        if not prefer_llvm:
+            sys.exit("PREFER_LLVM is not set and no prefer_llvm key present in toolchain config")
 
     platform_['type'] = 'dependency'
     do_continue = setup_platform(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder)
@@ -2085,32 +2103,12 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
         return
     platform_['type'] = 'toolchain'
 
-    if not 'toolchain' in platform_:
-        print_banner("Toolchain key not specified")
-        return
-
     if platform_['toolchain'] == 'llvm':
-        prefer_llvm = os.environ.get('PREFER_LLVM', None)
-        if not prefer_llvm:
-            # If not set by ENV variable, get default from platform config
-            if 'VERSION' in platform_['env']:
-                prefer_llvm = platform_['env']['VERSION']
-                os.environ['PREFER_LLVM'] = prefer_llvm
-                print(f'PREFER_LLVM: {prefer_llvm}')
-        else:
-            # If manually set by user, override the platform config
-            platform_['env']['VERSION'] = prefer_llvm
-
-        # Failsafe
-        if not prefer_llvm:
-            sys.exit("PREFER_LLVM is not set and no prefer_llvm key present in toolchain config")
-
         host_type = get_host_type()
 
         llvm_base_path = '/usr'
         if host_type == 'darwin':
-            prefer_llvm = None
-            llvm_base_path = get_mac_brew_prefix('llvm')
+            llvm_base_path = get_mac_brew_prefix('llvm' + '@' + prefer_llvm)
 
         llvm_config = find_llvm_config_in_sysroot(llvm_base_path, prefer_llvm)
         if llvm_config:
