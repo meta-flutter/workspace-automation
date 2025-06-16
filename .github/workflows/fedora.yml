@@ -1,0 +1,48 @@
+name: fedora-workspace-automation
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened, closed ]
+  release:
+    types: [ published, created, edited ]
+  workflow_dispatch:
+  schedule:
+    # daily
+    - cron:  '0 0 * * *'
+
+jobs:
+  workspace-automation:
+    strategy:
+      matrix:
+        os: [fedora:42]
+
+    # NOTE: GitHub Actions does not support running on Fedora directly, so we run it in a container.
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.os }}
+
+    steps:
+      - name: Set up tools
+        run: |
+          dnf install -y python3 python3-pip which cmake
+          python3 -m pip install --upgrade pip
+
+      - name: Create non-root user
+        run: |
+          sudo groupadd -g 1000 user
+          sudo useradd -m -u 1000 -g user -s /bin/bash user
+          echo "user ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/user
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Create workspace
+        # Run as non-root user in the container
+        run: |
+          chown -R user:user .
+          sudo -u user ./flutter_workspace.py
+
+      - name: Test workspace
+        run: |
+          sudo -u user bash -lc "source ./setup_env.sh; flutter doctor -v; dart --version"

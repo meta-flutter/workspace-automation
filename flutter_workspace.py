@@ -1544,10 +1544,16 @@ def handle_commands_obj(obj, cwd):
                 posix = True
                 print(f'cmd: {cmd}')
 
-        cmd_arr = shlex.split(cmd, posix=posix)
-        print(f'cmd: {cmd_arr}')
 
-        subprocess.check_call(cmd_arr, cwd=cwd, env=local_env, shell=shell_)
+        if shell_:
+            # If shell is True, we need to join the command as a single string
+            print(f'cmd: {cmd}')
+            subprocess.check_call(cmd, cwd=cwd, env=local_env, shell=shell_)
+        else:
+            # If shell is False, we pass the command as a list
+            cmd_arr = shlex.split(cmd, posix=posix)
+            print(f'cmd: {cmd_arr}')
+            subprocess.check_call(cmd_arr, cwd=cwd, env=local_env, shell=shell_)
 
     os.environ.clear()
     os.environ.update(orig_env)
