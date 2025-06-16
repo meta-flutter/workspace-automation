@@ -6,6 +6,7 @@ on:
     paths-ignore:
       - .github/workflows/windows.yaml
       - .github/workflows/ubuntu.yml
+      - .github/workflows/fedora.yml
   release:
     types: [ published, created, edited ]
   workflow_dispatch:
