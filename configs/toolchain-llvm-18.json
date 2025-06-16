@@ -39,14 +39,14 @@
       "arm64": {
         "darwin": {
           "cmds": [
-            "brew install llvm"
+            "brew install llvm@18"
           ]
         }
       },
       "x86_64": {
         "darwin": {
           "cmds": [
-            "brew install llvm"
+            "brew install llvm@18"
           ]
         },
         "ubuntu": {
