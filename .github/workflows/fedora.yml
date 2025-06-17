@@ -19,7 +19,7 @@ jobs:
   run:
     strategy:
       matrix:
-        os: [fedora:42]
+        os: [fedora:40, fedora:41, fedora:42]
 
     # NOTE: GitHub Actions does not support running on Fedora directly, so we run it in a container.
     runs-on: ubuntu-latest

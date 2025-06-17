@@ -99,11 +99,11 @@ flutter_workspace.py does the following tasks automatically for you
 * Create setup_env.sh
 * 
 * Tested on Linux, Mac, and Windows
-  * Ubuntu 20 (x86_64)
-  * Ubuntu 22 (x86_64)
-  * Fedora 37 (x86_64)
-  * Mac M1/M2 (arm64)
-  * Windows Surface Elite X (arm64)
+  * Ubuntu 22/24 (x86_64, aarch64)
+  * Fedora 40/41/42 (x86_64)
+  * macOS 13/14/15 (x86_64, arm64) - Mac M1/M2
+  * Windows 10 (AMD64)
+  * Windows 11 (AMD64, ARM64) - Windows Surface Elite X
 
 #### Environmental Variables
 

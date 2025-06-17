@@ -65,10 +65,13 @@
           ]
         },
         "fedora": {
+          "shell": true,
           "cmds": [
             "sudo dnf -y update",
             "sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libxatracker",
-            "sudo dnf -y install llvm${VERSION}-devel clang${VERSION} clang${VERSION}-tools-extra lldb lld${VERSION} libcxx-devel libcxx-static libcxxabi-devel libcxxabi-static"
+            "export VV=${VERSION}; CURRENT_LLVM=$(dnf info llvm 2>/dev/null | awk '/^Version/ {print $3;exit}' | cut -d. -f1); if [[ $CURRENT_LLVM == $VERSION ]] then export VV=''; fi; echo $VV > .llvm-version",
+            "echo 'Installing LLVM version $(cat .llvm-version)'",
+            "VV=$(cat .llvm-version); sudo dnf -y install llvm${VV}-devel clang${VV} clang${VV}-tools-extra lldb lld${VV} libcxx-devel libcxx-static libcxxabi-devel libcxxabi-static; rm .llvm-version"
           ]
         },
         "rhel": {

@@ -2132,7 +2132,7 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
             print(f"CC: {os.environ['CC']}")
             print(f"CXX: {os.environ['CXX']}")
         else:
-            print_banner(f'Failed to find llvm-config in {llvm_base_path}.')
+            print_banner(f'Failed to find llvm-config({prefer_llvm}) in {llvm_base_path}.')
             return
 
     elif platform_['toolchain'] == 'common':
