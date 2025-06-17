@@ -10,8 +10,8 @@
     ],
     "type": "dependency",
     "env": {
-        "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools;${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.7/bin;C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/Llvm/X64/bin/;$PATH",
-        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/cmake-3.31.7/lib",
+        "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools;${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin;C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/Llvm/X64/bin/;$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/filament-windows",
         "COMPILER_ARGS": "-DCMAKE_C_COMPILER=clang.exe -DCMAKE_CXX_COMPILER=clang++.exe",
         "FILAMENT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/filament",
