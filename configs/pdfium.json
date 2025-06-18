@@ -48,7 +48,7 @@
                 },
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt install -y nasm"
+                        "sudo apt-get install -yq nasm"
                     ]
                 }
             }

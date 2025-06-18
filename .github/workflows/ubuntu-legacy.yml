@@ -1,0 +1,61 @@
+name: ubuntu-legacy
+# Workflow for running builds on legacy/EOL Ubuntu versions (as required)
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened, closed ]
+    paths-ignore:
+      - .github/workflows/macos.yaml
+      - .github/workflows/windows.yaml
+      - .github/workflows/fedora.yml
+      - .github/workflows/ubuntu.yml
+      - '**/*.md'
+  release:
+    types: [ published, created, edited ]
+  workflow_dispatch:
+  schedule:
+    # daily
+    - cron:  '0 0 * * *'
+
+jobs:
+
+  run:
+
+    strategy:
+      matrix:
+        os: [ubuntu:20.04]
+        llvm: [18, 14]
+
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.os }}
+
+    if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip ubuntu-legacy') && !contains(github.event.head_commit.message, '[skip ubuntu-legacy]')"
+
+    steps:
+      - name: Set up tools
+        run: |
+          apt-get update -y
+          DEBIAN_FRONTEND=noninteractive apt-get install -yq python3 python3-pip cmake sudo
+          python3 -m pip install --upgrade pip
+
+      - name: Create non-root user
+        run: |
+          groupadd -g 1000 user
+          useradd -m -u 1000 -g user -s /bin/bash user
+          echo "user ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/user
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Create workspace
+        # Run as non-root user in the container
+        run: |
+          chown -R user:user .
+          export DEBIAN_FRONTEND=noninteractive; echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+          sudo -u user ./flutter_workspace.py
+
+      - name: Test workspace
+        run: |
+          sudo -u user bash -lc "source ./setup_env.sh; flutter doctor -v; dart --version"
