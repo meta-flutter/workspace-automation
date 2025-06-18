@@ -2025,7 +2025,8 @@ def get_llvm_version(llvm_config):
 
     try:
         result = subprocess.run([llvm_config, '--version'], capture_output=True, text=True, check=True)
-        version = result.stdout.strip()
+        version = result.stdout.strip() # this reports full version, e.g. "16.0.6"
+        version = version.split('.')[0]
         return version
     except subprocess.CalledProcessError as e:
         print(f"Error occurred: {e}")
