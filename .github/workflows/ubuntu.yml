@@ -43,6 +43,14 @@ jobs:
         # If llvm != 18, do --disable=toolchain-llvm-18
         run: |
           PREFER_LLVM=${{ matrix.llvm }} ./flutter_workspace.py
+          echo "Checking LLVM config..."
+          cat setup_env.sh; echo ""
+          FOUND_LLVM_VER=$(grep -oP 'export PREFER_LLVM=\K[0-9]+' setup_env.sh)
+          if [ "$FOUND_LLVM_VER" != ${{ matrix.llvm }} ]; then
+            echo "Expected LLVM version ${{ matrix.llvm }} but found ${FOUND_LLVM_VER} in setup_env.sh"
+            exit 1
+          fi
+
 
       - name: Test workspace
         run: |

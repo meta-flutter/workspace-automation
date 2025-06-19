@@ -2025,7 +2025,8 @@ def get_llvm_version(llvm_config):
 
     try:
         result = subprocess.run([llvm_config, '--version'], capture_output=True, text=True, check=True)
-        version = result.stdout.strip()
+        version = result.stdout.strip() # this reports full version, e.g. "16.0.6"
+        version = version.split('.')[0]
         return version
     except subprocess.CalledProcessError as e:
         print(f"Error occurred: {e}")
@@ -2501,82 +2502,80 @@ def get_random_mac() -> str:
     return ':'.join(map(lambda x: "%02x" % x, mac))
 
 
-env_prefix = '''#!/usr/bin/env bash -l
-
-pushd . > '/dev/null'
-SCRIPT_PATH=\"${BASH_SOURCE[0]:-$0}\"
-
-while [ -h \"$SCRIPT_PATH\" ]
-do
-    cd \"$( dirname -- \"$SCRIPT_PATH\"; )\"
-    SCRIPT_PATH=\"$( readlink -f -- \"$SCRIPT_PATH\"; )\"
-done
-cd \"$( dirname -- \"$SCRIPT_PATH\"; )\" > '/dev/null'
-
-SCRIPT_PATH=\"$( pwd; )\"
-popd  > '/dev/null'
-echo SCRIPT_PATH=$SCRIPT_PATH
-
-# LLVM/Clang environment variables
-export CC=''' + os.environ.get('CC', 'clang') + '''
-export CXX=''' + os.environ.get('CXX', 'clang++') + '''
-export LLVM_CONFIG=''' + os.environ.get('LLVM_CONFIG', 'llvm-config') + '''
-export LLVM_PREFIX=''' + os.environ.get('LLVM_PREFIX', '/usr') + '''
-export LLVM_VERSION=''' + os.environ.get('LLVM_VERSION', '') + '''
-export LLVM_CMAKEDIR=''' + os.environ.get('LLVM_CMAKEDIR', '') + '''
-export LLVM_STRIP=''' + os.environ.get('LLVM_STRIP', '/usr/bin/llvm-strip') + '''
-export PREFER_LLVM=''' + os.environ.get('PREFER_LLVM', '') + '''
-# (alias clang tools to match version)
-alias clang=clang-${LLVM_VERSION}
-alias clang++=clang++-${LLVM_VERSION}
-alias clang-tidy=${LLVM_PREFIX}/bin/clang-tidy
-alias clang-format=${LLVM_PREFIX}/bin/clang-format
-alias llvm-config=${LLVM_CONFIG}
-
-export FLUTTER_WORKSPACE=$SCRIPT_PATH
-export PATH=$FLUTTER_WORKSPACE/flutter/bin:$PATH
-export PUB_CACHE=$FLUTTER_WORKSPACE/.config/flutter_workspace/pub_cache
-export XDG_CONFIG_HOME=$FLUTTER_WORKSPACE/.config/flutter
-
-echo \"********************************************\"
-echo \"* Setting FLUTTER_WORKSPACE to:\"
-echo \"* ${FLUTTER_WORKSPACE}\"
-echo \"********************************************\"
-
-flutter doctor -v
-flutter custom-devices list
-'''
-
-env_prefix_win = r'''# PowerShell version of setup_env.sh for Windows
-
-# Get the directory of this script
-$SCRIPT_PATH = Split-Path -Parent $MyInvocation.MyCommand.Definition
-
-# Remove trailing backslash if present
-if ($SCRIPT_PATH.EndsWith('\')) {
-    $SCRIPT_PATH = $SCRIPT_PATH.Substring(0, $SCRIPT_PATH.Length)
-}
-
-$env:FLUTTER_WORKSPACE = $SCRIPT_PATH
-$env:PATH = "$env:FLUTTER_WORKSPACE\\flutter\\bin;$env:PATH"
-$env:PUB_CACHE = "$env:FLUTTER_WORKSPACE\\.config\\flutter_workspace\\pub_cache"
-
-Write-Host "********************************************"
-Write-Host "* Setting FLUTTER_WORKSPACE to:"
-Write-Host "* $env:FLUTTER_WORKSPACE"
-Write-Host "********************************************"
-
-flutter doctor -v
-flutter custom-devices list
-'''
-
 def write_env_script_header(workspace):
     """ Create environmental variable bash script """
     if sys.platform.startswith('win'):
+        env_prefix_win = r'''# PowerShell version of setup_env.sh for Windows
+
+        # Get the directory of this script
+        $SCRIPT_PATH = Split-Path -Parent $MyInvocation.MyCommand.Definition
+
+        # Remove trailing backslash if present
+        if ($SCRIPT_PATH.EndsWith('\')) {
+            $SCRIPT_PATH = $SCRIPT_PATH.Substring(0, $SCRIPT_PATH.Length)
+        }
+
+        $env:FLUTTER_WORKSPACE = $SCRIPT_PATH
+        $env:PATH = "$env:FLUTTER_WORKSPACE\\flutter\\bin;$env:PATH"
+        $env:PUB_CACHE = "$env:FLUTTER_WORKSPACE\\.config\\flutter_workspace\\pub_cache"
+
+        Write-Host "********************************************"
+        Write-Host "* Setting FLUTTER_WORKSPACE to:"
+        Write-Host "* $env:FLUTTER_WORKSPACE"
+        Write-Host "********************************************"
+
+        flutter doctor -v
+        flutter custom-devices list
+        '''
         environment_script = os.path.join(workspace, 'setup_env.ps1')
         with open(environment_script, 'w+', encoding="utf-8") as script:
             script.write(env_prefix_win)
     else:
+        env_prefix = '''#!/usr/bin/env bash -l
+        pushd . > '/dev/null'
+        SCRIPT_PATH=\"${BASH_SOURCE[0]:-$0}\"
+
+        while [ -h \"$SCRIPT_PATH\" ]
+        do
+            cd \"$( dirname -- \"$SCRIPT_PATH\"; )\"
+            SCRIPT_PATH=\"$( readlink -f -- \"$SCRIPT_PATH\"; )\"
+        done
+        cd \"$( dirname -- \"$SCRIPT_PATH\"; )\" > '/dev/null'
+
+        SCRIPT_PATH=\"$( pwd; )\"
+        popd  > '/dev/null'
+        echo SCRIPT_PATH=$SCRIPT_PATH
+
+        # LLVM/Clang environment variables
+        export CC=''' + os.environ.get('CC', 'clang') + '''
+        export CXX=''' + os.environ.get('CXX', 'clang++') + '''
+        export LLVM_CONFIG=''' + os.environ.get('LLVM_CONFIG', 'llvm-config') + '''
+        export LLVM_PREFIX=''' + os.environ.get('LLVM_PREFIX', '/usr') + '''
+        export LLVM_VERSION=''' + os.environ.get('LLVM_VERSION', '') + '''
+        export LLVM_CMAKEDIR=''' + os.environ.get('LLVM_CMAKEDIR', '') + '''
+        export LLVM_STRIP=''' + os.environ.get('LLVM_STRIP', '/usr/bin/llvm-strip') + '''
+        export PREFER_LLVM=''' + os.environ.get('PREFER_LLVM', '') + '''
+        # (alias clang tools to match version)
+        alias clang=clang-${LLVM_VERSION}
+        alias clang++=clang++-${LLVM_VERSION}
+        alias clang-tidy=${LLVM_PREFIX}/bin/clang-tidy
+        alias clang-format=${LLVM_PREFIX}/bin/clang-format
+        alias llvm-config=${LLVM_CONFIG}
+
+        export FLUTTER_WORKSPACE=$SCRIPT_PATH
+        export PATH=$FLUTTER_WORKSPACE/flutter/bin:$PATH
+        export PUB_CACHE=$FLUTTER_WORKSPACE/.config/flutter_workspace/pub_cache
+        export XDG_CONFIG_HOME=$FLUTTER_WORKSPACE/.config/flutter
+
+        echo \"********************************************\"
+        echo \"* Setting FLUTTER_WORKSPACE to:\"
+        echo \"* ${FLUTTER_WORKSPACE}\"
+        echo \"********************************************\"
+        
+        flutter doctor -v
+        flutter custom-devices list
+        '''
+
         environment_script = os.path.join(workspace, 'setup_env.sh')
         with open(environment_script, 'w+', encoding="utf-8") as script:
             script.write(env_prefix)
