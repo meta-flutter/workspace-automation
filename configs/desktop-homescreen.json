@@ -91,30 +91,31 @@
     "pre-requisites": {
       "aarch64": {
         "ubuntu": {
+          "shell": true,
           "cmds": [
-            "sudo apt update -y",
-            "sudo apt install -y flatpak libflatpak-dev gnome-software-plugin-flatpak",
-            "sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
-            "flatpak remotes"
+            "sudo apt-get update -y",
+            "if [ -n \"$GITHUB_ACTIONS\" ]; then sudo apt-get install -yq flatpak libflatpak-dev gnome-software-plugin-flatpak; fi",
+            "if [ -n \"$GITHUB_ACTIONS\" ]; then sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo; fi",
+            "if [ -n \"$GITHUB_ACTIONS\" ]; then flatpak remotes; fi"
           ],
           "20.04": {
             "cmds": [
               "echo \"Ubuntu 20.04\"",
-              "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
+              "sudo apt-get install -yq --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
               "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
             ]
           },
           "22.04": {
             "cmds": [
               "echo \"Ubuntu 22.04\"",
-              "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
+              "sudo apt-get install -yq --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
               "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
             ]
           },
           "24.04": {
             "cmds": [
               "echo \"Ubuntu 24.04\"",
-              "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
+              "sudo apt-get install -yq --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
               "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
             ]
           }
@@ -122,30 +123,31 @@
       },
       "x86_64": {
         "ubuntu": {
+          "shell": true,
           "cmds": [
-            "sudo apt update -y",
-            "sudo apt install -y flatpak libflatpak-dev gnome-software-plugin-flatpak",
-            "sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo",
-            "flatpak remotes"
+            "sudo apt-get update -y",
+            "if [ -n \"$GITHUB_ACTIONS\" ]; then sudo apt-get install -yq flatpak libflatpak-dev gnome-software-plugin-flatpak; fi",
+            "if [ -n \"$GITHUB_ACTIONS\" ]; then sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo; fi",
+            "if [ -n \"$GITHUB_ACTIONS\" ]; then flatpak remotes; fi"
           ],
           "20.04": {
             "cmds": [
               "echo \"Ubuntu 20.04\"",
-              "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
+              "sudo apt-get install -yq --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
               "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
             ]
           },
           "22.04": {
             "cmds": [
               "echo \"Ubuntu 22.04\"",
-              "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
+              "sudo apt-get install -yq --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
               "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
             ]
           },
           "24.04": {
             "cmds": [
               "echo \"Ubuntu 24.04\"",
-              "sudo apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
+              "sudo apt-get install -yq --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl",
               "pkg-config --modversion gstreamer-1.0 gstreamer-audio-1.0"
             ]
           }

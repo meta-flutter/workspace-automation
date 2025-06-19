@@ -34,8 +34,8 @@
                 "ubuntu": {
                     "cmds": [
                         "pip3 install absl-py",
-                        "sudo apt update -y",
-                        "sudo apt install -y libsdl2-dev libjpeg-dev"
+                        "sudo apt-get update -y",
+                        "sudo apt-get install -yq libsdl2-dev libjpeg-dev"
                     ]
                 }
             },
@@ -43,8 +43,8 @@
                 "ubuntu": {
                     "cmds": [
                         "pip3 install absl-py",
-                        "sudo apt update -y",
-                        "sudo apt install -y libsdl2-dev libjpeg-dev"
+                        "sudo apt-get update -y",
+                        "sudo apt-get install -yq libsdl2-dev libjpeg-dev"
                     ]
                 },
                 "fedora": {

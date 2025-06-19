@@ -6,6 +6,7 @@ on:
     paths-ignore:
       - .github/workflows/windows.yaml
       - .github/workflows/ubuntu.yml
+      - .github/workflows/ubuntu-legacy.yml
       - .github/workflows/fedora.yml
       - '**/*.md'
   release:
