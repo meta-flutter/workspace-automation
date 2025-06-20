@@ -12,8 +12,10 @@
     ],
     "type": "dependency",
     "env": {
-        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
-        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
+        "CC": "${LLVM_BINDIR}/clang",
+        "CXX": "${LLVM_BINDIR}/clang++",
+        "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
+        "LD_LIBRARY_PATH": "${LLVM_LIBDIR}:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
         "SENTRY_NATIVE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/sentry-native",
         "SENTRY_NATIVE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/sentry-native/build",
         "SENTRY_NATIVE_STAGING_DIR": "${SENTRY_NATIVE_BUILD_DIR}/staging/debug",
@@ -22,7 +24,7 @@
     "src": [
         {
             "uri": "https://github.com/getsentry/sentry-native.git",
-            "branch": "master"
+            "branch": "0.9.0"
         }
     ],
     "runtime": {
@@ -31,9 +33,8 @@
                 "cwd": "${SENTRY_NATIVE_BUILD_DIR}",
                 "cmds": [
                     "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
-                    "cmake -G Ninja ${SENTRY_NATIVE_CMAKE_ARGS} -S ${SENTRY_NATIVE_SRC_DIR} -B ${SENTRY_NATIVE_BUILD_DIR}",
-                    "${AUTONINJA}",
-                    "${LLVM_STRIP} ${SENTRY_NATIVE_BUILD_DIR}/libsentry.so"
+                    "cmake -G Ninja -S ${SENTRY_NATIVE_SRC_DIR} -B ${SENTRY_NATIVE_BUILD_DIR} ${SENTRY_NATIVE_CMAKE_ARGS}",
+                    "cmake --build ${SENTRY_NATIVE_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target install --parallel"
                 ]
             }
         ],
@@ -41,7 +42,7 @@
             {
                 "cwd": "${SENTRY_NATIVE_BUILD_DIR}",
                 "cmds": [
-                    "ninja -t clean"
+                    "cmake --build ${SENTRY_NATIVE_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target clean --parallel"
                 ]
             }
         ]

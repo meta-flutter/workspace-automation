@@ -1,0 +1,54 @@
+From 08874908f9bf85b61cc58b375fd15d61b237026e Mon Sep 17 00:00:00 2001
+From: Joel Winarske <joel.winarske@toyotaconnected.com>
+Date: Thu, 19 Jun 2025 14:32:49 -0700
+Subject: [PATCH] spirv-tools threads
+
+Signed-off-by: Joel Winarske <joel.winarske@toyotaconnected.com>
+---
+ third_party/spirv-tools/CMakeLists.txt          | 2 ++
+ third_party/spirv-tools/examples/CMakeLists.txt | 2 +-
+ third_party/spirv-tools/tools/CMakeLists.txt    | 2 +-
+ 3 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/third_party/spirv-tools/CMakeLists.txt b/third_party/spirv-tools/CMakeLists.txt
+index abb545058..0bc2b1547 100644
+--- a/third_party/spirv-tools/CMakeLists.txt
++++ b/third_party/spirv-tools/CMakeLists.txt
+@@ -48,6 +48,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
+ option(ENABLE_RTTI "Enables RTTI" OFF)
+ option(SPIRV_ALLOW_TIMERS "Allow timers via clock_gettime on supported platforms" ON)
+ 
++find_package(Threads)
++
+ if("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
+   set(SPIRV_TIMER_ENABLED ${SPIRV_ALLOW_TIMERS})
+ elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+diff --git a/third_party/spirv-tools/examples/CMakeLists.txt b/third_party/spirv-tools/examples/CMakeLists.txt
+index fd627cbda..7c723897b 100644
+--- a/third_party/spirv-tools/examples/CMakeLists.txt
++++ b/third_party/spirv-tools/examples/CMakeLists.txt
+@@ -27,7 +27,7 @@ function(add_spvtools_example)
+ 
+     add_executable(${ARG_TARGET} ${ARG_SRCS})
+     spvtools_default_compile_options(${ARG_TARGET})
+-    target_link_libraries(${ARG_TARGET} PRIVATE ${ARG_LIBS})
++    target_link_libraries(${ARG_TARGET} PRIVATE ${ARG_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+     set_property(TARGET ${ARG_TARGET} PROPERTY FOLDER "SPIRV-Tools examples")
+   endif()
+ endfunction()
+diff --git a/third_party/spirv-tools/tools/CMakeLists.txt b/third_party/spirv-tools/tools/CMakeLists.txt
+index a6736ca3c..76dcc21b6 100644
+--- a/third_party/spirv-tools/tools/CMakeLists.txt
++++ b/third_party/spirv-tools/tools/CMakeLists.txt
+@@ -31,7 +31,7 @@ function(add_spvtools_tool)
+ 
+   add_executable(${ARG_TARGET} ${ARG_SRCS})
+   spvtools_default_compile_options(${ARG_TARGET})
+-  target_link_libraries(${ARG_TARGET} PRIVATE ${ARG_LIBS})
++  target_link_libraries(${ARG_TARGET} PRIVATE ${ARG_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+   target_include_directories(${ARG_TARGET} PRIVATE
+     ${spirv-tools_SOURCE_DIR}
+     ${spirv-tools_BINARY_DIR}
+-- 
+2.49.0
+

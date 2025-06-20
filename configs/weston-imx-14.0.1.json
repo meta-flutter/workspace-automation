@@ -23,11 +23,11 @@
     "src": [
         {
             "uri": "https://github.com/nxp-imx/wayland-protocols-imx.git",
-            "branch": "wayland-protocols-imx-1.32"
+            "branch": "wayland-protocols-imx-1.37"
         },
         {
             "uri": "https://github.com/nxp-imx/weston-imx.git",
-            "branch": "weston-imx-12.0.4"
+            "branch": "weston-imx-14.0.1"
         }
     ],
     "runtime": {

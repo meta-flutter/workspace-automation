@@ -12,7 +12,10 @@
     ],
     "type": "dependency",
     "env": {
-        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:$PATH",
+        "CC": "${LLVM_BINDIR}/clang",
+        "CXX": "${LLVM_BINDIR}/clang++",
+        "PATH": "${LLVM_BINDIR}:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
+        "LD_LIBRARY_PATH": "${LLVM_LIBDIR}",
         "CAMERA_SRC_DIR": "${FLUTTER_WORKSPACE}/app/libcamera",
         "CAMERA_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/libcamera/buildDir",
         "INSTALL_PREFIX": "${FLUTTER_WORKSPACE}/app/libcamera/out/usr",
@@ -22,7 +25,7 @@
         {
             "uri": "https://git.libcamera.org/libcamera/libcamera.git",
             "branch": "master",
-            "rev": "v0.4.0"
+            "rev": "v0.5.1"
         }
     ],
     "runtime": {
@@ -61,8 +64,9 @@
             {
                 "cwd": "${CAMERA_BUILD_DIR}",
                 "cmds": [
-                    "${AUTONINJA} -C ${CAMERA_BUILD_DIR} install",
-                    "find ${INSTALL_PREFIX} -name \"lib*.so.0.4.0\" -exec ${LLVM_STRIP} {} \\;"
+                    "${REMOVE_TREE} *",
+                    "ninja -C ${CAMERA_BUILD_DIR} install",
+                    "find ${INSTALL_PREFIX} -name \"lib*.so.0.4.0\" -exec llvm-strip {} \\;"
                 ]
             }
         ],

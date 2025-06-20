@@ -10,8 +10,7 @@
   "supported_host_types": [
     "darwin",
     "fedora",
-    "ubuntu",
-    "rhel"
+    "ubuntu"
   ],
   "type": "toolchain",
   "toolchain": "llvm",
@@ -74,18 +73,14 @@
           "cmds": [
             "sudo dnf -y update",
             "sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libxatracker",
-            "export VV=${PREFER_LLVM}; CURRENT_LLVM=$(dnf info llvm 2>/dev/null | awk '/^Version/ {print $3;exit}' | cut -d. -f1); if [[ $CURRENT_LLVM == $PREFER_LLVM ]] then export VV=''; fi; echo $VV > .llvm-version",
-            "echo 'Installing LLVM version $(cat .llvm-version)'",
-            "VV=$(cat .llvm-version); if [[ -n $VV ]] then sudo dnf copr enable @fedora-llvm-team/llvm$((PREFER_LLVM + 1)) -y; fi",
-            "VV=$(cat .llvm-version); sudo dnf -y install llvm${VV}-devel clang${VV} clang${VV}-tools-extra lldb lld${VV} libcxx-devel libcxx-static libcxxabi-devel libcxxabi-static; rm .llvm-version",
-            "VV=$(cat .llvm-version); if [[ -n $VV ]] then sudo dnf copr remove @fedora-llvm-team/llvm$((PREFER_LLVM + 1)) -y; fi"
-          ]
-        },
-        "rhel": {
-          "cmds": [
-            "sudo dnf -y update",
-            "sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libxatracker",
-            "sudo dnf -y install llvm-devel clang clang-tools-extra lldb lld"
+            "export VV=${PREFER_LLVM}",
+            "CURRENT_LLVM=$(dnf info llvm 2>/dev/null | awk '/^Version/ {print $3;exit}' | cut -d. -f1); if [[ $CURRENT_LLVM == $PREFER_LLVM ]]; then export VV=''; fi",
+            "echo $VV > .llvm-version",
+            "echo \"Installing LLVM version $(cat .llvm-version)\"",
+            "VV=$(cat .llvm-version); if [[ -n $VV ]]; then sudo dnf copr enable @fedora-llvm-team/llvm${PREFER_LLVM} -y; fi",
+            "VV=$(cat .llvm-version); sudo dnf -y install llvm${VV}-devel clang${VV} clang${VV}-tools-extra lldb lld${VV} libcxx-devel libcxx-static libcxxabi-devel libcxxabi-static",
+            "VV=$(cat .llvm-version); if [[ -n $VV ]]; then sudo dnf copr remove @fedora-llvm-team/llvm${PREFER_LLVM} -y; fi",
+            "rm .llvm-version"
           ]
         }
       }
