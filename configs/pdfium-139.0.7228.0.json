@@ -30,11 +30,13 @@
         "gclient_config": {
             "path": "${PDFIUM_ROOT}",
             "name": "${PDFIUM_SRC_DIR_RELATIVE}",
-            "url": "https://pdfium.googlesource.com/pdfium.git@2b675cf15ab4b68bf1ed4e0511ba2479e11f1605",
+            "url": "https://pdfium.googlesource.com/pdfium.git@4e4d7a14a4d9d484feb4a4770a892cd964cfd968",
             "deps_file": "DEPS",
             "managed": false,
             "custom_deps": {},
             "custom_vars": {
+                "reclient_package": "gn/gn/",
+                "reclient_version": "git_revision:b99a82ca8ee957da829d6313b818b99df8e7ccb8",
                 "checkout_configuration": "small"
             }
         },
@@ -83,7 +85,7 @@
                 "cwd": "${PDFIUM_SRC_DIR}",
                 "cmds": [
                     "${AUTONINJA} -C ${PDFIUM_BUILD_DIR} pdfium",
-                    "${LLVM_STRIP} ${PDFIUM_BUILD_DIR}/libpdfium.so"
+                    "llvm-strip ${PDFIUM_BUILD_DIR}/libpdfium.so"
                 ]
             }
         ],

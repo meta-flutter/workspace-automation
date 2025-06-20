@@ -12,8 +12,10 @@
   ],
   "type": "host",
   "env": {
+    "CC": "${LLVM_BINDIR}/clang",
+    "CXX": "${LLVM_BINDIR}/clang++",
     "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
-    "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
+    "LD_LIBRARY_PATH": "${LLVM_LIBDIR}:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
     "HOMESCREEN_SRC_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen",
     "HOMESCREEN_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen/build",
     "PLUGINS_DIR": "${FLUTTER_WORKSPACE}/app/ivi-homescreen-plugins/plugins",
@@ -181,8 +183,7 @@
           "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
           "cmake -G Ninja ${HOMESCREEN_CMAKE_ARGS} -S ${HOMESCREEN_SRC_DIR} -B ${HOMESCREEN_BUILD_DIR}",
           "cmake --build ${HOMESCREEN_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target clean --parallel",
-          "cmake --build ${HOMESCREEN_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target homescreen --parallel",
-          "${LLVM_STRIP} shell/homescreen"
+          "cmake --build ${HOMESCREEN_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target homescreen --parallel"
         ]
       }
     ],

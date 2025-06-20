@@ -2000,15 +2000,10 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, ena
     return 0
 
 
-def find_llvm_config_in_sysroot(sysroot, prefer_llvm_config):
-    if prefer_llvm_config is None:
-        llvm_config = 'llvm-config'
-    else:
-        llvm_config = 'llvm-config-' + prefer_llvm_config
-
-    for root, _, files in os.walk(sysroot):
+def get_first_file_in_path(path, file_to_find):
+    for root, _, files in os.walk(path):
         for file in files:
-            if file == llvm_config:
+            if file == file_to_find:
                 file_path = os.path.join(root, file)
                 if os.access(file_path, os.X_OK):
                     if 'android' in file_path:
@@ -2018,42 +2013,13 @@ def find_llvm_config_in_sysroot(sysroot, prefer_llvm_config):
     return None
 
 
-def get_llvm_version(llvm_config):
+def get_llvm_config(llvm_config, option):
     if not os.access(llvm_config, os.X_OK):
         print(f"Error: {llvm_config} is not executable or not accessible.")
         return None
 
     try:
-        result = subprocess.run([llvm_config, '--version'], capture_output=True, text=True, check=True)
-        version = result.stdout.strip() # this reports full version, e.g. "16.0.6"
-        version = version.split('.')[0]
-        return version
-    except subprocess.CalledProcessError as e:
-        print(f"Error occurred: {e}")
-        return None
-
-
-def get_llvm_cmakedir(llvm_config):
-    if not os.access(llvm_config, os.X_OK):
-        print(f"Error: {llvm_config} is not executable or not accessible.")
-        return None
-
-    try:
-        result = subprocess.run([llvm_config, '--cmakedir'], capture_output=True, text=True, check=True)
-        cmake_dir = result.stdout.strip()
-        return cmake_dir
-    except subprocess.CalledProcessError as e:
-        print(f"Error occurred: {e}")
-        return None
-
-
-def get_llvm_prefix(llvm_config):
-    if not os.access(llvm_config, os.X_OK):
-        print(f"Error: {llvm_config} is not executable or not accessible.")
-        return None
-
-    try:
-        result = subprocess.run([llvm_config, '--prefix'], capture_output=True, text=True, check=True)
+        result = subprocess.run([llvm_config, f'--{option}'], capture_output=True, text=True, check=True)
         prefix_path = result.stdout.strip()
         return prefix_path
     except subprocess.CalledProcessError as e:
@@ -2070,6 +2036,18 @@ def get_hardware_threads():
         return len(os.sched_getaffinity(0))
     except AttributeError:
         return multiprocessing.cpu_count()
+
+
+def setup_llvm_vars(llvm_config):
+    llvm_bindir = get_llvm_config(llvm_config, 'bindir')
+    llvm_libdir = get_llvm_config(llvm_config, 'libdir')
+
+    os.environ['LLVM_BINDIR'] = llvm_bindir
+    os.environ['LLVM_LIBDIR'] = llvm_libdir
+    os.environ['LLVM_CONFIG'] = llvm_bindir + '/llvm-config'
+
+    print(f"LLVM_BINDIR: {os.environ['LLVM_BINDIR']}")
+    print(f"LLVM_CONFIG: {os.environ['LLVM_CONFIG']}")
 
 
 def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin,
@@ -2108,34 +2086,28 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
         host_type = get_host_type()
 
         llvm_base_path = '/usr'
+
         if host_type == 'darwin':
             llvm_base_path = get_mac_brew_prefix('llvm' + '@' + prefer_llvm)
+        elif host_type == 'linux':
+            host_type = get_freedesktop_os_release_id()
+            if host_type == 'ubuntu':
+                llvm_base_path = '/usr/lib/llvm-' + prefer_llvm + '/bin'
+            elif host_type == 'fedora':
+                llvm_base_path = '/usr/lib64/llvm' + prefer_llvm + '/bin'
 
-        llvm_config = find_llvm_config_in_sysroot(llvm_base_path, prefer_llvm)
+        llvm_config = get_first_file_in_path(llvm_base_path, 'llvm-config')
         if llvm_config:
-            llvm_prefix = get_llvm_prefix(llvm_config)
-            llvm_version = get_llvm_version(llvm_config)
-            llvm_cmakedir = get_llvm_cmakedir(llvm_config)
-
-            os.environ['LLVM_CONFIG'] = llvm_config
-            os.environ['LLVM_PREFIX'] = llvm_prefix
-            os.environ['LLVM_VERSION'] = llvm_version
-            os.environ['LLVM_CMAKEDIR'] = llvm_cmakedir
-            os.environ['LLVM_STRIP'] = llvm_prefix + '/bin/llvm-strip'
-
-            os.environ['CC'] = llvm_prefix + '/bin/clang'
-            os.environ['CXX'] = llvm_prefix + '/bin/clang++'
-
-            print(f"LLVM_CONFIG: {llvm_config}")
-            print(f"LLVM_PREFIX: {llvm_prefix}")
-            print(f"LLVM_VERSION: {llvm_version}")
-            print(f"LLVM_CMAKEDIR: {llvm_cmakedir}")
-            print(f"LLVM_STRIP: {os.environ['LLVM_STRIP']}")
-            print(f"CC: {os.environ['CC']}")
-            print(f"CXX: {os.environ['CXX']}")
+            setup_llvm_vars(llvm_config)
         else:
-            print_banner(f'Failed to find llvm-config({prefer_llvm}) in {llvm_base_path}.')
-            return
+            llvm_base_path = '/usr'
+            llvm_config = get_first_file_in_path(llvm_base_path, 'llvm-config')
+            if llvm_config:
+                setup_llvm_vars(llvm_config)
+            else:
+                print_banner(f'Failed to find llvm-config({prefer_llvm}) in {llvm_base_path}.')
+                exit()
+                return
 
     elif platform_['toolchain'] == 'common':
         return
@@ -2547,23 +2519,12 @@ def write_env_script_header(workspace):
         echo SCRIPT_PATH=$SCRIPT_PATH
 
         # LLVM/Clang environment variables
-        export CC=''' + os.environ.get('CC', 'clang') + '''
-        export CXX=''' + os.environ.get('CXX', 'clang++') + '''
-        export LLVM_CONFIG=''' + os.environ.get('LLVM_CONFIG', 'llvm-config') + '''
-        export LLVM_PREFIX=''' + os.environ.get('LLVM_PREFIX', '/usr') + '''
-        export LLVM_VERSION=''' + os.environ.get('LLVM_VERSION', '') + '''
-        export LLVM_CMAKEDIR=''' + os.environ.get('LLVM_CMAKEDIR', '') + '''
-        export LLVM_STRIP=''' + os.environ.get('LLVM_STRIP', '/usr/bin/llvm-strip') + '''
         export PREFER_LLVM=''' + os.environ.get('PREFER_LLVM', '') + '''
+        export LLVM_BINDIR=''' + os.environ.get('LLVM_BINDIR', '') + '''
         # (alias clang tools to match version)
-        alias clang=clang-${LLVM_VERSION}
-        alias clang++=clang++-${LLVM_VERSION}
-        alias clang-tidy=${LLVM_PREFIX}/bin/clang-tidy
-        alias clang-format=${LLVM_PREFIX}/bin/clang-format
-        alias llvm-config=${LLVM_CONFIG}
 
         export FLUTTER_WORKSPACE=$SCRIPT_PATH
-        export PATH=$FLUTTER_WORKSPACE/flutter/bin:$PATH
+        export PATH=$LLVM_BINDIR:$FLUTTER_WORKSPACE/flutter/bin:$PATH
         export PUB_CACHE=$FLUTTER_WORKSPACE/.config/flutter_workspace/pub_cache
         export XDG_CONFIG_HOME=$FLUTTER_WORKSPACE/.config/flutter
 

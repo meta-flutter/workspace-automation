@@ -1,19 +1,23 @@
 {
-  "id": "weston-pi-zero2w",
+  "id": "weston-pi5",
   "load": false,
   "supported_archs": [
     "aarch64",
     "arm64",
-    "x86_64"
+    "x86_64",
+    "ARM64",
+    "AMD64"
   ],
   "supported_host_types": [
     "darwin",
     "fedora",
-    "ubuntu"
+    "ubuntu",
+    "rhel",
+    "windows"
   ],
   "type": "remote",
   "env": {
-    "DEVICE_HOSTNAME": "raspberrypi0-2w-64.local",
+    "DEVICE_HOSTNAME": "raspberrypi5.local",
     "SCP_PREFIX": "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
     "SSH_PREFIX": "ssh -t -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o BatchMode=yes",
     "PING_CMD": "ping -c 1 -w 400 ${DEVICE_HOSTNAME}",
@@ -36,9 +40,9 @@
   },
   "overwrite-existing": true,
   "custom-device": {
-    "id": "pi-zero2w-weston",
-    "label": "Raspberry Pi Zero 2W",
-    "sdkNameAndVersion": "Raspberry Pi Zero 2W (flutter-auto)",
+    "id": "weston-pi5",
+    "label": "Raspberry Pi 5",
+    "sdkNameAndVersion": "Raspberry Pi 5 (weston + ivi-homescreen)",
     "platform": "linux-x64",
     "enabled": true,
     "ping": "bash -c \"${PING_CMD}\"",
