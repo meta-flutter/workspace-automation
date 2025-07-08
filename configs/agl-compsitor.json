@@ -51,7 +51,7 @@
         },
         {
             "uri": "https://gerrit.automotivelinux.org/gerrit/src/agl-compositor.git",
-            "branch": "salmon"
+            "branch": "trout"
         },
         {
             "uri": "https://github.com/jwinarske/waypp.git",
@@ -59,7 +59,7 @@
         },
         {
             "uri": "https://gerrit.automotivelinux.org/gerrit/apps/flutter-ics-homescreen.git",
-            "branch": "salmon"
+            "branch": "trout"
         }
     ],
     "runtime": {
