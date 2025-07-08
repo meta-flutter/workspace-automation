@@ -13,7 +13,7 @@
   ],
   "type": "qemu",
   "env": {
-    "RELEASE_NAME": "salmon",
+    "RELEASE_NAME": "trout",
     "RELEASE_VERSION": "latest",
     "FLUTTER_DEBUG_PORT": "1234",
     "FLUTTER_OBSERVATORY_HOST": "0.0.0.0",
@@ -39,7 +39,7 @@
     "config": {
       "global": {
         "cursor_theme": "DMZ-White",
-        "app_id": "agl-qemu-salmon"
+        "app_id": "agl-qemu-trout"
       },
       "view": {
         "window_type": "BG",
