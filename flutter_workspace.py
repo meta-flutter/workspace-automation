@@ -348,13 +348,15 @@ def main():
     if args.cookie_file:
         cookie_file = args.cookie_file
 
-    setup_platforms(platforms, github_token, cookie_file, args.plex, args.enable, args.disable, args.enable_plugin,
-                    args.disable_plugin, app_folder)
-
     #
     # Create environmental setup script
     #
     write_env_script_header(workspace)
+
+
+    setup_platforms(platforms, github_token, cookie_file, args.plex, args.enable, args.disable, args.enable_plugin,
+                    args.disable_plugin, app_folder)
+
 
     #
     # Display the custom devices list
