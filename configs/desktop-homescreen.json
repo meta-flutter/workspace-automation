@@ -28,7 +28,7 @@
     "PLUGIN_CAMERA_PIPEWIRE": "-DBUILD_PLUGIN_CAMERA_PIPEWIRE=${FLUTTER_WORKSPACE_PIPEWIRE_LOAD}",
     "PLUGIN_FLATPAK": "-DBUILD_PLUGIN_FLATPAK=OFF",
     "FILAMENT_INCLUDE_DIR": "${FLUTTER_WORKSPACE}/app/filament/cmake-build-release/staging/release/include",
-    "FILAMENT_LINK_LIBRARIES_DIR": "${FLUTTER_WORKSPACE}/app/filament/cmake-build-release/staging/release/lib/x86_64",
+    "FILAMENT_LINK_LIBRARIES_DIR": "${FLUTTER_WORKSPACE}/app/filament/cmake-build-release/staging/release/lib/${HOST_ARCH}",
     "FLUGIN_FILAMENT_VIEW": "-DBUILD_PLUGIN_FILAMENT_VIEW=${FLUTTER_WORKSPACE_FILAMENT_LOAD} -DFILAMENT_INCLUDE_DIR=${FILAMENT_INCLUDE_DIR} -DFILAMENT_LINK_LIBRARIES_DIR=${FILAMENT_LINK_LIBRARIES_DIR}",
     "PLUGIN_PDF": "-DBUILD_PLUGIN_PDF=${FLUTTER_WORKSPACE_PDFIUM_LOAD}",
     "LIBWEBRTC_SRC_DIR": "${FLUTTER_WORKSPACE}/app/libwebrtc/src",
@@ -200,7 +200,7 @@
   "custom-device": {
     "id": "desktop-homescreen",
     "label": "Toyota homescreen",
-    "sdkNameAndVersion": "homescreen x86_64",
+    "sdkNameAndVersion": "homescreen ${HOST_ARCH}",
     "platform": "linux-x64",
     "enabled": true,
     "ping": "bash -c \"${PING_CMD}\"",

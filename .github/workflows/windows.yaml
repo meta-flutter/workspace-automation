@@ -42,11 +42,10 @@ jobs:
           git config --global core.longpaths true
           python3.exe -m pip install --upgrade pip
           python3.exe -m pip install virtualenv
-          ./flutter_workspace.ps1 --enable "filament-windows"
+          ./flutter_workspace.ps1 --enable=filament
 
       - name: Test workspace
         run: |
-          ls
           ./setup_env.ps1
           flutter doctor -v
           dart --version

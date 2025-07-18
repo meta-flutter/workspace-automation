@@ -44,7 +44,6 @@ jobs:
           brew doctor |true
           ruby -v
           
-
       - name: Create workspace
         run: |
           ./flutter_workspace.py

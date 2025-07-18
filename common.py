@@ -319,7 +319,8 @@ def validate_sudo_user():
 def chown_workspace(username, workspace):
     """chown workspace if linux"""
     if get_host_type() == "linux":
-        cmd = ['sudo', 'chown', '-R', username, workspace]
+        cmd = ['sudo', 'chown', '-R', f'{username}:{username}', workspace]
+        print(f'Changing ownership of workspace: {cmd}')
         subprocess.check_call(cmd, cwd=workspace, stdout=subprocess.DEVNULL)
 
 

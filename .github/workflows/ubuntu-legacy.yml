@@ -36,7 +36,7 @@ jobs:
       - name: Set up tools
         run: |
           apt-get update -y
-          DEBIAN_FRONTEND=noninteractive apt-get install -yq python3 python3-pip cmake sudo
+          DEBIAN_FRONTEND=noninteractive apt-get install -yq python3 python3-pip bash cmake sudo
           python3 -m pip install --upgrade pip
 
       - name: Create non-root user
@@ -49,13 +49,17 @@ jobs:
         with:
           fetch-depth: 1
 
+
       - name: Create workspace
         # Run as non-root user in the container
         run: |
           chown -R user:user .
           export DEBIAN_FRONTEND=noninteractive; echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
-          sudo -u user ./flutter_workspace.py
+          sudo -u user ./flutter_workspace.py --enable=filament
 
       - name: Test workspace
         run: |
-          sudo -u user bash -lc "source ./setup_env.sh; flutter doctor -v; dart --version"
+          cat ./setup_env.sh
+          . ./setup_env.sh
+          flutter doctor -v
+          dart --version

@@ -348,13 +348,18 @@ def main():
     if args.cookie_file:
         cookie_file = args.cookie_file
 
+    #
+    # Write environmental script header
+    #
+    write_env_script_header(workspace)
+
     setup_platforms(platforms, github_token, cookie_file, args.plex, args.enable, args.disable, args.enable_plugin,
                     args.disable_plugin, app_folder)
 
     #
-    # Create environmental setup script
+    # Write environmental script footer
     #
-    write_env_script_header(workspace)
+    write_env_script_footer(workspace)
 
     #
     # Display the custom devices list
@@ -1629,7 +1634,6 @@ tell application "Finder"
 end tell
 '''
 
-
 def handle_qemu_obj(qemu: dict, cwd: os.path, platform_id: str, flutter_runtime: str):
     if qemu is None:
         return
@@ -1705,7 +1709,7 @@ def handle_qemu_obj(qemu: dict, cwd: os.path, platform_id: str, flutter_runtime:
     os.environ['CONTAINER_SSH_PORT'] = container_ssh_port
 
     env_script = os.path.join(flutter_workspace, 'setup_env.sh')
-    with open(env_script, 'a', encoding="utf-8") as f:
+    with open(env_script, 'a+', encoding="utf-8") as f:
         f.write(env_qemu % (
             platform_id,
             platform_id,
@@ -1997,6 +2001,7 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, ena
     handle_post_cmds(runtime.get('post_cmds'))
 
     handle_custom_devices(platform_)
+
     return 0
 
 
@@ -2039,6 +2044,8 @@ def get_hardware_threads():
 
 
 def setup_llvm_vars(llvm_config):
+    print_banner(f"Setting up LLVM variables using {llvm_config}")
+
     llvm_bindir = get_llvm_config(llvm_config, 'bindir')
     llvm_libdir = get_llvm_config(llvm_config, 'libdir')
 
@@ -2096,6 +2103,7 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
             elif host_type == 'fedora':
                 llvm_base_path = '/usr/lib64/llvm' + prefer_llvm + '/bin'
 
+        print(f'Looking for llvm-config in {llvm_base_path}')
         llvm_config = get_first_file_in_path(llvm_base_path, 'llvm-config')
         if llvm_config:
             setup_llvm_vars(llvm_config)
@@ -2108,6 +2116,15 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
                 print_banner(f'Failed to find llvm-config({prefer_llvm}) in {llvm_base_path}.')
                 exit()
                 return
+
+        # append lines to runtime env script
+        workspace = os.environ.get('FLUTTER_WORKSPACE')
+        if 'append_to_runtime_env' in platform_:
+            append_to_runtime_env = platform_['append_to_runtime_env']
+            if append_to_runtime_env:
+                append_to_env_script(workspace, '\n')
+                for line in append_to_runtime_env:
+                    append_to_env_script(workspace, line)
 
     elif platform_['toolchain'] == 'common':
         return
@@ -2475,74 +2492,128 @@ def get_random_mac() -> str:
 
 
 def write_env_script_header(workspace):
-    """ Create environmental variable bash script """
+    """ Write environmental variables to script header"""
+
+    buffer = ""
+
     if sys.platform.startswith('win'):
-        env_prefix_win = r'''# PowerShell version of setup_env.sh for Windows
 
-        # Get the directory of this script
-        $SCRIPT_PATH = Split-Path -Parent $MyInvocation.MyCommand.Definition
-
-        # Remove trailing backslash if present
-        if ($SCRIPT_PATH.EndsWith('\')) {
-            $SCRIPT_PATH = $SCRIPT_PATH.Substring(0, $SCRIPT_PATH.Length)
-        }
-
-        $env:FLUTTER_WORKSPACE = $SCRIPT_PATH
-        $env:PATH = "$env:FLUTTER_WORKSPACE\\flutter\\bin;$env:PATH"
-        $env:PUB_CACHE = "$env:FLUTTER_WORKSPACE\\.config\\flutter_workspace\\pub_cache"
-
-        Write-Host "********************************************"
-        Write-Host "* Setting FLUTTER_WORKSPACE to:"
-        Write-Host "* $env:FLUTTER_WORKSPACE"
-        Write-Host "********************************************"
-
-        flutter doctor -v
-        flutter custom-devices list
-        '''
         environment_script = os.path.join(workspace, 'setup_env.ps1')
-        with open(environment_script, 'w+', encoding="utf-8") as script:
-            script.write(env_prefix_win)
+
+        buffer = r'''
+# PowerShell version of setup_env.sh for Windows
+
+# Get the directory of this script
+$SCRIPT_PATH = Split-Path -Parent $MyInvocation.MyCommand.Definition
+
+# Remove trailing backslash if present
+if ($SCRIPT_PATH.EndsWith('\')) {
+    $SCRIPT_PATH = $SCRIPT_PATH.Substring(0, $SCRIPT_PATH.Length)
+}
+
+$env:FLUTTER_WORKSPACE = $SCRIPT_PATH
+$env:PATH = "$env:FLUTTER_WORKSPACE\\flutter\\bin;$env:PATH"
+$env:PUB_CACHE = "$env:FLUTTER_WORKSPACE\\.config\\flutter_workspace\\pub_cache"
+
+Write-Host "********************************************"
+Write-Host "* Setting FLUTTER_WORKSPACE to:"
+Write-Host "* $env:FLUTTER_WORKSPACE"
+Write-Host "********************************************"
+
+'''
+
     else:
-        env_prefix = '''#!/usr/bin/env bash -l
-        pushd . > '/dev/null'
-        SCRIPT_PATH=\"${BASH_SOURCE[0]:-$0}\"
-
-        while [ -h \"$SCRIPT_PATH\" ]
-        do
-            cd \"$( dirname -- \"$SCRIPT_PATH\"; )\"
-            SCRIPT_PATH=\"$( readlink -f -- \"$SCRIPT_PATH\"; )\"
-        done
-        cd \"$( dirname -- \"$SCRIPT_PATH\"; )\" > '/dev/null'
-
-        SCRIPT_PATH=\"$( pwd; )\"
-        popd  > '/dev/null'
-        echo SCRIPT_PATH=$SCRIPT_PATH
-
-        # LLVM/Clang environment variables
-        export PREFER_LLVM=''' + os.environ.get('PREFER_LLVM', '') + '''
-        export LLVM_BINDIR=''' + os.environ.get('LLVM_BINDIR', '') + '''
-        # (alias clang tools to match version)
-
-        export FLUTTER_WORKSPACE=$SCRIPT_PATH
-        export PATH=$LLVM_BINDIR:$FLUTTER_WORKSPACE/flutter/bin:$PATH
-        export PUB_CACHE=$FLUTTER_WORKSPACE/.config/flutter_workspace/pub_cache
-        export XDG_CONFIG_HOME=$FLUTTER_WORKSPACE/.config/flutter
-
-        echo \"********************************************\"
-        echo \"* Setting FLUTTER_WORKSPACE to:\"
-        echo \"* ${FLUTTER_WORKSPACE}\"
-        echo \"********************************************\"
-        
-        flutter doctor -v
-        flutter custom-devices list
-        '''
 
         environment_script = os.path.join(workspace, 'setup_env.sh')
-        with open(environment_script, 'w+', encoding="utf-8") as script:
-            script.write(env_prefix)
-        # Add execute permission for user
-        st = os.stat(environment_script)
-        os.chmod(environment_script, st.st_mode | stat.S_IXUSR)
+
+        buffer = '''#!/usr/bin/env bash -l
+
+# Save current directory
+ORIGINAL_DIR=$(pwd)
+
+# Get script directory
+SCRIPT_PATH="${BASH_SOURCE[0]:-$0}"
+
+while [ -h "$SCRIPT_PATH" ]; do
+    cd "$(dirname -- "$SCRIPT_PATH")"
+    SCRIPT_PATH="$(readlink -f -- "$SCRIPT_PATH")"
+done
+cd "$(dirname -- "$SCRIPT_PATH")"
+
+SCRIPT_PATH="$(pwd)"
+
+# Return to original directory
+cd "$ORIGINAL_DIR"
+
+echo SCRIPT_PATH=$SCRIPT_PATH
+
+export FLUTTER_WORKSPACE=$SCRIPT_PATH
+export PATH=$FLUTTER_WORKSPACE/flutter/bin:$PATH
+export PUB_CACHE=$FLUTTER_WORKSPACE/.config/flutter_workspace/pub_cache
+export XDG_CONFIG_HOME=$FLUTTER_WORKSPACE/.config/flutter
+
+echo "********************************************"
+echo "* Setting FLUTTER_WORKSPACE to:"
+echo "* ${FLUTTER_WORKSPACE}"
+echo "********************************************"
+
+        '''
+
+    with open(environment_script, 'w+', encoding="utf-8") as script:
+        script.write(buffer)
+
+def append_to_env_script(workspace, line=None):
+    """ Append environmental variables to script """
+
+    if not line:
+        return
+
+    if sys.platform.startswith('win'):
+        environment_script = os.path.join(workspace, 'setup_env.ps1')
+    else:
+        environment_script = os.path.join(workspace, 'setup_env.sh')
+
+    if not line.endswith('\n'):
+        line += '\n'
+
+    # Don't expand $PATH in the script, as it will be expanded at runtime
+    if '$PATH' not in line:
+        # Expand environment variables in the buffer
+        print(f'line raw: {line}')
+        line = os.path.expanduser(line)
+        print(f'line expanduser: {line}')
+        line = string.Template(line).safe_substitute(os.environ)
+        print(f'cwd safe_substitute: {line}')
+        line = os.path.normpath(line)
+        print(f'line normpath: {line}')
+
+    with open(environment_script, 'a+', encoding="utf-8") as script:
+        script.write(line)
+
+    # Add execute permission for user
+    st = os.stat(environment_script)
+    os.chmod(environment_script, st.st_mode | stat.S_IXUSR)
+
+def write_env_script_footer(workspace):
+    """ Append environmental variables to script footer """
+
+    buffer = '''
+flutter doctor -v
+flutter custom-devices list
+    '''
+
+    if sys.platform.startswith('win'):
+        # append to the script
+        environment_script = os.path.join(workspace, 'setup_env.ps1')
+    else:
+        environment_script = os.path.join(workspace, 'setup_env.sh')
+
+    with open(environment_script, 'a+', encoding="utf-8") as script:
+        script.write(buffer)
+
+    # Add execute permission for user
+    st = os.stat(environment_script)
+    os.chmod(environment_script, st.st_mode | stat.S_IXUSR)
 
 def get_engine_commit(version, hash_):
     """Get matching engine commit hash."""
