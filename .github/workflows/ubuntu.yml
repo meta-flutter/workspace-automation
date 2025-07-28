@@ -63,9 +63,13 @@ jobs:
           fi
 
       - name: Test workspace
+        working-directory: ${{ github.workspace }}
         shell: bash
         run: |
           echo "Testing workspace..."
-          . ${{ github.workspace }}/setup_env.sh
+          pwd
+          ls -la
+          cat ./setup_env.sh
+          . ./setup_env.sh
           flutter doctor -v
           dart --version

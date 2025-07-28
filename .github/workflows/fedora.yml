@@ -61,10 +61,14 @@ jobs:
           sudo -u user ./flutter_workspace.py --enable=filament
 
       - name: Test workspace
+        working-directory: ${{ github.workspace }}
         shell: bash
         run: |
           echo "Testing workspace..."
-          git config --global --add safe.directory ${{ github.workspace }}/flutter
-          . ${{ github.workspace }}/setup_env.sh
+          pwd
+          ls -la
+          cat ./setup_env.sh
+          git config --global --add safe.directory $(pwd)/flutter
+          . ./setup_env.sh
           flutter doctor -v
           dart --version

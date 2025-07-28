@@ -357,8 +357,12 @@ def main():
     # Append GEN_SNAPSHOT to environment script
     #
     if sys.platform.startswith('win'):
+        append_to_env_script(workspace, '$env:FLUTTER_ENGINE_VERSION="${FLUTTER_ENGINE_VERSION}"')
+        append_to_env_script(workspace, '$env:HOST_ARCH_GOOGLE="${HOST_ARCH_GOOGLE}"')
         append_to_env_script(workspace, '$env:GEN_SNAPSHOT="${FLUTTER_WORKSPACE}/.config/flutter_workspace/flutter-engine/${FLUTTER_ENGINE_VERSION}/engine-sdk-release-${HOST_ARCH_GOOGLE}/flutter/engine/src/out/linux_release_${HOST_ARCH_GOOGLE}/engine-sdk/bin/gen_snapshot"')
     else:
+        append_to_env_script(workspace, 'export FLUTTER_ENGINE_VERSION="${FLUTTER_ENGINE_VERSION}"')
+        append_to_env_script(workspace, 'export HOST_ARCH_GOOGLE="${HOST_ARCH_GOOGLE}"')
         append_to_env_script(workspace, 'export GEN_SNAPSHOT="${FLUTTER_WORKSPACE}/.config/flutter_workspace/flutter-engine/${FLUTTER_ENGINE_VERSION}/engine-sdk-release-${HOST_ARCH_GOOGLE}/flutter/engine/src/out/linux_release_${HOST_ARCH_GOOGLE}/engine-sdk/bin/gen_snapshot"')
 
     #
@@ -2599,7 +2603,7 @@ def append_to_env_script(workspace, line=None):
         line += '\n'
 
     # Don't expand $PATH in the script, as it will be expanded at runtime
-    if '$PATH' not in line:
+    if '$PATH' not in line or 'GEN_SNAPSHOT=' not in line:
         # Expand environment variables in the buffer
         print(f'line raw: {line}')
         line = os.path.expanduser(line)
