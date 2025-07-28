@@ -353,6 +353,17 @@ def main():
     #
     write_env_script_header(workspace)
 
+    #
+    # Append GEN_SNAPSHOT to environment script
+    #
+    if sys.platform.startswith('win'):
+        append_to_env_script(workspace, '$env:GEN_SNAPSHOT="${FLUTTER_WORKSPACE}/.config/flutter_workspace/flutter-engine/${FLUTTER_ENGINE_VERSION}/engine-sdk-release-${HOST_ARCH_GOOGLE}/flutter/engine/src/out/linux_release_${HOST_ARCH_GOOGLE}/engine-sdk/bin/gen_snapshot"')
+    else:
+        append_to_env_script(workspace, 'export GEN_SNAPSHOT="${FLUTTER_WORKSPACE}/.config/flutter_workspace/flutter-engine/${FLUTTER_ENGINE_VERSION}/engine-sdk-release-${HOST_ARCH_GOOGLE}/flutter/engine/src/out/linux_release_${HOST_ARCH_GOOGLE}/engine-sdk/bin/gen_snapshot"')
+
+    #
+    # Setup Platforms
+    #
     setup_platforms(platforms, github_token, cookie_file, args.plex, args.enable, args.disable, args.enable_plugin,
                     args.disable_plugin, app_folder)
 
@@ -2559,9 +2570,9 @@ cd "$ORIGINAL_DIR" || exit 1
 echo "SCRIPT_PATH=$SCRIPT_PATH"
 
 export FLUTTER_WORKSPACE="$SCRIPT_PATH"
-export PATH="$FLUTTER_WORKSPACE/flutter/bin:$PATH"
-export PUB_CACHE="$FLUTTER_WORKSPACE/.config/flutter_workspace/pub_cache"
-export XDG_CONFIG_HOME="$FLUTTER_WORKSPACE/.config/flutter"
+export PATH="${FLUTTER_WORKSPACE}/flutter/bin:$PATH"
+export PUB_CACHE="${FLUTTER_WORKSPACE}/.config/flutter_workspace/pub_cache"
+export XDG_CONFIG_HOME="${FLUTTER_WORKSPACE}/.config/flutter"
 
 echo "********************************************"
 echo "* Setting FLUTTER_WORKSPACE to:"
