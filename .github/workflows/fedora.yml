@@ -53,17 +53,18 @@ jobs:
           fetch-depth: 1
 
       - name: Create workspace
+        working-directory: ${{ github.workspace }}
+        shell: bash
         # Run as non-root user in the container
         run: |
           chown -R user:user .
           sudo -u user ./flutter_workspace.py --enable=filament
 
       - name: Test workspace
+        shell: bash
         run: |
           echo "Testing workspace..."
-          cd /__w/workspace-automation/workspace-automation
-          git config --global --add safe.directory /__w/workspace-automation/workspace-automation/flutter
-          cat ./setup_env.sh
-          . ./setup_env.sh
+          git config --global --add safe.directory ${{ github.workspace }}/flutter
+          . ${{ github.workspace }}/setup_env.sh
           flutter doctor -v
           dart --version

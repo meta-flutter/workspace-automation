@@ -53,14 +53,15 @@ jobs:
           ruby -v
           
       - name: Create workspace
+        working-directory: ${{ github.workspace }}
+        shell: bash
         run: |
           ./flutter_workspace.py
 
       - name: Test workspace
+        shell: bash
         run: |
           echo "Testing workspace..."
-          env
-          cd /__w/workspace-automation/workspace-automation
-          . ./setup_env.sh
+          . ${{ github.workspace }}/setup_env.sh
           flutter doctor -v
           dart --version
