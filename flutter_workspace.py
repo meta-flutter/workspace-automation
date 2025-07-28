@@ -2558,12 +2558,10 @@ cd "$ORIGINAL_DIR" || exit 1
 
 echo "SCRIPT_PATH=$SCRIPT_PATH"
 
-FLUTTER_WORKSPACE="$SCRIPT_PATH"
-PATH="$FLUTTER_WORKSPACE/flutter/bin:$PATH"
-PUB_CACHE="$FLUTTER_WORKSPACE/.config/flutter_workspace/pub_cache"
-XDG_CONFIG_HOME="$FLUTTER_WORKSPACE/.config/flutter"
-
-export FLUTTER_WORKSPACE PATH PUB_CACHE XDG_CONFIG_HOME
+export FLUTTER_WORKSPACE="$SCRIPT_PATH"
+export PATH="$FLUTTER_WORKSPACE/flutter/bin:$PATH"
+export PUB_CACHE="$FLUTTER_WORKSPACE/.config/flutter_workspace/pub_cache"
+export XDG_CONFIG_HOME="$FLUTTER_WORKSPACE/.config/flutter"
 
 echo "********************************************"
 echo "* Setting FLUTTER_WORKSPACE to:"

@@ -59,6 +59,8 @@ jobs:
 
       - name: Test workspace
         run: |
+          echo "Testing workspace..."
+          cd /__w/workspace-automation/workspace-automation
           cat ./setup_env.sh
           . ./setup_env.sh
           flutter doctor -v

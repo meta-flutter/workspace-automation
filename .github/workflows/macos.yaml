@@ -50,6 +50,8 @@ jobs:
 
       - name: Test workspace
         run: |
-          source ./setup_env.sh
+          echo "Testing workspace..."
+          cd /__w/workspace-automation/workspace-automation
+          . ./setup_env.sh
           flutter doctor -v
           dart --version
