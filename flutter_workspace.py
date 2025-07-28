@@ -2610,12 +2610,8 @@ def append_to_env_script(workspace, line=None):
 def write_env_script_footer(workspace):
     """ Append environmental variables to script footer """
 
-    buffer = '''if command -v flutter >/dev/null 2>&1; then
-    flutter doctor -v
-    flutter custom-devices list
-else
-    echo "flutter not found in PATH"
-fi
+    buffer = '''flutter doctor -v
+flutter custom-devices list
 '''
 
     if sys.platform.startswith('win'):
