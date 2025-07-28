@@ -33,6 +33,14 @@ jobs:
     if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip ubuntu-legacy') && !contains(github.event.head_commit.message, '[skip ubuntu-legacy]')"
 
     steps:
+      - name: Check Environment
+        run: |
+          echo "Running on Ubuntu version: $(lsb_release -d | cut -f2)"
+          echo "Running on architecture: $(uname -m)"
+          echo "Current directory: $(pwd)"
+          echo "Environment variables:"
+          env
+          
       - name: Set up tools
         run: |
           apt-get update -y

@@ -33,6 +33,14 @@ jobs:
     if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip windows') && !contains(github.event.head_commit.message, '[skip windows]')"
 
     steps:
+      - name: Check Environment
+        run: |
+          echo "Running on Windows version: $(powershell -Command [System.Environment]::OSVersion.Version)"
+          echo "Running on architecture: $(uname -m)"
+          echo "Current directory: $(pwd)"
+          echo "Environment variables:"
+          env
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1

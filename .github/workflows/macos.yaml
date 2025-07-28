@@ -37,6 +37,14 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Check Environment
+        run: |
+          echo "Running on macOS version: $(sw_vers -productVersion)"
+          echo "Running on architecture: $(uname -m)"
+          echo "Current directory: $(pwd)"
+          echo "Environment variables:"
+          env
+          
       - name: Brew fixup
         run: |
           brew upgrade |true
@@ -51,6 +59,7 @@ jobs:
       - name: Test workspace
         run: |
           echo "Testing workspace..."
+          env
           cd /__w/workspace-automation/workspace-automation
           . ./setup_env.sh
           flutter doctor -v
