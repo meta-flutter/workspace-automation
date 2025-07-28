@@ -2526,38 +2526,51 @@ Write-Host "********************************************"
 
         environment_script = os.path.join(workspace, 'setup_env.sh')
 
-        buffer = '''#!/usr/bin/env bash -l
+        buffer = '''#!/bin/sh
 
 # Save current directory
 ORIGINAL_DIR=$(pwd)
 
-# Get script directory
-SCRIPT_PATH="${BASH_SOURCE[0]:-$0}"
+# Get script directory (POSIX-compatible, resolves symlinks if possible)
+SCRIPT_PATH="$0"
+# If $0 is a relative path, prepend $PWD
+case "$SCRIPT_PATH" in
+    /*) ;;
+    *) SCRIPT_PATH="$PWD/$SCRIPT_PATH";;
+esac
 
+# Resolve symlinks (POSIX way)
 while [ -h "$SCRIPT_PATH" ]; do
-    cd "$(dirname -- "$SCRIPT_PATH")"
-    SCRIPT_PATH="$(readlink -f -- "$SCRIPT_PATH")"
+    DIR="$(dirname -- "$SCRIPT_PATH")"
+    SYM="$(readlink "$SCRIPT_PATH")"
+    case "$SYM" in
+        /*) SCRIPT_PATH="$SYM" ;;
+        *) SCRIPT_PATH="$DIR/$SYM" ;;
+    esac
 done
-cd "$(dirname -- "$SCRIPT_PATH")"
 
+SCRIPT_DIR="$(dirname -- "$SCRIPT_PATH")"
+cd "$SCRIPT_DIR" || exit 1
 SCRIPT_PATH="$(pwd)"
 
 # Return to original directory
-cd "$ORIGINAL_DIR"
+cd "$ORIGINAL_DIR" || exit 1
 
-echo SCRIPT_PATH=$SCRIPT_PATH
+echo "SCRIPT_PATH=$SCRIPT_PATH"
 
-export FLUTTER_WORKSPACE=$SCRIPT_PATH
-export PATH=$FLUTTER_WORKSPACE/flutter/bin:$PATH
-export PUB_CACHE=$FLUTTER_WORKSPACE/.config/flutter_workspace/pub_cache
-export XDG_CONFIG_HOME=$FLUTTER_WORKSPACE/.config/flutter
+FLUTTER_WORKSPACE="$SCRIPT_PATH"
+PATH="$FLUTTER_WORKSPACE/flutter/bin:$PATH"
+PUB_CACHE="$FLUTTER_WORKSPACE/.config/flutter_workspace/pub_cache"
+XDG_CONFIG_HOME="$FLUTTER_WORKSPACE/.config/flutter"
+
+export FLUTTER_WORKSPACE PATH PUB_CACHE XDG_CONFIG_HOME
 
 echo "********************************************"
 echo "* Setting FLUTTER_WORKSPACE to:"
 echo "* ${FLUTTER_WORKSPACE}"
 echo "********************************************"
 
-        '''
+'''
 
     with open(environment_script, 'w+', encoding="utf-8") as script:
         script.write(buffer)
@@ -2597,10 +2610,13 @@ def append_to_env_script(workspace, line=None):
 def write_env_script_footer(workspace):
     """ Append environmental variables to script footer """
 
-    buffer = '''
-flutter doctor -v
-flutter custom-devices list
-    '''
+    buffer = '''if command -v flutter >/dev/null 2>&1; then
+    flutter doctor -v
+    flutter custom-devices list
+else
+    echo "flutter not found in PATH"
+fi
+'''
 
     if sys.platform.startswith('win'):
         # append to the script
