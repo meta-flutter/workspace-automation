@@ -49,11 +49,14 @@ jobs:
         env:
           CI: true
           GITHUB_ACTIONS: true
+          PIP_PREFER_BINARY: "1"
+          PIP_ONLY_BINARY: ":all:"
         run: |
           Set-Location $env:GITHUB_WORKSPACE
           git config --global core.longpaths true
-          python3.exe -m pip install --upgrade pip
+          python3.exe -m pip install --upgrade pip setuptools wheel
           python3.exe -m pip install virtualenv
+          Write-Host "Starting flutter_workspace.py..."
           python3.exe .\flutter_workspace.py --enable "filament-windows"
 
       - name: Test workspace
