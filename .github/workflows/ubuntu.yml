@@ -78,5 +78,5 @@ jobs:
           cd $GITHUB_WORKSPACE
           pwd; ls -la
           . ./setup_env.sh
-          ./create_aot.sh --app-path=./flutter/examples/hello_world/
+          ./create_aot.py --app-path=./flutter/examples/hello_world/
           ./flutter_workspace.py --create-aot --app-path=./flutter/examples/hello_world/

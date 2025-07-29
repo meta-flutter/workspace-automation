@@ -39,7 +39,7 @@ jobs:
 
       - name: Set up tools
         run: |
-          dnf install -y python3 python3-pip which cmake
+          dnf install -y python3 python3-pip which cmake util-linux
           python3 -m pip install --upgrade pip
 
       - name: Create non-root user

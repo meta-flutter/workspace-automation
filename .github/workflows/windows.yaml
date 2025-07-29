@@ -26,7 +26,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ windows-2022, windows-2025, windows-11-arm ]
+        os: [windows-2022, windows-2025, windows-11-arm]
 
     runs-on: ${{ matrix.os }}
 
@@ -47,21 +47,21 @@ jobs:
 
       - name: Create workspace
         run: |
-          cd $GITHUB_WORKSPACE
+          Set-Location $env:GITHUB_WORKSPACE
           git config --global core.longpaths true
           python3.exe -m pip install --upgrade pip
           python3.exe -m pip install virtualenv
-          python3.exe ./flutter_workspace.py --enable "filament-windows"
+          python3.exe .\flutter_workspace.py --enable "filament-windows"
 
       - name: Test workspace
         run: |
-          cd $GITHUB_WORKSPACE
+          Set-Location $env:GITHUB_WORKSPACE
           & .\setup_env.ps1
           dart --version
 
       - name: Create AOT Tests
         run: |
-          cd $GITHUB_WORKSPACE
+          Set-Location $env:GITHUB_WORKSPACE
           & .\setup_env.ps1
-          python3.exe ./create_aot.py --app-path=./flutter/examples/hello_world/
-          python3.exe ./flutter_workspace.py --create-aot --app-path=./flutter/examples/hello_world/
+          python3.exe .\create_aot.py --app-path=.\flutter\examples\hello_world\
+          python3.exe .\flutter_workspace.py --create-aot --app-path=.\flutter\examples\hello_world\

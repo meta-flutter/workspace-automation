@@ -47,9 +47,21 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get install -yq python3 python3-pip bash cmake sudo
           python3 -m pip install --upgrade pip
 
+      - name: Create non-root user
+        run: |
+          groupadd -g 1000 user
+          useradd -m -u 1000 -g user -s /bin/bash user
+          echo "user ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/user
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+
+      - name: Fix workspace permissions
+        shell: bash
+        run: |
+          cd $GITHUB_WORKSPACE
+          sudo chown -R user:user .
 
       - name: Create workspace
         shell: bash
@@ -59,7 +71,7 @@ jobs:
           cd $GITHUB_WORKSPACE
           pwd; ls -la
           export DEBIAN_FRONTEND=noninteractive; echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
-          ./flutter_workspace.py --enable=filament
+          sudo -u user bash -c "./flutter_workspace.py --enable=filament"
           cat ./setup_env.sh
 
       - name: Test workspace
@@ -68,8 +80,7 @@ jobs:
           env
           cd $GITHUB_WORKSPACE
           pwd; ls -la
-          . ./setup_env.sh
-          dart --version
+          sudo -u user bash -c ". ./setup_env.sh && dart --version"
 
       - name: Create AOT Tests
         shell: bash
@@ -77,6 +88,6 @@ jobs:
           env
           cd $GITHUB_WORKSPACE
           pwd; ls -la
-          . ./setup_env.sh
-          ./create_aot.sh --app-path=./flutter/examples/hello_world/
-          ./flutter_workspace.py --create-aot --app-path=./flutter/examples/hello_world/
+          sudo -u user bash -c ". ./setup_env.sh && \
+          ./create_aot.sh --app-path=./flutter/examples/hello_world/ && \
+          ./flutter_workspace.py --create-aot --app-path=./flutter/examples/hello_world"
