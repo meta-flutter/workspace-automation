@@ -51,17 +51,17 @@ jobs:
           git config --global core.longpaths true
           python3.exe -m pip install --upgrade pip
           python3.exe -m pip install virtualenv
-          .\flutter_workspace.ps1 --enable=filament
+          python3.exe ./flutter_workspace.py --enable "filament-windows"
 
       - name: Test workspace
         run: |
           cd $GITHUB_WORKSPACE
-          .\setup_env.ps1
+          & .\setup_env.ps1
           dart --version
 
       - name: Create AOT Tests
         run: |
           cd $GITHUB_WORKSPACE
-          .\setup_env.ps1
-          .\create_aot.py --app-path=./flutter/examples/hello_world/
-          .\flutter_workspace.py --create-aot --app-path=./flutter/examples/hello_world/
+          & .\setup_env.ps1
+          python3.exe ./create_aot.py --app-path=./flutter/examples/hello_world/
+          python3.exe ./flutter_workspace.py --create-aot --app-path=./flutter/examples/hello_world/
