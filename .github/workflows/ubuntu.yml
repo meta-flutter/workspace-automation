@@ -50,6 +50,9 @@ jobs:
 
       - name: Create workspace
         shell: bash
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
         # If llvm != 18, do --disable=toolchain-llvm-18
         run: |
           cd $GITHUB_WORKSPACE
@@ -65,6 +68,9 @@ jobs:
 
       - name: Test workspace
         shell: bash
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
         run: |
           cd $GITHUB_WORKSPACE
           pwd; ls -la
@@ -74,6 +80,9 @@ jobs:
 
       - name: Create AOT Tests
         shell: bash
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
         run: |
           cd $GITHUB_WORKSPACE
           pwd; ls -la

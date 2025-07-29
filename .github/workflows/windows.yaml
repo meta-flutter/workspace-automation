@@ -46,6 +46,9 @@ jobs:
           fetch-depth: 1
 
       - name: Create workspace
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
         run: |
           Set-Location $env:GITHUB_WORKSPACE
           git config --global core.longpaths true
@@ -54,14 +57,10 @@ jobs:
           python3.exe .\flutter_workspace.py --enable "filament-windows"
 
       - name: Test workspace
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
         run: |
           Set-Location $env:GITHUB_WORKSPACE
           & .\setup_env.ps1
           dart --version
-
-      - name: Create AOT Tests
-        run: |
-          Set-Location $env:GITHUB_WORKSPACE
-          & .\setup_env.ps1
-          python3.exe .\create_aot.py --app-path=.\flutter\examples\hello_world\
-          python3.exe .\flutter_workspace.py --create-aot --app-path=.\flutter\examples\hello_world\

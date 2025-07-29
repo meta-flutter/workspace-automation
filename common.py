@@ -295,12 +295,20 @@ def get_host_type() -> str:
 
 def reset_sudo_timestamp():
     """invalidate sudo timestamp file"""
+    # Skip sudo operations in CI environments with passwordless sudo
+    if os.environ.get('CI') == 'true' and os.environ.get('GITHUB_ACTIONS') == 'true':
+        return
+    
     if get_host_type() == "linux":
         subprocess.check_call(['sudo', '-k'], stdout=subprocess.DEVNULL)
 
 
 def validate_sudo_user_timestamp(args):
     """read password from standard input if available"""
+    # Skip sudo validation in CI environments with passwordless sudo
+    if os.environ.get('CI') == 'true' and os.environ.get('GITHUB_ACTIONS') == 'true':
+        return
+    
     if os.path.exists(args.stdin_file):
         stdin_file = open(args.stdin_file)
         if get_host_type() == "linux":
@@ -312,6 +320,10 @@ def validate_sudo_user_timestamp(args):
 
 def validate_sudo_user():
     """update user's sudo timestamp without running a command"""
+    # Skip sudo validation in CI environments with passwordless sudo
+    if os.environ.get('CI') == 'true' and os.environ.get('GITHUB_ACTIONS') == 'true':
+        return
+    
     if get_host_type() == "linux":
         subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
 
