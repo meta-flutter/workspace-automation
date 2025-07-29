@@ -68,7 +68,6 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           pwd; ls -la
-          cat ./setup_env.sh
           . ./setup_env.sh
           ls -la $FLUTTER_WORKSPACE
           dart --version
