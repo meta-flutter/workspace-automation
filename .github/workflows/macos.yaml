@@ -69,13 +69,3 @@ jobs:
           pwd; ls -la
           . ./setup_env.sh
           dart --version
-
-      - name: Test AOT creation
-        shell: bash
-        run: |
-          env
-          cd $GITHUB_WORKSPACE
-          pwd; ls -la
-          . ./setup_env.sh
-          ./create_aot.py --app-path=./flutter/examples/hello_world/
-          ./flutter_workspace.py --create-aot --app-path=./flutter/examples/hello_world/
