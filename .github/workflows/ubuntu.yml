@@ -79,6 +79,7 @@ jobs:
           dart --version
 
       - name: Create AOT Tests
+        if: ${{ !contains(matrix.os, 'arm') }}
         shell: bash
         env:
           CI: true
