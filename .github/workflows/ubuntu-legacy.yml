@@ -76,10 +76,9 @@ jobs:
           cd $GITHUB_WORKSPACE
           pwd; ls -la
           . ./setup_env.sh
-          ls -la $FLUTTER_WORKSPACE
           dart --version
 
-      - name: Test AOT creation
+      - name: Create AOT Tests
         shell: bash
         run: |
           su user; env

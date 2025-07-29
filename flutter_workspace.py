@@ -2553,8 +2553,19 @@ Write-Host "********************************************"
 ORIGINAL_DIR=$(pwd)
 
 # Get script directory (POSIX-compatible, resolves symlinks if possible)
-SCRIPT_PATH="$0"
-# If $0 is a relative path, prepend $PWD
+# Try multiple methods to get the script path
+if [ -n "${BASH_SOURCE:-}" ]; then
+    # Bash-specific variable (when available)
+    SCRIPT_PATH="${BASH_SOURCE[0]}"
+elif [ -n "${(%):-%N}" ] 2>/dev/null; then
+    # Zsh-specific method
+    SCRIPT_PATH="${(%):-%N}"
+else
+    # Fallback to $0
+    SCRIPT_PATH="$0"
+fi
+
+# Handle relative paths
 case "$SCRIPT_PATH" in
     /*) ;;
     *) SCRIPT_PATH="$PWD/$SCRIPT_PATH";;
@@ -2570,7 +2581,10 @@ while [ -h "$SCRIPT_PATH" ]; do
     esac
 done
 
+# Get the directory containing the script
 SCRIPT_DIR="$(dirname -- "$SCRIPT_PATH")"
+
+# Change to script directory and get absolute path
 cd "$SCRIPT_DIR" || exit 1
 SCRIPT_PATH="$(pwd)"
 
