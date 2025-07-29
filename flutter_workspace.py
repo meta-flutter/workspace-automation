@@ -1250,14 +1250,20 @@ def get_flutter_engine_commit():
 
 
 def set_gen_snapshot(runtime, arch):
-    engine_sdk = f'engine-sdk-{runtime}-{arch}'
-    linux_runtime = f'linux_{runtime}_x64'
+    # set environment variables
     commit = get_flutter_engine_commit()
+    arch = get_flutter_arch()
+
+    engine_sdk = f'engine-sdk-{runtime}-{arch}'
+
+    linux_runtime = f'linux_{runtime}_{arch}'
+
     platform_path = get_platform_working_dir('flutter-engine')
 
-    engine_sdk_root = os.path.join(platform_path, commit, engine_sdk, 'src', 'out', linux_runtime, 'engine-sdk')
+    engine_sdk_root = os.path.join(platform_path, commit, engine_sdk, 'flutter', 'engine', 'src', 'out', linux_runtime, 'engine-sdk')
 
     gen_snapshot = os.path.join(engine_sdk_root, 'bin', 'gen_snapshot')
+    
     if not os.path.exists(gen_snapshot):
         get_flutter_engine_artifacts(True, runtime, arch)
 
