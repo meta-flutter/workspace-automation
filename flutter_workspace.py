@@ -359,11 +359,11 @@ def main():
     if sys.platform.startswith('win'):
         append_to_env_script(workspace, '$env:FLUTTER_ENGINE_VERSION="${FLUTTER_ENGINE_VERSION}"')
         append_to_env_script(workspace, '$env:HOST_ARCH_GOOGLE="${HOST_ARCH_GOOGLE}"')
-        append_to_env_script(workspace, '$env:GEN_SNAPSHOT="${FLUTTER_WORKSPACE}/.config/flutter_workspace/flutter-engine/${FLUTTER_ENGINE_VERSION}/engine-sdk-release-${HOST_ARCH_GOOGLE}/flutter/engine/src/out/linux_release_${HOST_ARCH_GOOGLE}/engine-sdk/bin/gen_snapshot"')
+        append_to_env_script(workspace, '$env:GEN_SNAPSHOT="$FLUTTER_WORKSPACE/.config/flutter_workspace/flutter-engine/$FLUTTER_ENGINE_VERSION/engine-sdk-release-$HOST_ARCH_GOOGLE/flutter/engine/src/out/linux_release_$HOST_ARCH_GOOGLE/engine-sdk/bin/gen_snapshot"')
     else:
         append_to_env_script(workspace, 'export FLUTTER_ENGINE_VERSION="${FLUTTER_ENGINE_VERSION}"')
         append_to_env_script(workspace, 'export HOST_ARCH_GOOGLE="${HOST_ARCH_GOOGLE}"')
-        append_to_env_script(workspace, 'export GEN_SNAPSHOT="${FLUTTER_WORKSPACE}/.config/flutter_workspace/flutter-engine/${FLUTTER_ENGINE_VERSION}/engine-sdk-release-${HOST_ARCH_GOOGLE}/flutter/engine/src/out/linux_release_${HOST_ARCH_GOOGLE}/engine-sdk/bin/gen_snapshot"')
+        append_to_env_script(workspace, 'export GEN_SNAPSHOT="$FLUTTER_WORKSPACE/.config/flutter_workspace/flutter-engine/$FLUTTER_ENGINE_VERSION/engine-sdk-release-$HOST_ARCH_GOOGLE/flutter/engine/src/out/linux_release_$HOST_ARCH_GOOGLE/engine-sdk/bin/gen_snapshot"')
 
     #
     # Setup Platforms
@@ -2580,9 +2580,9 @@ cd "$ORIGINAL_DIR" || exit 1
 echo "SCRIPT_PATH=$SCRIPT_PATH"
 
 export FLUTTER_WORKSPACE="$SCRIPT_PATH"
-export PATH="${FLUTTER_WORKSPACE}/flutter/bin:$PATH"
-export PUB_CACHE="${FLUTTER_WORKSPACE}/.config/flutter_workspace/pub_cache"
-export XDG_CONFIG_HOME="${FLUTTER_WORKSPACE}/.config/flutter"
+export PATH="$FLUTTER_WORKSPACE/flutter/bin:$PATH"
+export PUB_CACHE="$FLUTTER_WORKSPACE/.config/flutter_workspace/pub_cache"
+export XDG_CONFIG_HOME="$FLUTTER_WORKSPACE/.config/flutter"
 
 echo "********************************************"
 echo "* Setting FLUTTER_WORKSPACE to:"
@@ -2609,7 +2609,9 @@ def append_to_env_script(workspace, line=None):
         line += '\n'
 
     # Don't expand line with PATH or GEN_SNAPSHOT definition, it expands at runtime
-    if 'PATH=' not in line or 'GEN_SNAPSHOT=' not in line:
+    if '$PATH=' not in line and 'PATH=' not in line and \
+        '$FLUTTER_WORKSPACE' not in line and \
+        'GEN_SNAPSHOT=' not in line:
         # Expand environment variables in the buffer
         print(f'line raw: {line}')
         line = os.path.expanduser(line)
@@ -2629,8 +2631,8 @@ def append_to_env_script(workspace, line=None):
 def write_env_script_footer(workspace):
     """ Append environmental variables to script footer """
 
-    buffer = '''flutter doctor -v
-flutter custom-devices list
+    buffer = '''
+flutter doctor -v
 '''
 
     if sys.platform.startswith('win'):

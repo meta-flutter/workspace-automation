@@ -46,20 +46,22 @@ jobs:
           fetch-depth: 1
 
       - name: Create workspace
-        working-directory: ${{ github.workspace }}
         run: |
+          cd $GITHUB_WORKSPACE
           git config --global core.longpaths true
           python3.exe -m pip install --upgrade pip
           python3.exe -m pip install virtualenv
           ./flutter_workspace.ps1 --enable=filament
 
       - name: Test workspace
-        working-directory: ${{ github.workspace }}
         run: |
+          cd $GITHUB_WORKSPACE
           ./setup_env.ps1
           dart --version
 
-      - name: Test AOT creation
-        working-directory: ${{ github.workspace }}
+      - name: Create AOT Tests
         run: |
+          cd $GITHUB_WORKSPACE
+          ./setup_env.ps1
+          ./create_aot.sh --app-path=./flutter/examples/hello_world/
           ./flutter_workspace.py --create-aot --app-path=./flutter/examples/hello_world/

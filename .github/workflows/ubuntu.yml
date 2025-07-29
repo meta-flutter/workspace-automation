@@ -49,10 +49,11 @@ jobs:
           fetch-depth: 1
 
       - name: Create workspace
-        working-directory: ${{ github.workspace }}
         shell: bash
         # If llvm != 18, do --disable=toolchain-llvm-18
         run: |
+          cd $GITHUB_WORKSPACE
+          pwd; ls -la
           PREFER_LLVM=${{ matrix.llvm }} ./flutter_workspace.py --enable=filament
           echo "Checking LLVM config..."
           cat setup_env.sh; echo ""
@@ -63,18 +64,20 @@ jobs:
           fi
 
       - name: Test workspace
-        working-directory: ${{ github.workspace }}
         shell: bash
         run: |
-          echo "Testing workspace..."
-          pwd
-          ls -la
+          cd $GITHUB_WORKSPACE
+          pwd; ls -la
           cat ./setup_env.sh
           . ./setup_env.sh
+          ls -la $FLUTTER_WORKSPACE
           dart --version
 
-      - name: Test AOT creation
-        working-directory: ${{ github.workspace }}
+      - name: Create AOT Tests
         shell: bash
         run: |
+          cd $GITHUB_WORKSPACE
+          pwd; ls -la
+          . ./setup_env.sh
+          ./create_aot.sh --app-path=./flutter/examples/hello_world/
           ./flutter_workspace.py --create-aot --app-path=./flutter/examples/hello_world/
