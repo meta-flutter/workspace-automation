@@ -2608,8 +2608,8 @@ def append_to_env_script(workspace, line=None):
     if not line.endswith('\n'):
         line += '\n'
 
-    # Don't expand $PATH in the script, as it will be expanded at runtime
-    if '$PATH' not in line or 'GEN_SNAPSHOT=' not in line:
+    # Don't expand line with PATH or GEN_SNAPSHOT definition, it expands at runtime
+    if 'PATH=' not in line or 'GEN_SNAPSHOT=' not in line:
         # Expand environment variables in the buffer
         print(f'line raw: {line}')
         line = os.path.expanduser(line)
