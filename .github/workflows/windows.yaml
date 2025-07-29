@@ -50,7 +50,6 @@ jobs:
           CI: true
           GITHUB_ACTIONS: true
           PIP_PREFER_BINARY: "1"
-          PIP_ONLY_BINARY: ":all:"
         run: |
           Set-Location $env:GITHUB_WORKSPACE
           git config --global core.longpaths true

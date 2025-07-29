@@ -2229,16 +2229,26 @@ def base64_to_string(b):
 
 def get_github_json(token, url):
     """Function to return the JSON of GitHub REST API"""
-    import pycurl
-
-    c = pycurl.Curl()
-    c.setopt(pycurl.URL, url)
-    c.setopt(pycurl.HTTPHEADER, [
-        "Accept: application/vnd.github+json", "Authorization: Bearer %s" % token])
-    buffer = io.BytesIO()
-    c.setopt(pycurl.WRITEDATA, buffer)
-    c.perform()
-    return json.loads(buffer.getvalue().decode('utf-8'))
+    try:
+        import pycurl
+        c = pycurl.Curl()
+        c.setopt(pycurl.URL, url)
+        c.setopt(pycurl.HTTPHEADER, [
+            "Accept: application/vnd.github+json", "Authorization: Bearer %s" % token])
+        buffer = io.BytesIO()
+        c.setopt(pycurl.WRITEDATA, buffer)
+        c.perform()
+        return json.loads(buffer.getvalue().decode('utf-8'))
+    except ImportError:
+        # Fallback to requests if pycurl is not available (e.g., on Windows)
+        import requests
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {token}"
+        }
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
 
 
 def get_github_artifact_list_json(token, url):
@@ -2493,7 +2503,14 @@ def install_minimum_runtime_deps():
 
     activate_python_virtualenv()
 
-    cmd = 'python3 -m pip install pycurl toml python-dotenv'.split(' ')
+    # Install dependencies, but handle pycurl specially for Windows
+    if host_type == "windows":
+        # On Windows, especially ARM64, pycurl can be problematic
+        # Use requests instead of pycurl for HTTP operations
+        cmd = 'python3 -m pip install requests toml python-dotenv'.split(' ')
+    else:
+        cmd = 'python3 -m pip install pycurl toml python-dotenv'.split(' ')
+
     subprocess.check_output(cmd)
 
 
@@ -2664,22 +2681,29 @@ flutter doctor -v
 
 def get_engine_commit(version, hash_):
     """Get matching engine commit hash."""
-    import pycurl
-    import certifi
-    from io import BytesIO
+    try:
+        import pycurl
+        import certifi
+        from io import BytesIO
 
-    buffer = BytesIO()
-    c = pycurl.Curl()
-    c.setopt(
-        pycurl.URL, f'https://raw.githubusercontent.com/flutter/flutter/{hash_}/bin/internal/engine.version')
-    c.setopt(pycurl.WRITEDATA, buffer)
-    c.setopt(pycurl.CAINFO, certifi.where())
-    c.perform()
-    c.close()
+        buffer = BytesIO()
+        c = pycurl.Curl()
+        c.setopt(
+            pycurl.URL, f'https://raw.githubusercontent.com/flutter/flutter/{hash_}/bin/internal/engine.version')
+        c.setopt(pycurl.WRITEDATA, buffer)
+        c.setopt(pycurl.CAINFO, certifi.where())
+        c.perform()
+        c.close()
 
-    get_body = buffer.getvalue()
-
-    return version, get_body.decode('utf8').strip()
+        get_body = buffer.getvalue()
+        return version, get_body.decode('utf8').strip()
+    except ImportError:
+        # Fallback to requests if pycurl is not available (e.g., on Windows)
+        import requests
+        url = f'https://raw.githubusercontent.com/flutter/flutter/{hash_}/bin/internal/engine.version'
+        response = requests.get(url)
+        response.raise_for_status()
+        return version, response.text.strip()
 
 
 def get_launch_obj(repo, device_id):
