@@ -2493,7 +2493,7 @@ def install_minimum_runtime_deps():
 
     activate_python_virtualenv()
 
-    cmd = 'python3 -m pip install pycurl toml python-dotenv'.split(' ')
+    cmd = 'python3 -m pip install pycurl toml python-dotenv PyYAML'.split(' ')
     subprocess.check_output(cmd)
 
 
