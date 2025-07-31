@@ -2493,8 +2493,28 @@ def install_minimum_runtime_deps():
 
     activate_python_virtualenv()
 
-    cmd = 'python3 -m pip install pycurl toml python-dotenv PyYAML'.split(' ')
-    subprocess.check_output(cmd)
+    # Check and install Python packages only if not already installed
+    required_packages = [
+        ('pycurl', 'pycurl'),
+        ('toml', 'toml'), 
+        ('python-dotenv', 'dotenv'),
+        ('PyYAML', 'yaml')
+    ]
+    packages_to_install = []
+    
+    for package_name, import_name in required_packages:
+        try:
+            __import__(import_name)
+            print(f"Package {package_name} is already installed")
+        except ImportError:
+            print(f"Package {package_name} needs to be installed")
+            packages_to_install.append(package_name)
+    
+    if packages_to_install:
+        cmd = ['python3', '-m', 'pip', 'install'] + packages_to_install
+        subprocess.check_output(cmd)
+    else:
+        print("All required Python packages are already installed")
 
 
 def is_repo(path):
