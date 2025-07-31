@@ -56,33 +56,24 @@ jobs:
       - name: Create workspace
         shell: bash
         # Run as non-root user in the container
-        env:
-          CI: true
-          GITHUB_ACTIONS: true
         run: |
           cd $GITHUB_WORKSPACE
           pwd; ls -la
           chown -R user:user .
-          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && ./flutter_workspace.py --enable=filament --stdin-file=/dev/null"
+          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && ./flutter_workspace.py --enable=filament --stdin-file=/dev/null"
           cat ./setup_env.sh
 
       - name: Test workspace
         shell: bash
-        env:
-          CI: true
-          GITHUB_ACTIONS: true
         run: |
           cd $GITHUB_WORKSPACE
           pwd; ls -la
-          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la &&  . ./setup_env.sh && dart --version"
+          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && . ./setup_env.sh && dart --version"
 
       - name: Test AOT creation
         working-directory: ${{ github.workspace }}
         shell: bash
-        env:
-          CI: true
-          GITHUB_ACTIONS: true
         run: |
           cd $GITHUB_WORKSPACE
           pwd; ls -la
-          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && . ./setup_env.sh && ./flutter_workspace.py --create-aot --app-path=./flutter/examples/hello_world/"
+          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && . ./setup_env.sh && ./flutter_workspace.py --create-aot --app-path=./flutter/examples/hello_world/"
