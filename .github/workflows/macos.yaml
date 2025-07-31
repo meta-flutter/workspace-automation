@@ -54,6 +54,9 @@ jobs:
           
       - name: Create workspace
         shell: bash
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
         run: |
           env
           cd $GITHUB_WORKSPACE
@@ -63,6 +66,9 @@ jobs:
 
       - name: Test workspace
         shell: bash
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
         run: |
           env
           cd $GITHUB_WORKSPACE

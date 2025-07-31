@@ -45,62 +45,44 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Find libcurl in Windows CI
+      - name: Build libcurl from source
+        if: matrix.os == 'windows-11-arm'
         run: |
-          Write-Host "Searching for libcurl files in common locations..."
+          Write-Host "Fetching and building libcurl from source..."
           
-          # Search for libcurl files
-          $searchPaths = @(
-            "C:\Program Files",
-            "C:\Program Files (x86)", 
-            "C:\ProgramData",
-            "C:\tools",
-            "C:\vcpkg",
-            "C:\hostedtoolcache",
-            "C:\Windows\System32"
-          )
+          # Create build directory
+          $buildDir = "$env:GITHUB_WORKSPACE\libcurl-build"
+          New-Item -ItemType Directory -Force -Path $buildDir
+          Set-Location $buildDir
           
-          foreach ($path in $searchPaths) {
-            if (Test-Path $path) {
-              Write-Host "`nSearching in: $path"
-              try {
-                Get-ChildItem -Path $path -Recurse -Name "*curl*" -ErrorAction SilentlyContinue | Select-Object -First 10 | ForEach-Object {
-                  Write-Host "  Found: $path\$_"
-                }
-              } catch {
-                Write-Host "  Could not search in $path (access denied)"
-              }
-            }
-          }
+          # Download curl source
+          Write-Host "Downloading curl source..."
+          $curlVersion = "8.4.0"
+          $curlUrl = "https://github.com/curl/curl/releases/download/curl-$($curlVersion.Replace('.','_'))/curl-$curlVersion.tar.gz"
+          Invoke-WebRequest -Uri $curlUrl -OutFile "curl-$curlVersion.tar.gz"
           
-          # Search for specific curl files
-          Write-Host "`nSearching for specific curl files..."
-          $curlFiles = @("libcurl.dll", "libcurl.lib", "curl.exe", "libcurl-d.lib")
-          foreach ($file in $curlFiles) {
-            Write-Host "Searching for $file..."
-            Get-ChildItem -Path "C:\" -Recurse -Name $file -ErrorAction SilentlyContinue | Select-Object -First 5 | ForEach-Object {
-              Write-Host "  Found: $_"
-            }
-          }
+          # Extract source
+          Write-Host "Extracting curl source..."
+          tar -xzf "curl-$curlVersion.tar.gz"
+          Set-Location "curl-$curlVersion"
           
-          # Check environment variables
-          Write-Host "`nChecking environment variables for curl paths..."
-          Get-ChildItem Env: | Where-Object { $_.Name -match "curl|CURL" } | ForEach-Object {
-            Write-Host "  $($_.Name) = $($_.Value)"
-          }
+          # Create build directory and configure
+          New-Item -ItemType Directory -Force -Path "build"
+          Set-Location "build"
           
-          # Check if curl is in PATH
-          Write-Host "`nChecking if curl is available in PATH..."
-          try {
-            $curlPath = Get-Command curl.exe -ErrorAction SilentlyContinue
-            if ($curlPath) {
-              Write-Host "  curl.exe found at: $($curlPath.Source)"
-            } else {
-              Write-Host "  curl.exe not found in PATH"
-            }
-          } catch {
-            Write-Host "  Error checking for curl.exe"
-          }
+          Write-Host "Configuring curl build..."
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_CURL_EXE=OFF -DBUILD_SHARED_LIBS=OFF -DCURL_STATICLIB=ON -DCMAKE_INSTALL_PREFIX="$buildDir\install"
+          
+          Write-Host "Building curl..."
+          cmake --build . --config Release --parallel
+          
+          Write-Host "Installing curl..."
+          cmake --install . --config Release
+          
+          # Set environment variable for next step
+          $curlInstallPath = "$buildDir\install"
+          Write-Host "##vso[task.setvariable variable=CURL_INSTALL_PATH]$curlInstallPath"
+          Write-Host "libcurl built and installed to: $curlInstallPath"
 
       - name: Create workspace
         env:
@@ -113,60 +95,17 @@ jobs:
           python3.exe -m pip install --upgrade pip
           python3.exe -m pip install virtualenv
           
-          # Try to find libcurl path dynamically
+          # Use the built libcurl path first, then fallback to default install
           Write-Host "Looking for libcurl installation..."
-          $curlPath = $null
+          $curlPath = $env:CURL_INSTALL_PATH
           
-          # Check common vcpkg locations first
-          $vcpkgPaths = @(
-            "C:\vcpkg\installed\x64-windows\lib",
-            "C:\vcpkg\installed\arm64-windows\lib", 
-            "C:\tools\vcpkg\installed\x64-windows\lib",
-            "C:\tools\vcpkg\installed\arm64-windows\lib"
-          )
-          
-          foreach ($path in $vcpkgPaths) {
-            if (Test-Path "$path\libcurl.lib") {
-              $curlPath = Split-Path $path -Parent
-              Write-Host "Found libcurl in vcpkg at: $curlPath"
-              break
-            }
-          }
-          
-          # If not found, try to locate curl.exe and derive path
-          if (-not $curlPath) {
-            try {
-              $curlExe = Get-Command curl.exe -ErrorAction SilentlyContinue
-              if ($curlExe) {
-                $curlDir = Split-Path $curlExe.Source -Parent
-                Write-Host "Found curl.exe at: $curlDir"
-                # Try to find lib directory relative to curl.exe
-                $possibleLibDirs = @(
-                  "$curlDir\..\lib",
-                  "$curlDir\lib", 
-                  "$curlDir\..\lib\x64",
-                  "$curlDir\..\lib\arm64"
-                )
-                foreach ($libDir in $possibleLibDirs) {
-                  if (Test-Path "$libDir\libcurl.lib") {
-                    $curlPath = Resolve-Path $libDir | Select-Object -ExpandProperty Path
-                    $curlPath = Split-Path $curlPath -Parent
-                    Write-Host "Found libcurl relative to curl.exe at: $curlPath"
-                    break
-                  }
-                }
-              }
-            } catch {
-              Write-Host "Could not locate curl.exe"
-            }
-          }
-          
-          # Install pycurl with or without curl-dir
-          if ($curlPath) {
+          if ($curlPath -and (Test-Path "$curlPath\lib\libcurl.lib")) {
+            Write-Host "Using built libcurl at: $curlPath"
+            # Install pycurl with curl-dir
             Write-Host "Installing pycurl with curl-dir: $curlPath"
             python3.exe -m pip install pycurl --global-option=build_ext --global-option="--curl-dir=$curlPath"
           } else {
-            Write-Host "libcurl not found, trying pycurl installation without curl-dir (may fail)..."
+            Write-Host "No custom libcurl path set, using default pycurl installation..."
             try {
               python3.exe -m pip install pycurl
             } catch {
