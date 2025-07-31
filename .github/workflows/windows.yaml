@@ -26,27 +26,139 @@ jobs:
 
     strategy:
       matrix:
-        os: [ windows-2022, windows-2025, windows-11-arm ]
+        os: [windows-2022, windows-2025]
 
     runs-on: ${{ matrix.os }}
 
     if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip windows') && !contains(github.event.head_commit.message, '[skip windows]')"
 
     steps:
+      - name: Check Environment
+        run: |
+          echo "Running on Windows version: $(powershell -Command [System.Environment]::OSVersion.Version)"
+          echo "Running on architecture: $(uname -m)"
+          echo "Current directory: $(pwd)"
+          echo "Environment variables:"
+          env
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: Create workspace
+      - name: Build libcurl from source
+        if: matrix.os == 'windows-11-arm'
         run: |
+          Write-Host "Fetching and building libcurl from source..."
+          
+          try {
+            # Create build directory
+            $buildDir = "$env:GITHUB_WORKSPACE\libcurl-build"
+            New-Item -ItemType Directory -Force -Path $buildDir
+            Set-Location $buildDir
+            
+            # Download curl source
+            Write-Host "Downloading curl source..."
+            $curlVersion = "8.4.0"
+            $curlUrl = "https://github.com/curl/curl/releases/download/curl-$($curlVersion.Replace('.','_'))/curl-$curlVersion.tar.gz"
+            Invoke-WebRequest -Uri $curlUrl -OutFile "curl-$curlVersion.tar.gz"
+            
+            # Extract source
+            Write-Host "Extracting curl source..."
+            tar -xzf "curl-$curlVersion.tar.gz"
+            Set-Location "curl-$curlVersion"
+            
+            # Create build directory and configure
+            New-Item -ItemType Directory -Force -Path "build"
+            Set-Location "build"
+            
+            Write-Host "Configuring curl build..."
+            cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_CURL_EXE=OFF -DBUILD_SHARED_LIBS=OFF -DCURL_STATICLIB=ON -DCMAKE_INSTALL_PREFIX="$buildDir\install"
+            
+            if ($LASTEXITCODE -ne 0) {
+              throw "CMake configuration failed with exit code $LASTEXITCODE"
+            }
+            
+            Write-Host "Building curl..."
+            cmake --build . --config Release --parallel
+            
+            if ($LASTEXITCODE -ne 0) {
+              throw "CMake build failed with exit code $LASTEXITCODE"
+            }
+            
+            Write-Host "Installing curl..."
+            cmake --install . --config Release
+            
+            if ($LASTEXITCODE -ne 0) {
+              throw "CMake install failed with exit code $LASTEXITCODE"
+            }
+            
+            # Set environment variable for next step
+            $curlInstallPath = "$buildDir\install"
+            echo "CURL_INSTALL_PATH=$curlInstallPath" >> $env:GITHUB_ENV
+            Write-Host "libcurl built and installed successfully to: $curlInstallPath"
+            
+            # Verify the installation
+            if (Test-Path "$curlInstallPath\lib\libcurl.lib") {
+              Write-Host "Verified: libcurl.lib found at $curlInstallPath\lib\libcurl.lib"
+            } else {
+              Write-Host "Warning: libcurl.lib not found in expected location"
+            }
+            
+          } catch {
+            Write-Host "Error building libcurl: $($_.Exception.Message)"
+            Write-Host "Will fall back to default pycurl installation (which may fail on ARM64)"
+          }
+
+      - name: Create workspace
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
+          PIP_PREFER_BINARY: "1"
+        run: |
+          Set-Location $env:GITHUB_WORKSPACE
           git config --global core.longpaths true
           python3.exe -m pip install --upgrade pip
           python3.exe -m pip install virtualenv
+          
+          # Use the built libcurl path first, then fallback to default install
+          Write-Host "Looking for libcurl installation..."
+          Write-Host "CURL_INSTALL_PATH environment variable: $env:CURL_INSTALL_PATH"
+          $curlPath = $env:CURL_INSTALL_PATH
+          
+          if ($curlPath -and (Test-Path "$curlPath\lib\libcurl.lib")) {
+            Write-Host "Using built libcurl at: $curlPath"
+            # Install pycurl with curl-dir
+            Write-Host "Installing pycurl with curl-dir: $curlPath"
+            python3.exe -m pip install pycurl --global-option=build_ext --global-option="--curl-dir=$curlPath"
+          } else {
+            # For ARM64, if libcurl build failed, we need to fail here
+            if ("${{ matrix.os }}" -eq "windows-11-arm") {
+              Write-Host "ERROR: libcurl was not built successfully for ARM64"
+              Write-Host "Expected path: $curlPath"
+              if ($curlPath) {
+                Write-Host "Directory exists: $(Test-Path $curlPath)"
+                Write-Host "libcurl.lib exists: $(Test-Path "$curlPath\lib\libcurl.lib")"
+                if (Test-Path $curlPath) {
+                  Write-Host "Contents of ${curlPath}:"
+                  Get-ChildItem $curlPath -Recurse
+                }
+              }
+              throw "libcurl build required for ARM64 but failed"
+            }
+            
+            # For x64 systems, try default pycurl installation
+            Write-Host "Installing pycurl with default system libraries..."
+            python3.exe -m pip install pycurl
+          }
+          
+          Write-Host "Starting flutter_workspace.py..."
           ./flutter_workspace.ps1 --enable "filament-windows"
 
       - name: Test workspace
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
         run: |
-          ls
-          ./setup_env.ps1
-          flutter doctor -v
+          Set-Location $env:GITHUB_WORKSPACE
+          & .\setup_env.ps1
           dart --version

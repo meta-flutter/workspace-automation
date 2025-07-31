@@ -36,14 +36,28 @@ jobs:
     if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip ubuntu') && !contains(github.event.head_commit.message, '[skip ubuntu]')"
 
     steps:
+      - name: Check Environment
+        run: |
+          echo "Running on Ubuntu version: $(lsb_release -d | cut -f2)"
+          echo "Running on architecture: $(uname -m)"
+          echo "Current directory: $(pwd)"
+          echo "Environment variables:"
+          env
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       - name: Create workspace
+        shell: bash
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
         # If llvm != 18, do --disable=toolchain-llvm-18
         run: |
-          PREFER_LLVM=${{ matrix.llvm }} ./flutter_workspace.py
+          cd $GITHUB_WORKSPACE
+          pwd; ls -la
+          PREFER_LLVM=${{ matrix.llvm }} ./flutter_workspace.py --enable=filament
           echo "Checking LLVM config..."
           cat setup_env.sh; echo ""
           FOUND_LLVM_VER=$(grep -oP 'export PREFER_LLVM=\K[0-9]+' setup_env.sh)
@@ -52,9 +66,27 @@ jobs:
             exit 1
           fi
 
-
       - name: Test workspace
+        shell: bash
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
         run: |
-          source ./setup_env.sh
-          flutter doctor -v
+          cd $GITHUB_WORKSPACE
+          pwd; ls -la
+          . ./setup_env.sh
+          ls -la $FLUTTER_WORKSPACE
           dart --version
+
+      - name: Create AOT Tests
+        if: ${{ !contains(matrix.os, 'arm') }}
+        shell: bash
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
+        run: |
+          cd $GITHUB_WORKSPACE
+          pwd; ls -la
+          . ./setup_env.sh
+          ./create_aot.py --app-path=./flutter/examples/hello_world/
+          ./flutter_workspace.py --create-aot --app-path=./flutter/examples/hello_world/

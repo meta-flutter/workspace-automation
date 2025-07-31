@@ -29,27 +29,51 @@ jobs:
     if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip fedora') && !contains(github.event.head_commit.message, '[skip fedora]')"
 
     steps:
+      - name: Check Environment
+        run: |
+          echo "Running on Fedora version: $(cat /etc/fedora-release)"
+          echo "Running on architecture: $(uname -m)"
+          echo "Current directory: $(pwd)"
+          echo "Environment variables:"
+          env
+
       - name: Set up tools
         run: |
-          dnf install -y python3 python3-pip which cmake
+          dnf install -y python3 python3-pip python3-pyyaml which cmake util-linux
           python3 -m pip install --upgrade pip
 
       - name: Create non-root user
         run: |
-          sudo groupadd -g 1000 user
-          sudo useradd -m -u 1000 -g user -s /bin/bash user
-          echo "user ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/user
+          dnf install -y sudo
+          groupadd -g 1000 user
+          useradd -m -u 1000 -g user -G wheel -s /bin/bash user
+          echo "user ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/user
 
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       - name: Create workspace
+        shell: bash
         # Run as non-root user in the container
         run: |
+          cd $GITHUB_WORKSPACE
+          pwd; ls -la
           chown -R user:user .
-          sudo -u user ./flutter_workspace.py
+          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && ./flutter_workspace.py --enable=filament --stdin-file=/dev/null"
+          cat ./setup_env.sh
 
       - name: Test workspace
+        shell: bash
         run: |
-          sudo -u user bash -lc "source ./setup_env.sh; flutter doctor -v; dart --version"
+          cd $GITHUB_WORKSPACE
+          pwd; ls -la
+          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && . ./setup_env.sh && dart --version"
+
+      - name: Test AOT creation
+        working-directory: ${{ github.workspace }}
+        shell: bash
+        run: |
+          cd $GITHUB_WORKSPACE
+          pwd; ls -la
+          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && . ./setup_env.sh && ./flutter_workspace.py --create-aot --app-path=./flutter/examples/hello_world/"

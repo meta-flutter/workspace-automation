@@ -37,6 +37,14 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Check Environment
+        run: |
+          echo "Running on macOS version: $(sw_vers -productVersion)"
+          echo "Running on architecture: $(uname -m)"
+          echo "Current directory: $(pwd)"
+          echo "Environment variables:"
+          env
+          
       - name: Brew fixup
         run: |
           brew upgrade |true
@@ -44,13 +52,26 @@ jobs:
           brew doctor |true
           ruby -v
           
-
       - name: Create workspace
+        shell: bash
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
         run: |
+          env
+          cd $GITHUB_WORKSPACE
+          pwd; ls -la
           ./flutter_workspace.py
+          cat ./setup_env.sh
 
       - name: Test workspace
+        shell: bash
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
         run: |
-          source ./setup_env.sh
-          flutter doctor -v
+          env
+          cd $GITHUB_WORKSPACE
+          pwd; ls -la
+          . ./setup_env.sh
           dart --version

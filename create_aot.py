@@ -7,6 +7,7 @@
 #
 # Script to build custom Flutter AOT artifacts for Release and Profile runtime
 
+import glob
 import os
 import signal
 import sys
@@ -182,21 +183,30 @@ def create_platform_aot(app_path: str, flutter_sdk_version: str):
                 flutter_source_flags += f' -Dflutter.dart_plugin_registrant=file://{dart_plugin_registrant_file}'
 
             flutter_native_assets = ''
-            if os.path.exists(f'{app_path}.dart_tool/flutter_build/*/native_assets.yaml'):
-                flutter_native_assets = f'--native-assets {app_path}/.dart_tool/flutter_build/*/native_assets.yaml'
+            native_assets_pattern = f'{app_path}/.dart_tool/flutter_build/*/native_assets.yaml'
+            native_assets_files = glob.glob(native_assets_pattern)
+            if native_assets_files:
+                flutter_native_assets = f'--native-assets {native_assets_files[0]}'
 
             app_aot_extra = os.getenv("APP_AOT_EXTRA")
             if app_aot_extra is None:
                 app_aot_extra = ''
 
+            # Resolve build directory paths
+            build_dirs = glob.glob(f'{app_path}/.dart_tool/flutter_build/*/')
+            if not build_dirs:
+                print(f"Error: No build directory found in {app_path}/.dart_tool/flutter_build/")
+                return
+            build_dir = build_dirs[0].rstrip('/')  # Remove trailing slash
+
             if not new_build_scheme:
                 dart_runtime = f'{flutter_sdk}/bin/cache/dart-sdk/bin/dart'
                 frontend_snapshot = f'{flutter_sdk}/bin/cache/artifacts/engine/linux-x64/frontend_server.dart.snapshot'
-                depfile = f'{app_path}/.dart_tool/flutter_build/*/kernel_snapshot.d'
+                depfile = f'{build_dir}/kernel_snapshot.d'
             else:
                 dart_runtime = f'{flutter_sdk}/bin/cache/dart-sdk/bin/dartaotruntime'
                 frontend_snapshot = f'{flutter_sdk}/bin/cache/artifacts/engine/linux-x64/frontend_server_aot.dart.snapshot'
-                depfile = f'{app_path}/.dart_tool/flutter_build/*/kernel_snapshot_program.d'
+                depfile = f'{build_dir}/kernel_snapshot_program.d'
 
             cmd = f'{dart_runtime} \
                 --disable-analytics \
@@ -215,7 +225,7 @@ def create_platform_aot(app_path: str, flutter_sdk_version: str):
                 {flutter_release_and_profile_flags} \
                 --target-os linux \
                 --packages {app_path}/.dart_tool/package_config.json \
-                --output-dill {app_path}/.dart_tool/flutter_build/*/app.dill \
+                --output-dill {build_dir}/app.dill \
                 --depfile {depfile} \
                 {flutter_source_flags} \
                 {flutter_app_debug_flags_extra} \
