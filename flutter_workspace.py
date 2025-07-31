@@ -116,6 +116,7 @@ def main():
         if args.app_path == '':
             sys.exit("Must specify value for --app-path")
 
+        activate_python_venv()
         set_gen_snapshot('release', get_flutter_arch())
         create_platform_aot(args.app_path, get_flutter_sdk_version())
         return

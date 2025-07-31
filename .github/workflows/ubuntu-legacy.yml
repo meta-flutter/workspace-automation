@@ -89,5 +89,4 @@ jobs:
           cd $GITHUB_WORKSPACE
           pwd; ls -la
           sudo -u user bash -c ". ./setup_env.sh && \
-          ./create_aot.py --app-path=./flutter/examples/hello_world/ && \
           ./flutter_workspace.py --create-aot --app-path=./flutter/examples/hello_world"
