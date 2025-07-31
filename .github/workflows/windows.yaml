@@ -50,39 +50,64 @@ jobs:
         run: |
           Write-Host "Fetching and building libcurl from source..."
           
-          # Create build directory
-          $buildDir = "$env:GITHUB_WORKSPACE\libcurl-build"
-          New-Item -ItemType Directory -Force -Path $buildDir
-          Set-Location $buildDir
-          
-          # Download curl source
-          Write-Host "Downloading curl source..."
-          $curlVersion = "8.4.0"
-          $curlUrl = "https://github.com/curl/curl/releases/download/curl-$($curlVersion.Replace('.','_'))/curl-$curlVersion.tar.gz"
-          Invoke-WebRequest -Uri $curlUrl -OutFile "curl-$curlVersion.tar.gz"
-          
-          # Extract source
-          Write-Host "Extracting curl source..."
-          tar -xzf "curl-$curlVersion.tar.gz"
-          Set-Location "curl-$curlVersion"
-          
-          # Create build directory and configure
-          New-Item -ItemType Directory -Force -Path "build"
-          Set-Location "build"
-          
-          Write-Host "Configuring curl build..."
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_CURL_EXE=OFF -DBUILD_SHARED_LIBS=OFF -DCURL_STATICLIB=ON -DCMAKE_INSTALL_PREFIX="$buildDir\install"
-          
-          Write-Host "Building curl..."
-          cmake --build . --config Release --parallel
-          
-          Write-Host "Installing curl..."
-          cmake --install . --config Release
-          
-          # Set environment variable for next step
-          $curlInstallPath = "$buildDir\install"
-          Write-Host "##vso[task.setvariable variable=CURL_INSTALL_PATH]$curlInstallPath"
-          Write-Host "libcurl built and installed to: $curlInstallPath"
+          try {
+            # Create build directory
+            $buildDir = "$env:GITHUB_WORKSPACE\libcurl-build"
+            New-Item -ItemType Directory -Force -Path $buildDir
+            Set-Location $buildDir
+            
+            # Download curl source
+            Write-Host "Downloading curl source..."
+            $curlVersion = "8.4.0"
+            $curlUrl = "https://github.com/curl/curl/releases/download/curl-$($curlVersion.Replace('.','_'))/curl-$curlVersion.tar.gz"
+            Invoke-WebRequest -Uri $curlUrl -OutFile "curl-$curlVersion.tar.gz"
+            
+            # Extract source
+            Write-Host "Extracting curl source..."
+            tar -xzf "curl-$curlVersion.tar.gz"
+            Set-Location "curl-$curlVersion"
+            
+            # Create build directory and configure
+            New-Item -ItemType Directory -Force -Path "build"
+            Set-Location "build"
+            
+            Write-Host "Configuring curl build..."
+            cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_CURL_EXE=OFF -DBUILD_SHARED_LIBS=OFF -DCURL_STATICLIB=ON -DCMAKE_INSTALL_PREFIX="$buildDir\install"
+            
+            if ($LASTEXITCODE -ne 0) {
+              throw "CMake configuration failed with exit code $LASTEXITCODE"
+            }
+            
+            Write-Host "Building curl..."
+            cmake --build . --config Release --parallel
+            
+            if ($LASTEXITCODE -ne 0) {
+              throw "CMake build failed with exit code $LASTEXITCODE"
+            }
+            
+            Write-Host "Installing curl..."
+            cmake --install . --config Release
+            
+            if ($LASTEXITCODE -ne 0) {
+              throw "CMake install failed with exit code $LASTEXITCODE"
+            }
+            
+            # Set environment variable for next step
+            $curlInstallPath = "$buildDir\install"
+            echo "CURL_INSTALL_PATH=$curlInstallPath" >> $env:GITHUB_ENV
+            Write-Host "libcurl built and installed successfully to: $curlInstallPath"
+            
+            # Verify the installation
+            if (Test-Path "$curlInstallPath\lib\libcurl.lib") {
+              Write-Host "Verified: libcurl.lib found at $curlInstallPath\lib\libcurl.lib"
+            } else {
+              Write-Host "Warning: libcurl.lib not found in expected location"
+            }
+            
+          } catch {
+            Write-Host "Error building libcurl: $($_.Exception.Message)"
+            Write-Host "Will fall back to default pycurl installation (which may fail on ARM64)"
+          }
 
       - name: Create workspace
         env:
@@ -97,6 +122,7 @@ jobs:
           
           # Use the built libcurl path first, then fallback to default install
           Write-Host "Looking for libcurl installation..."
+          Write-Host "CURL_INSTALL_PATH environment variable: $env:CURL_INSTALL_PATH"
           $curlPath = $env:CURL_INSTALL_PATH
           
           if ($curlPath -and (Test-Path "$curlPath\lib\libcurl.lib")) {
@@ -105,12 +131,24 @@ jobs:
             Write-Host "Installing pycurl with curl-dir: $curlPath"
             python3.exe -m pip install pycurl --global-option=build_ext --global-option="--curl-dir=$curlPath"
           } else {
-            Write-Host "No custom libcurl path set, using default pycurl installation..."
-            try {
-              python3.exe -m pip install pycurl
-            } catch {
-              Write-Host "pycurl installation failed, will rely on requests fallback in the Python code"
+            # For ARM64, if libcurl build failed, we need to fail here
+            if ("${{ matrix.os }}" -eq "windows-11-arm") {
+              Write-Host "ERROR: libcurl was not built successfully for ARM64"
+              Write-Host "Expected path: $curlPath"
+              if ($curlPath) {
+                Write-Host "Directory exists: $(Test-Path $curlPath)"
+                Write-Host "libcurl.lib exists: $(Test-Path "$curlPath\lib\libcurl.lib")"
+                if (Test-Path $curlPath) {
+                  Write-Host "Contents of ${curlPath}:"
+                  Get-ChildItem $curlPath -Recurse
+                }
+              }
+              throw "libcurl build required for ARM64 but failed"
             }
+            
+            # For x64 systems, try default pycurl installation
+            Write-Host "Installing pycurl with default system libraries..."
+            python3.exe -m pip install pycurl
           }
           
           Write-Host "Starting flutter_workspace.py..."
