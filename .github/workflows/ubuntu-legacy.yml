@@ -46,6 +46,7 @@ jobs:
           apt-get update -y
           DEBIAN_FRONTEND=noninteractive apt-get install -yq python3 python3-pip bash cmake sudo
           python3 -m pip install --upgrade pip
+          apt install python3.8-venv -yq
 
       - name: Create non-root user
         run: |
