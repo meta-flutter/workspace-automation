@@ -2140,12 +2140,11 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
                 return
 
     elif platform_['toolchain'] == 'common':
-        # do nothing
-        print('')
+        pass
     else:
         print_banner("Toolchain not supported")
 
-    # append lines to runtime env script
+    # append lines to runtime env script (for both llvm and common toolchains)
     workspace = os.environ.get('FLUTTER_WORKSPACE')
     if 'append_to_runtime_env' in platform_:
         append_to_runtime_env = platform_['append_to_runtime_env']
