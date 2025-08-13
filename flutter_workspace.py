@@ -2139,19 +2139,20 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
                 exit()
                 return
 
-        # append lines to runtime env script
-        workspace = os.environ.get('FLUTTER_WORKSPACE')
-        if 'append_to_runtime_env' in platform_:
-            append_to_runtime_env = platform_['append_to_runtime_env']
-            if append_to_runtime_env:
-                append_to_env_script(workspace, '\n')
-                for line in append_to_runtime_env:
-                    append_to_env_script(workspace, line)
-
     elif platform_['toolchain'] == 'common':
-        return
+        # do nothing
+        print('')
     else:
         print_banner("Toolchain not supported")
+
+    # append lines to runtime env script
+    workspace = os.environ.get('FLUTTER_WORKSPACE')
+    if 'append_to_runtime_env' in platform_:
+        append_to_runtime_env = platform_['append_to_runtime_env']
+        if append_to_runtime_env:
+            append_to_env_script(workspace, '\n')
+            for line in append_to_runtime_env:
+                append_to_env_script(workspace, line)
 
 
 def get_toolchains(platforms):

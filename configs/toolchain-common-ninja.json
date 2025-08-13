@@ -19,6 +19,10 @@
         "VERSION": "1.12.1",
         "ARCHIVE_FILE": "ninja-${VERSION}.zip"
     },
+    "append_to_runtime_env": [
+        "# toolchain-common-cmake",
+        "export PATH=$FLUTTER_WORKSPACE/.config/flutter_workspace/toolchain-common-ninja:$PATH"
+    ],
     "runtime": {
         "artifacts": {
             "http": {
