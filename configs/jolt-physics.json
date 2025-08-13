@@ -1,0 +1,51 @@
+{
+    "id": "jolt",
+    "load": false,
+    "supported_archs": [
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "fedora",
+        "ubuntu",
+        "windows"
+    ],
+    "type": "dependency",
+    "env": {
+        "CC": "${LLVM_BINDIR}/clang",
+        "CXX": "${LLVM_BINDIR}/clang++",
+        "PATH": "${LLVM_BINDIR}:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
+        "LD_LIBRARY_PATH": "${LLVM_LIBDIR}:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
+        "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches",
+        "JOLT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/JoltPhysics/Build",
+        "JOLT_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/JoltPhysics/cmake-build-release",
+        "JOLT_STAGING_DIR": "${JOLT_BUILD_DIR}/staging/release",
+        "JOLT_CMAKE_ARGS": "-DCMAKE_STAGING_PREFIX=${JOLT_STAGING_DIR} -DCMAKE_BUILD_TYPE=Release -DTARGET_UNIT_TESTS=OFF -DTARGET_HELLO_WORLD=ON -DTARGET_PERFORMANCE_TEST=ON -DTARGET_SAMPLES=ON -DTARGET_VIEWER=OFF"
+    },
+    "src": [
+        {
+            "uri": "https://github.com/jrouwe/JoltPhysics.git",
+            "branch": "master",
+            "rev": "v5.3.0"
+        }
+    ],
+    "runtime": {
+        "post_cmds": [
+            {
+                "cwd": "${JOLT_BUILD_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
+                    "cmake -G Ninja -S ${JOLT_SRC_DIR} -B ${JOLT_BUILD_DIR} ${JOLT_CMAKE_ARGS}",
+                    "cmake --build . --config Release --target install --parallel"
+                ]
+            }
+        ],
+        "do_clean": [
+            {
+                "cwd": "${JOLT_BUILD_DIR}",
+                "cmds": [
+                    "cmake --build . --config Release --target clean --parallel"
+                ]
+            }
+        ]
+    }
+}
