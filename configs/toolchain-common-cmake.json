@@ -18,6 +18,16 @@
     "env": {
         "VERSION": "3.31"
     },
+    "append_to_runtime_env": {
+        "common": [
+            "# toolchain-common-cmake",
+            "export PATH=$FLUTTER_WORKSPACE/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH"
+        ],
+        "windows": [
+            "# toolchain-common-cmake",
+            "$env:PATH = \"$env:FLUTTER_WORKSPACE\\.config\\flutter_workspace\\toolchain-common-cmake\\bin;$env:PATH\""
+        ]
+    },
     "runtime": {
         "artifacts": {
             "http": {

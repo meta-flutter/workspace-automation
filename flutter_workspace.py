@@ -2111,19 +2111,20 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
         return
     platform_['type'] = 'toolchain'
 
-    if platform_['toolchain'] == 'llvm':
-        host_type = get_host_type()
+    host_type = get_host_type()
+    if host_type == 'linux':
+        host_type = get_freedesktop_os_release_id()
 
+
+    if platform_['toolchain'] == 'llvm':
         llvm_base_path = '/usr'
 
         if host_type == 'darwin':
             llvm_base_path = get_mac_brew_prefix('llvm' + '@' + prefer_llvm)
-        elif host_type == 'linux':
-            host_type = get_freedesktop_os_release_id()
-            if host_type == 'ubuntu':
-                llvm_base_path = '/usr/lib/llvm-' + prefer_llvm + '/bin'
-            elif host_type == 'fedora':
-                llvm_base_path = '/usr/lib64/llvm' + prefer_llvm + '/bin'
+        elif host_type == 'ubuntu':
+            llvm_base_path = '/usr/lib/llvm-' + prefer_llvm + '/bin'
+        elif host_type == 'fedora':
+            llvm_base_path = '/usr/lib64/llvm' + prefer_llvm + '/bin'
 
         print(f'Looking for llvm-config in {llvm_base_path}')
         llvm_config = get_first_file_in_path(llvm_base_path, 'llvm-config')
@@ -2139,19 +2140,25 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
                 exit()
                 return
 
-        # append lines to runtime env script
-        workspace = os.environ.get('FLUTTER_WORKSPACE')
-        if 'append_to_runtime_env' in platform_:
-            append_to_runtime_env = platform_['append_to_runtime_env']
-            if append_to_runtime_env:
-                append_to_env_script(workspace, '\n')
-                for line in append_to_runtime_env:
-                    append_to_env_script(workspace, line)
-
     elif platform_['toolchain'] == 'common':
-        return
+        pass
     else:
         print_banner("Toolchain not supported")
+
+    # get host type and check if present in platform_['append_to_runtime_env'], if not attempt to use common
+    if host_type in platform_['append_to_runtime_env']:
+        append_to_runtime_env = platform_['append_to_runtime_env'][host_type]
+    elif 'common' in platform_['append_to_runtime_env']:
+        append_to_runtime_env = platform_['append_to_runtime_env']['common']
+    else:
+        append_to_runtime_env = []
+
+    # append lines to runtime env script (for both llvm and common toolchains)
+    workspace = os.environ.get('FLUTTER_WORKSPACE')
+    if append_to_runtime_env:
+        append_to_env_script(workspace, '\n')
+        for line in append_to_runtime_env:
+            append_to_env_script(workspace, line)
 
 
 def get_toolchains(platforms):
