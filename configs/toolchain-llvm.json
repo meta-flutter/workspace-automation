@@ -18,13 +18,15 @@
     "DEFAULT_VERSION": "18",
     "NONINTERACTIVE": "1"
   },
-  "append_to_runtime_env": [
-    "# toolchain-llvm",
-    "export PREFER_LLVM=${PREFER_LLVM}",
-    "export LLVM_BINDIR='${LLVM_BINDIR}'",
-    "\n",
-    "export PATH=$LLVM_BINDIR:$PATH"
-  ],
+  "append_to_runtime_env": {
+      "common": [
+        "# toolchain-llvm",
+        "export PREFER_LLVM=${PREFER_LLVM}",
+        "export LLVM_BINDIR='${LLVM_BINDIR}'",
+        "\n",
+        "export PATH=$LLVM_BINDIR:$PATH"
+      ]
+  },
   "runtime": {
     "pre-requisites": {
       "aarch64": {
