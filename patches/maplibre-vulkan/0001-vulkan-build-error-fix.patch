@@ -1,0 +1,27 @@
+From 0c2c8f53705c301bbcd87a5ad9a32d8247de1066 Mon Sep 17 00:00:00 2001
+From: Joel Winarske <joel.winarske@gmail.com>
+Date: Mon, 18 Aug 2025 12:11:54 -0700
+Subject: [PATCH] vulkan build error fix
+
+Upstream-Status: Pending
+
+Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
+---
+ vendor/vulkan.cmake | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/vendor/vulkan.cmake b/vendor/vulkan.cmake
+index f8be9376168..c430c5dcdfb 100644
+--- a/vendor/vulkan.cmake
++++ b/vendor/vulkan.cmake
+@@ -44,6 +44,7 @@ endif()
+ 
+ get_target_property(glslang_inc glslang INTERFACE_INCLUDE_DIRECTORIES)
+ set_target_properties(glslang PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES ${glslang_inc})
++target_compile_options(SPIRV PRIVATE -include cstdint)
+ 
+ set_target_properties(
+     glslang
+-- 
+2.50.1
+

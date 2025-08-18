@@ -12,17 +12,20 @@
     ],
     "type": "dependency",
     "env": {
+        "CC": "${LLVM_BINDIR}/clang",
+        "CXX": "${LLVM_BINDIR}/clang++",
         "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
         "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
         "MAPLIBRE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native",
         "MAPLIBRE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native/build",
-        "MAPLIBRE_CMAKE_ARGS": "-DBUILD_SHARED_LIBS=OFF -DMLN_WITH_WERROR=OFF -DMLN_WITH_VULKAN=ON -DMLN_DRAWABLE_RENDERER=ON -DMLN_LEGACY_RENDERER=OFF -DMLN_WITH_EGL=OFF -DMLN_WITH_OPENGL=OFF",
+        "MAPLIBRE_STAGING_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native/staging",
+        "MAPLIBRE_CMAKE_ARGS": "-DBUILD_SHARED_LIBS=OFF -DMLN_WITH_WERROR=OFF -DMLN_WITH_X11=OFF -DMLN_WITH_WAYLAND=ON -DMLN_WITH_EGL=OFF -DMLN_WITH_OPENGL=OFF -DMLN_WITH_VULKAN=ON -DMLN_WITH_GLFW=OFF -DMLN_LEGACY_RENDERER=OFF -DMLN_WITH_PMTILES=ON -DCMAKE_STAGING_PREFIX=${MAPLIBRE_STAGING_DIR}",
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/maplibre-vulkan"
     },
     "src": [
         {
             "uri": "https://github.com/maplibre/maplibre-native.git",
-            "branch": "main"
+            "version": "core-fe158c7e9b0b3f748f88d34ad384a7bcbc2cf903"
         }
     ],
     "runtime": {
@@ -30,19 +33,19 @@
             "aarch64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt-get install -yq libwebp-dev libuv1-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libicu-dev libglfw3-dev"
+                        "sudo apt-get install -yq libwebp-dev libuv1-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libicu-dev"
                     ]
                 }
             },
             "x86_64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt-get install -yq libwebp-dev libuv1-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libicu-dev libglfw3-dev"
+                        "sudo apt-get install -yq libwebp-dev libuv1-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libicu-dev"
                     ]
                 },
                 "fedora": {
                     "cmds": [
-                        "sudo dnf install -y libwebp-devel libuv-devel libcurl-devel libjpeg-devel libpng-devel libicu-devel glfw-devel"
+                        "sudo dnf install -y libwebp-devel libuv-devel libcurl-devel libjpeg-devel libpng-devel libicu-devel"
                     ]
                 }
             }
@@ -51,15 +54,17 @@
             {
                 "cwd": "${MAPLIBRE_SRC_DIR}",
                 "cmds": [
-                    "git apply ${PATCH_FOLDER}/0001-platform-linux-wayland-vulkan.patch"
+                    "git reset --hard core-8e3899df391b21f9cd1786194cb6fbfa318795da",
+                    "git apply ${PATCH_FOLDER}/0001-vulkan-build-error-fix.patch",
+                    "git apply ${PATCH_FOLDER}/0002-Prevent-setting-MLN_WITH_EGL-and-OPENGL_USE_GLES3-wh.patch"
                 ]
             },
             {
                 "cwd": "${MAPLIBRE_BUILD_DIR}",
                 "cmds": [
                     "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
-                    "cmake -GNinja ${MAPLIBRE_CMAKE_ARGS} -S ${MAPLIBRE_SRC_DIR} -B ${MAPLIBRE_BUILD_DIR}",
-                    "${AUTONINJA}"
+                    "cmake -GNinja -S ${MAPLIBRE_SRC_DIR} -B ${MAPLIBRE_BUILD_DIR} ${MAPLIBRE_CMAKE_ARGS}",
+                    "cmake --build . --config Release --target install --parallel"                    
                 ]
             }
         ],
