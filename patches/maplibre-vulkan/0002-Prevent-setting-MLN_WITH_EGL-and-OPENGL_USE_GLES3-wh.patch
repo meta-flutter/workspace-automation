@@ -1,0 +1,39 @@
+From cdf41b2895666e4e80b562d43a2fb09694ada05b Mon Sep 17 00:00:00 2001
+From: Joel Winarske <joel.winarske@gmail.com>
+Date: Mon, 18 Aug 2025 12:47:49 -0700
+Subject: [PATCH] Prevent setting MLN_WITH_EGL and OPENGL_USE_GLES3 when
+ setting MLN_WITH_VULKAN
+
+Upstream-Status: Pending
+
+Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
+---
+ platform/linux/linux.cmake | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/platform/linux/linux.cmake b/platform/linux/linux.cmake
+index e2a66448246..18c6c9340f1 100644
+--- a/platform/linux/linux.cmake
++++ b/platform/linux/linux.cmake
+@@ -15,7 +15,7 @@ find_package(Threads REQUIRED)
+ pkg_search_module(WEBP libwebp REQUIRED)
+ pkg_search_module(LIBUV libuv REQUIRED)
+ 
+-if(MLN_WITH_WAYLAND)
++if(MLN_WITH_WAYLAND AND NOT MLN_WITH_VULKAN)
+     # See https://github.com/maplibre/maplibre-native/pull/2022
+ 
+     # MLN_WITH_EGL needs to be set for Wayland, otherwise this CMakeLists will
+@@ -175,7 +175,9 @@ target_link_libraries(
+ 
+ add_subdirectory(${PROJECT_SOURCE_DIR}/bin)
+ add_subdirectory(${PROJECT_SOURCE_DIR}/expression-test)
++if(MLN_WITH_GLFW)
+ add_subdirectory(${PROJECT_SOURCE_DIR}/platform/glfw)
++endif()
+ if(MLN_WITH_NODE)
+     add_subdirectory(${PROJECT_SOURCE_DIR}/platform/node)
+ endif()
+-- 
+2.50.1
+
