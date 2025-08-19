@@ -89,4 +89,4 @@ jobs:
           pwd; ls -la
           . ./setup_env.sh
           ./create_aot.py --app-path=./flutter/examples/hello_world/
-          ./flutter_workspace.py --create-aot --app-path=./flutter/examples/hello_world/
+          ./flutter_workspace.py --create-aot --app-path=./flutter/dev/integration_tests/new_gallery/
