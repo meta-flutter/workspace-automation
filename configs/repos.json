@@ -1,10 +1,10 @@
 [
     {
-        "uri": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
+        "uri": "https://github.com/flutter/packages.git",
         "branch": "main"
     },
     {
-        "uri": "https://github.com/flutter/packages.git",
+        "uri": "https://github.com/flutter/demos.git",
         "branch": "main"
     },
     {
