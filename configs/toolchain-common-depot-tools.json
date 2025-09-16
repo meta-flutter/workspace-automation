@@ -1,0 +1,38 @@
+{
+    "id": "toolchain-common-depot-tools",
+    "load": true,
+    "supported_archs": [
+        "aarch64",
+        "x86_64",
+        "ARM64",
+        "AMD64"
+    ],
+    "supported_host_types": [
+        "darwin",
+        "fedora",
+        "rhel",
+        "ubuntu",
+        "windows"
+    ],
+    "type": "toolchain",
+    "toolchain": "common",
+    "append_to_runtime_env": {
+        "common": [
+            "# toolchain-common-depot-tools",
+            "export PATH=$FLUTTER_WORKSPACE/.config/flutter_workspace/toolchain-common-depot-tools:$PATH",
+            "export FLUTTER_GIT_URL=\"https://github.com/flutter/flutter.git\""
+        ],
+        "windows": [
+            "# toolchain-common-depot-tools",
+            "$env:PATH = \"$env:FLUTTER_WORKSPACE\\.config\\flutter_workspace\\toolchain-common-depot-tools;$env:PATH\"",
+            "$env:FLUTTER_GIT_URL = \"https://github.com/flutter/flutter.git\""
+        ]
+    },
+    "src": [
+    {
+      "uri": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
+      "branch": "main"
+    }
+    ],
+    "runtime": {}
+}

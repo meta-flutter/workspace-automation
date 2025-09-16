@@ -76,4 +76,4 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           pwd; ls -la
-          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && . ./setup_env.sh && ./flutter_workspace.py --create-aot --app-path=./flutter/examples/hello_world/"
+          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && . ./setup_env.sh && ./flutter_workspace.py --create-aot --app-path=./app/tcna-packages/packages/filament_scene/example/"
