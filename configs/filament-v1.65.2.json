@@ -27,7 +27,7 @@
         {
             "uri": "https://github.com/google/filament.git",
             "branch": "release",
-            "rev": "v1.60.1"
+            "rev": "v1.65.2"
         }
     ],
     "runtime": {
@@ -63,11 +63,11 @@
                 "cwd": "${FILAMENT_SRC_DIR}",
                 "cmds": [
                     "git reset --hard",
-                    "git apply ${PATCH_FOLDER}/filament/0001-disable-backend-tests.patch",
+                    "git apply ${PATCH_FOLDER}/filament/0001-disable-backend-tests-1.65.2.patch",
                     "git apply ${PATCH_FOLDER}/filament/0002-install-required-files.patch",
                     "git apply ${PATCH_FOLDER}/filament/0003-move-include-contents-to-include-filament.patch",
-                    "git apply ${PATCH_FOLDER}/filament/0004-move-libraries-so-they-install.patch",
-                    "git apply ${PATCH_FOLDER}/filament/0006-spirv-tools-threads.patch"
+                    "git apply ${PATCH_FOLDER}/filament/0004-move-libraries-so-they-install-1.65.2.patch",
+                    "git apply ${PATCH_FOLDER}/filament/0005-spirv-tools-threads.patch"
                 ]
             },
             {

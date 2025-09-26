@@ -1,0 +1,33 @@
+From 0c4bc86bbfc883db61b585a21d2653ca8514f2f7 Mon Sep 17 00:00:00 2001
+From: Joel Winarske <joel.winarske@gmail.com>
+Date: Fri, 26 Sep 2025 07:13:07 -0700
+Subject: [PATCH] disable backend tests 1.65.2
+
+Signed-off-by: Joel Winarske <joel.winarske@gmail.com>
+---
+ filament/backend/CMakeLists.txt | 9 ---------
+ 1 file changed, 9 deletions(-)
+
+diff --git a/filament/backend/CMakeLists.txt b/filament/backend/CMakeLists.txt
+index 989078622..48c1d0a84 100644
+--- a/filament/backend/CMakeLists.txt
++++ b/filament/backend/CMakeLists.txt
+@@ -660,15 +660,6 @@ if (APPLE AND NOT IOS)
+     endif()
+ endif()
+ 
+-if (LINUX)
+-    add_executable(backend_test_linux test/linux_runner.cpp ${BACKEND_TEST_SRC})
+-    target_link_libraries(backend_test_linux PRIVATE ${BACKEND_TEST_LIBS})
+-    set_target_properties(backend_test_linux PROPERTIES FOLDER Tests)
+-    if (FILAMENT_SUPPORTS_WEBGPU)
+-        target_link_libraries(backend_test_linux PRIVATE webgpu_dawn dawncpp_headers)
+-    endif()
+-endif()
+-
+ # ==================================================================================================
+ # Compute tests
+ #
+-- 
+2.51.0
+
