@@ -271,6 +271,8 @@ def main():
             flutter_version = globals_.get('flutter-version')
         else:
             flutter_version = "main"
+    
+    os.environ['FLUTTER_VERSION'] = flutter_version
 
     print_banner("Flutter Version: %s" % flutter_version)
     flutter_sdk_path = get_flutter_sdk(flutter_version)
