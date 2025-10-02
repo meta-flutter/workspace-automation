@@ -1,0 +1,13 @@
+diff --git a/filament/backend/src/vulkan/VulkanConstants.h b/filament/backend/src/vulkan/VulkanConstants.h
+index 2c92277..0dcbb30 100644
+--- a/filament/backend/src/vulkan/VulkanConstants.h
++++ b/filament/backend/src/vulkan/VulkanConstants.h
+@@ -190,7 +190,7 @@ static_assert(FVK_ENABLED(FVK_DEBUG_VALIDATION));
+ constexpr struct VkAllocationCallbacks* VKALLOC = nullptr;
+ 
+ constexpr static const int FVK_REQUIRED_VERSION_MAJOR = 1;
+-constexpr static const int FVK_REQUIRED_VERSION_MINOR = 1;
++constexpr static const int FVK_REQUIRED_VERSION_MINOR = 3;
+ 
+ // Maximum number of VkCommandBuffer handles managed simultaneously by VulkanCommands.
+ //
