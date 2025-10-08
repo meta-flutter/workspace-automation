@@ -185,6 +185,29 @@ def main():
         return
 
     #
+    # Check resources for safe compilation
+    #
+
+    # decide a number of threads to use for compilation
+    # assuming each core needs at least 1GB of RAM
+    # meaning max_threads = min(num_cores, floor(total_ram_in_GB))
+    sys_core_count = os.cpu_count()
+    sys_ram_gb = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 3) # in GB
+    sys_ram_gb -= 1  # leave 1GB for system
+
+    if sys_core_count and sys_ram_gb:
+        max_threads = int(min(sys_core_count, sys_ram_gb))
+    elif sys_core_count:
+        max_threads = int(sys_core_count)
+    elif sys_ram_gb:
+        max_threads = int(sys_ram_gb)
+    else:
+        max_threads = 2
+
+    os.environ['_MAX_THREADS'] = str(max_threads)
+    print("Using %s threads for compilation" % os.environ.get('_MAX_THREADS'))
+
+    #
     # Workspace Configuration
     #
     config = get_workspace_config(args.config)
@@ -194,6 +217,9 @@ def main():
         os.environ['CMAKE_BUILD_TYPE'] = globals_.get('CMAKE_BUILD_TYPE', 'MinSizeRel')
     if 'MESON_BUILD_TYPE' in globals_:
         os.environ['MESON_BUILD_TYPE'] = globals_.get('MESON_BUILD_TYPE', 'minsize')
+    # allow max threads override from globals.json
+    if '_MAX_THREADS' in globals_:
+        os.environ['_MAX_THREADS'] = globals_.get('_MAX_THREADS', str(max_threads))
 
     platforms = config.get('platforms')
     for platform_ in platforms:
