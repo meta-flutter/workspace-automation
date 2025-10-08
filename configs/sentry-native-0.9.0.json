@@ -34,7 +34,7 @@
                 "cmds": [
                     "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
                     "cmake -G Ninja -S ${SENTRY_NATIVE_SRC_DIR} -B ${SENTRY_NATIVE_BUILD_DIR} ${SENTRY_NATIVE_CMAKE_ARGS}",
-                    "cmake --build ${SENTRY_NATIVE_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target install --parallel"
+                    "cmake --build ${SENTRY_NATIVE_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target install"
                 ]
             }
         ],
@@ -42,7 +42,7 @@
             {
                 "cwd": "${SENTRY_NATIVE_BUILD_DIR}",
                 "cmds": [
-                    "cmake --build ${SENTRY_NATIVE_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target clean --parallel"
+                    "cmake --build ${SENTRY_NATIVE_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target clean"
                 ]
             }
         ]

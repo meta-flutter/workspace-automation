@@ -183,8 +183,8 @@
         "cmds": [
           "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
           "cmake -G Ninja ${HOMESCREEN_CMAKE_ARGS} -S ${HOMESCREEN_SRC_DIR} -B ${HOMESCREEN_BUILD_DIR}",
-          "cmake --build ${HOMESCREEN_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target clean --parallel",
-          "cmake --build ${HOMESCREEN_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target homescreen --parallel"
+          "cmake --build ${HOMESCREEN_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target clean",
+          "cmake --build ${HOMESCREEN_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target homescreen"
         ]
       }
     ],
@@ -192,7 +192,7 @@
       {
         "cwd": "${HOMESCREEN_BUILD_DIR}",
         "cmds": [
-          "cmake --build ${HOMESCREEN_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target clean --parallel"
+          "cmake --build ${HOMESCREEN_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target clean"
         ]
       }
     ]

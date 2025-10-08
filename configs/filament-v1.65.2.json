@@ -77,7 +77,7 @@
                 "cmds": [
                     "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
                     "cmake -G Ninja -S ${FILAMENT_SRC_DIR} -B ${FILAMENT_BUILD_DIR} ${FILAMENT_CMAKE_ARGS}",
-                    "cmake --build . --config Release --target install --parallel"
+                    "cmake --build . --config Release --target install"
                 ]
             }
         ],
@@ -85,7 +85,7 @@
             {
                 "cwd": "${FILAMENT_BUILD_DIR}",
                 "cmds": [
-                    "cmake --build . --config Release --target clean --parallel"
+                    "cmake --build . --config Release --target clean"
                 ]
             }
         ]
