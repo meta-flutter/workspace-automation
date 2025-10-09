@@ -867,13 +867,10 @@ def validate_custom_device_config(config):
     return True
 
 
-def get_repo(base_folder, uri, branch, rev):
+def get_repo(base_folder, uri, ref):
     """ Clone Git Repo """
     if not uri:
         print("repo entry needs a 'uri' key.  Skipping")
-        return
-    if not branch:
-        print("repo entry needs a 'branch' key.  Skipping")
         return
 
     # get repo folder name
@@ -908,17 +905,14 @@ def get_repo(base_folder, uri, branch, rev):
                 pass
 
         # print_banner(f'git clone {uri} -b {branch} {repo_name}')
-        cmd = ['git', 'clone', uri, '-b', branch, repo_name]
+        cmd = ['git', 'clone', uri, repo_name]
         subprocess.check_call(cmd, cwd=base_folder)
 
-    if rev:
-        # print_banner(f'git checkout {rev}')
-        cmd = ['git', 'checkout', rev]
+    if ref:
+        # print_banner(f'git checkout {ref}')
+        cmd = ['git', 'checkout', ref]
         subprocess.check_call(cmd, cwd=git_folder)
     else:
-        # print_banner(f'git checkout {branch}')
-        cmd = ['git', 'checkout', branch]
-        subprocess.check_call(cmd, cwd=git_folder)
 
     # get lfs
     git_lfs_file = os.path.join(base_folder, repo_name, '.gitattributes')
@@ -952,7 +946,7 @@ def get_workspace_repos(base_folder, config):
         futures = []
         for repo in repos:
             futures.append(executor.submit(get_repo, base_folder=base_folder, uri=repo.get(
-                'uri'), branch=repo.get('branch'), rev=repo.get('rev')))
+                'uri'), ref=repo.get('rev')))
             validate_sudo_user()
 
         for _ in concurrent.futures.as_completed(futures):
@@ -987,7 +981,7 @@ def get_platform_src(src, base_folder: str):
         futures = []
         for repo in src:
             futures.append(executor.submit(get_repo, base_folder=base_folder, uri=repo.get(
-                'uri'), branch=repo.get('branch'), rev=repo.get('rev')))
+                'uri'), ref=repo.get('rev')))
             validate_sudo_user()
 
         for future in concurrent.futures.as_completed(futures):
