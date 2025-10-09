@@ -117,6 +117,7 @@ def main():
     parser.add_argument('--plex', default='', type=str, help='Platform Load Excludes')
     parser.add_argument('--enable', default='', type=str, help='Platform Load Enable Override')
     parser.add_argument('--disable', default='', type=str, help='Platform Load Disable Override')
+    parser.add_argument('--remote', default='', type=str, help='Remote Platform Load Git Repo')
     parser.add_argument('--enable-plugin', default='', type=str, help='Plugin Enable')
     parser.add_argument('--disable-plugin', default='', type=str, help='Plugin Disable')
     parser.add_argument('--fastboot', default='', type=str, help='Update the selected platform using fastboot')
@@ -225,7 +226,11 @@ def main():
     #
     # Create Workspace
     #
-    os.makedirs(workspace, exist_ok=True)
+    os.makedirs(workspace, exist_ok=True)    #
+    app_folder = os.path.join(workspace, 'app')
+    if not os.path.exists(app_folder):
+        os.makedirs(app_folder)
+
 
     if os.path.exists(workspace):
         os.environ['FLUTTER_WORKSPACE'] = workspace
@@ -237,6 +242,19 @@ def main():
         print_banner("Fetching Engine Artifacts")
         get_flutter_engine_runtime(True, get_flutter_arch())
         return
+
+
+
+    #
+    # Load Remote Platforms
+    #
+    app_folder = os.path.join(workspace, 'app')
+    if args.remote:
+        # comma-separated list of git repos
+        print(f"Loading Remote Platforms from: {args.remote}")
+        remote_repos = args.remote.split(',')
+        for repo in remote_repos:
+            load_remote_platform(repo, app_folder)
 
     #
     # Limit compiler threads
@@ -332,7 +350,6 @@ def main():
             print("Invalid platform configuration")
             exit(1)
 
-    app_folder = os.path.join(workspace, 'app')
     flutter_sdk_folder = os.path.join(workspace, 'flutter')
 
     vscode_folder = os.path.join(workspace, '.vscode')
@@ -378,7 +395,7 @@ def main():
         return
 
     #
-    # App folder setup
+    # Get Repos
     #
     is_exist = os.path.exists(app_folder)
     if not is_exist:
@@ -867,7 +884,7 @@ def validate_custom_device_config(config):
     return True
 
 
-def get_repo(base_folder, uri, ref):
+def get_repo(base_folder, uri, ref, branch=None):
     """ Clone Git Repo """
     if not uri:
         print("repo entry needs a 'uri' key.  Skipping")
@@ -894,8 +911,14 @@ def get_repo(base_folder, uri, ref):
         subprocess.check_call(cmd, cwd=git_folder)
 
         # print_banner(f'git pull: {repo_name}')
-        cmd = ['git', 'pull', 'origin', branch]
-        subprocess.check_call(cmd, cwd=git_folder)
+        cmd = ['git', 'pull', '--ff-only']
+        if branch:
+            print(f'Using branch: {branch}')
+            cmd.extend(['origin', branch])
+        try:
+            subprocess.check_call(cmd, cwd=git_folder)
+        except subprocess.CalledProcessError as e:
+            print(f"WARNING: git pull failed, continuing anyway")
     else:
         # print_banner(f'Checking if folder exists: {git_folder}')
         if os.path.exists(git_folder):
@@ -904,16 +927,21 @@ def get_repo(base_folder, uri, ref):
             except subprocess.CalledProcessError:
                 pass
 
-        # print_banner(f'git clone {uri} -b {branch} {repo_name}')
         cmd = ['git', 'clone', uri, repo_name]
+        if branch:
+            print(f'Using branch: {branch}')
+            cmd.extend(['-b', branch])
         subprocess.check_call(cmd, cwd=base_folder)
 
     if ref:
-        # print_banner(f'git checkout {ref}')
+        print(f'git checkout {ref}')
         cmd = ['git', 'checkout', ref]
         subprocess.check_call(cmd, cwd=git_folder)
-    else:
-
+    elif branch:
+        print(f'git checkout {branch}')
+        cmd = ['git', 'checkout', branch]
+        subprocess.check_call(cmd, cwd=git_folder)
+        
     # get lfs
     git_lfs_file = os.path.join(base_folder, repo_name, '.gitattributes')
     # print_banner(f'Checking if folder exists: {git_lfs_file}')
@@ -933,6 +961,85 @@ def get_repo(base_folder, uri, ref):
     print_banner(f'Fetched: {repo_name}')
 
 
+# Load Remote Platforms
+#
+# For reach --remote=<git repo> specified on command line
+# clone the repo into app/<repo name>
+# and link the files in app/<repo name>/configs/... to configs/...
+# (but make sure not to overwrite existing files, throw error if so)
+def load_remote_platform(remote, app_folder):
+    """ Load Remote Platforms from GIT repo """
+    if not remote:
+        return
+
+    print_banner(f'Loading Remote Platforms from: {remote}')
+
+    remote_parts = remote.split('#')
+    print(f'remote_parts: {remote_parts}')
+    # get repo folder name
+    repo_name = remote_parts[0].rsplit('/', 1)
+    print(f'repo_name parts: {repo_name}')
+    repo_name = repo_name[-1]
+    print(f'repo_name before split: {repo_name}')
+    repo_name = repo_name.split(".")[0]
+    print(f'repo_name: {repo_name}')
+    # get git ref from remote_uri
+    git_uri = remote_parts[0]
+    git_ref = remote_parts[1] if len(remote_parts) == 2 else None
+
+    # get branch from ref (if starts with 'heads/)
+    git_branch = None
+    if git_ref and git_ref.startswith('heads/'):
+        git_branch = git_ref.split('heads/', 1)[1]
+        git_ref = None
+
+    get_repo(base_folder=app_folder, uri=git_uri, ref=git_ref, branch=git_branch)
+    git_folder = str(os.path.join(app_folder, repo_name))
+
+    # link files in app/<repo name>/configs/... to configs/...
+    remote_config_folder = os.path.join(git_folder, 'configs')
+    if os.path.exists(remote_config_folder):
+        import glob
+        for filename in sorted(glob.glob(os.path.join(remote_config_folder, '*.json'))):
+
+            filepath = os.path.join(os.getcwd(), filename)
+            _, tail = os.path.split(filename)
+
+            # link file as 'configs/remote_<file>'
+            dest_filepath = os.path.join(os.getcwd(), 'configs', f'remote_{tail}')
+
+            if os.path.exists(dest_filepath):
+                print(f'Config file already exists! skipping: {dest_filepath}')
+            else:
+                print(f'Linking config file: {dest_filepath}')
+                os.symlink(filepath, dest_filepath)
+    else:
+        print(f'No configs folder found in remote platform repo: {remote_config_folder}')
+
+    # link patches in app/<repo name>/patches to patches/
+    remote_patches_folder = os.path.join(git_folder, 'patches')
+    patches_folder = os.path.join(os.getcwd(), 'patches')
+    if os.path.exists(remote_patches_folder):
+        if not os.path.exists(patches_folder):
+            os.makedirs(patches_folder)
+
+        import glob
+        for filename in sorted(glob.glob(os.path.join(remote_patches_folder, '*'))):
+
+            filepath = os.path.join(os.getcwd(), filename)
+            _, tail = os.path.split(filename)
+
+            dest_filepath = os.path.join(patches_folder, tail)
+
+            if os.path.exists(dest_filepath):
+                print(f'Patch file already exists! skipping: {dest_filepath}')
+            else:
+                print(f'Linking patch file: {dest_filepath}')
+                os.symlink(filepath, dest_filepath)
+    else:
+        print(f'No patches folder found in remote platform repo: {remote_patches_folder}')
+
+
 def get_workspace_repos(base_folder, config):
     """ Clone GIT repos referenced in config repos dict to base_folder """
     import concurrent.futures
@@ -946,7 +1053,7 @@ def get_workspace_repos(base_folder, config):
         futures = []
         for repo in repos:
             futures.append(executor.submit(get_repo, base_folder=base_folder, uri=repo.get(
-                'uri'), ref=repo.get('rev')))
+                'uri'), ref=repo.get('rev'), branch=repo.get('branch')))
             validate_sudo_user()
 
         for _ in concurrent.futures.as_completed(futures):
@@ -981,7 +1088,7 @@ def get_platform_src(src, base_folder: str):
         futures = []
         for repo in src:
             futures.append(executor.submit(get_repo, base_folder=base_folder, uri=repo.get(
-                'uri'), ref=repo.get('rev')))
+                'uri'), ref=repo.get('rev'), branch=repo.get('branch')))
             validate_sudo_user()
 
         for future in concurrent.futures.as_completed(futures):
