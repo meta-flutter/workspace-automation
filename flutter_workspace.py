@@ -117,7 +117,8 @@ def main():
     #
     if args.create_aot:
         if args.app_path == '':
-            sys.exit("Must specify value for --app-path")
+            print("Must specify value for --app-path")
+            sys.exit(1)
 
         activate_python_venv()
         set_gen_snapshot('release', get_flutter_arch())
@@ -1042,7 +1043,8 @@ def add_flutter_custom_device_ex(custom_device):
     """ Add a single Flutter custom device from JSON string """
 
     if not validate_custom_device_config(custom_device):
-        sys.exit("Invalid Custom Device configuration")
+        print("Invalid Custom Device configuration")
+        sys.exit(1)
 
     device_config = fixup_custom_device(custom_device)
     # print("Adding custom-device: %s" % device_config)
@@ -1220,7 +1222,8 @@ def get_flutter_engine_version(flutter_sdk_path):
         flutter_sdk_path, 'bin/internal/engine.version')
 
     if not os.path.exists(engine_version_file):
-        sys.exit("Missing Flutter SDK")
+        print("Missing Flutter SDK")
+        sys.exit(1)
 
     with open(engine_version_file, encoding="utf-8") as f:
         engine_version = f.read()
@@ -1312,7 +1315,8 @@ def get_host_type() -> str:
 def get_flutter_engine_commit():
     workspace = os.environ.get('FLUTTER_WORKSPACE')
     if not workspace:
-        sys.exit("FLUTTER_WORKSPACE not set")
+        print("FLUTTER_WORKSPACE not set")
+        sys.exit(1)
 
     flutter_sdk_path = os.path.join(workspace, 'flutter')
 
@@ -1340,7 +1344,8 @@ def set_gen_snapshot(runtime, arch):
         get_flutter_engine_artifacts(True, runtime, arch)
 
     if not os.path.exists(gen_snapshot):
-        sys.exit('engine-sdk error')
+        print('engine-sdk error')
+        sys.exit(1)
 
     os.environ['GEN_SNAPSHOT'] = gen_snapshot
 
@@ -1513,7 +1518,8 @@ def handle_netrc_obj(obj):
         return False
 
     if not check_netrc_for_str(obj.get('machine')):
-        sys.exit("Fix ~/.netrc to continue")
+        print("Fix ~/.netrc to continue")
+        sys.exit(1)
     else:
         print('~/.netrc is good')
         return True
@@ -1749,7 +1755,8 @@ def handle_qemu_obj(qemu: dict, cwd: os.path, platform_id: str, flutter_runtime:
             if is_linux_host_kvm_capable():
                 extra = '-enable-kvm '
         if host_type not in qemu['extra']:
-            sys.exit("Extra parameters not specified for this host type")
+            print("Extra parameters not specified for this host type")
+            sys.exit(1)
         extra = extra + qemu['extra'][host_type]
         os.environ['QEMU_EXTRA'] = os.path.expandvars(extra)
 
@@ -2174,7 +2181,8 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
 
         # Failsafe
         if not prefer_llvm:
-            sys.exit("PREFER_LLVM is not set and no prefer_llvm key present in toolchain config")
+            print("PREFER_LLVM is not set and no prefer_llvm key present in toolchain config")
+            sys.exit(1)
 
     platform_['type'] = 'dependency'
     do_continue = setup_platform(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder)
@@ -2347,8 +2355,8 @@ def get_github_workflow_runs(token, owner, repo, workflow):
         return data.get('workflow_runs')
 
     if 'message' in data:
-        sys.exit("[get_github_workflow_runs] GitHub Message: %s" %
-                 data.get('message'))
+        print("[get_github_workflow_runs] GitHub Message: %s" % data.get('message'))
+        sys.exit(1)
 
     return {}
 
@@ -2365,8 +2373,8 @@ def get_github_workflow_artifacts(token, owner, repo, id_):
         return data.get('artifacts')
 
     if 'message' in data:
-        sys.exit("[get_github_workflow_artifacts] GitHub Message: %s" %
-                 data.get('message'))
+        print("[get_github_workflow_artifacts] GitHub Message: %s" % data.get('message'))
+        sys.exit(1)
 
     return {}
 
@@ -2552,8 +2560,8 @@ def install_minimum_runtime_deps():
 
         brew_path = get_mac_brew_path()
         if brew_path == '':
-            sys.exit(
-                "brew is required for this script.  Please install.  https://brew.sh")
+            print("brew is required for this script.  Please install.  https://brew.sh")
+            sys.exit(1)
 
         os.environ['NONINTERACTIVE'] = '1'
         os.environ['HOMEBREW_NO_AUTO_UPDATE'] = '1'
