@@ -63,6 +63,27 @@ from common import validate_sudo_user_timestamp
 from create_aot import create_platform_aot
 from create_aot import get_flutter_sdk_version
 
+# Map of _BUILD_TYPE values to CMAKE_BUILD_TYPE
+build_types_cmake = {
+    'debug': 'Debug',
+    'profile': 'RelWithDebInfo',
+    'release': 'Release'
+}
+
+# Map of _BUILD_TYPE values to MESON_BUILD_TYPE
+build_types_meson = {
+    'debug': 'debug',
+    'profile': 'releasewithdebuginfo',
+    'release': 'release'
+}
+
+# map of config names to build types
+# (if not specified, defaults to globals' _BUILD_TYPE)
+build_types = {}
+
+# `configs/globals.json` values
+globals_ = {}
+
 
 def handle_exception(exc_type, exc_value, exc_traceback):
     if issubclass(exc_type, KeyboardInterrupt):
@@ -71,6 +92,8 @@ def handle_exception(exc_type, exc_value, exc_traceback):
 
 
 def main():
+    global globals_
+    
     check_python_version()
 
     parser = argparse.ArgumentParser()
@@ -104,6 +127,10 @@ def main():
     parser.add_argument('--app-path', default='', type=str, help='Specify Application path')
     parser.add_argument('--copy-dconf-user', default=False, action='store_true',
                         help='copy $HOME/.confi/dconf/user to $FLUTTER_WORKSPACE')
+    parser.add_argument('--build-type', default='', type=str,
+                        help='Specify build types.  Format: <platform_id>:<build_type>,<platform_id>:<build_type>.  '
+                             'Valid build types are debug, profile, release.  '
+                             'If not specified, defaults to globals\' _BUILD_TYPE')
 
     args = parser.parse_args()
 
@@ -116,6 +143,10 @@ def main():
     # Generate Release/Profile AOT
     #
     if args.create_aot:
+        if args.build_type != '':
+            # if create_aot is specified then build_type will be ignored
+            print("WARNING: --build-type is ignored when --create-aot is specified")
+
         if args.app_path == '':
             print("Must specify value for --app-path")
             sys.exit(1)
@@ -124,6 +155,23 @@ def main():
         set_gen_snapshot('release', get_flutter_arch())
         create_platform_aot(args.app_path, get_flutter_sdk_version())
         return
+
+    #
+    # Specify build types
+    #
+    if not args.create_aot and args.build_type != '':
+        # format: --build-type <platform_id>:<build_type>,<platform_id>:<build_type>
+        build_type_list = args.build_type.split(',')
+
+        for build_type in build_type_list:
+            platform_id, build_type = build_type.split(':')
+            build_types[platform_id] = build_type
+            if build_type not in build_types_cmake:
+                # print warning and ignore
+                print(f"WARNING: Invalid build type '{build_type}' specified for platform '{platform_id}'")
+                del build_types[platform_id]
+
+        print(f"Build types: {build_types}")
 
     #
     # Copy dconf user to workspace
@@ -255,12 +303,9 @@ def main():
     # Workspace Configuration
     #
     config = get_workspace_config(args.config)
+    globals_ = config.get('globals').copy()
+    handle_build_type(os.environ, globals_.get('build_type'))
 
-    globals_ = config.get('globals')
-    if 'CMAKE_BUILD_TYPE' in globals_:
-        os.environ['CMAKE_BUILD_TYPE'] = globals_.get('CMAKE_BUILD_TYPE', 'MinSizeRel')
-    if 'MESON_BUILD_TYPE' in globals_:
-        os.environ['MESON_BUILD_TYPE'] = globals_.get('MESON_BUILD_TYPE', 'minsize')
     # allow max threads override from globals.json
     if '_MAX_THREADS' in globals_:
         os.environ['_MAX_THREADS'] = globals_.get('_MAX_THREADS', str(max_threads))
@@ -1909,7 +1954,7 @@ def handle_dotenv(dotenv_files):
             print(f'Loaded: {dotenv_path}')
 
 
-def handle_env(env_variables, local_env):
+def handle_env(env_variables, local_env, build_type=None):
     if not env_variables:
         return
 
@@ -1922,6 +1967,8 @@ def handle_env(env_variables, local_env):
                 local_env['PATH'] = local_env['PATH'] + os.pathsep + os.path.normpath(os.path.expandvars(v))
                 continue
 
+            handle_build_type(local_env, build_type)
+
             local_env[k] = os.path.normpath(os.path.expandvars(v))
         else:
             if 'PATH_PREPEND' in k:
@@ -1931,9 +1978,22 @@ def handle_env(env_variables, local_env):
                 os.environ['PATH'] = os.environ['PATH'] + os.pathsep + os.path.normpath(os.path.expandvars(v))
                 continue
 
+            handle_build_type(os.environ, build_type)
+
         os.environ[k] = os.path.normpath(os.path.expandvars(v)) 
         # print(f'global: {k} = {os.environ[k]}')
 
+
+def handle_build_type(env, build_type=None):
+    # set default from globals
+    if build_type is None:
+        build_type = globals_.get('build_type')
+
+
+    env['_BUILD_TYPE'] = build_type
+    env['CMAKE_BUILD_TYPE'] = build_types_cmake[build_type]
+    env['MESON_BUILD_TYPE'] = build_types_meson[build_type]
+    
 
 def get_platform_working_dir(platform_id):
     from pathlib import Path
@@ -2023,6 +2083,7 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, ena
 
     if 'type' in platform_:
         if platform_['type'] == 'toolchain':
+            print("WARNING! Calling setup_platform on a config of type 'toolchain'")
             return
 
     # setup environmental variable to use in later occuring CMake configs
@@ -2041,11 +2102,13 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, ena
         # skip if distro not supported
         if not is_host_type_supported(platform_['supported_host_types']):
             value = "OFF"
+            print(f'WARNING: {platform_id} not supported on this host type: {get_host_type()}')
 
         # skip if architecture not supported
         host_machine_arch = get_host_machine_arch()
         if host_machine_arch not in platform_['supported_archs']:
             value = "OFF"
+            print(f'WARNING: {platform_id} not supported on this machine architecture: {host_machine_arch}')
 
         key = f'FLUTTER_WORKSPACE_{id_upper}_LOAD'
         print(f'{key}={value}')
@@ -2080,7 +2143,9 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, ena
     validate_sudo_user()
 
     handle_dotenv(platform_.get('dotenv'))
-    handle_env(platform_.get('env'), None)
+    handle_env(platform_.get('env'), None, build_types.get(platform_['id'], None))
+
+    print(f"Build type: {os.environ.get('_BUILD_TYPE', '<unset>')}")
 
     create_platform_config_file(runtime.get('config'), cwd)
     create_gclient_config_file(runtime.get('gclient_config'))

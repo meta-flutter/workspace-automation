@@ -2,6 +2,5 @@
     "flutter-version": "3.35.5",
     "github_token": "",
     "cookie_file": "",
-    "CMAKE_BUILD_TYPE": "Release",
-    "MESON_BUILD_TYPE": "release"
+    "build_type": "release"
 }
