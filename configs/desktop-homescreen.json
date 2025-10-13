@@ -155,7 +155,7 @@
         "fedora": {
           "shell": true,
           "cmds": [
-            "sudo dnf update -yq",
+            "sudo dnf update -y",
             "sudo dnf -yq install SDL2-devel libsecret-devel zenity",
             "sudo dnf -yq install libunwind-devel gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel gstreamer1-plugins-bad-free-extras gstreamer1-plugins-base-tools gstreamer1-plugins-good gstreamer1-plugins-good-extras gstreamer1-plugins-ugly-free",
             "sudo dnf -yq install flatpak",

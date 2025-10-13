@@ -81,12 +81,17 @@
           "shell": true,
           "cmds": [
             "sudo dnf -y update",
-            "sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libxatracker",
+            "if [ $(rpm -E %fedora) -le 42 ]; then sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libxatracker; fi",
+            "if [ $(rpm -E %fedora) -ge 43 ]; then sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-compat-libxatracker; fi",
             "export VV=${PREFER_LLVM}; CURRENT_LLVM=$(dnf -y info llvm 2>/dev/null | awk '/^Version/ {print $3;exit}' | cut -d. -f1); if [[ $CURRENT_LLVM == $PREFER_LLVM ]]; then export VV=''; fi; echo $VV > .llvm-version",
             "echo \"Installing LLVM version $(cat .llvm-version)\"",
             "VV=$(cat .llvm-version); if [[ -n $VV ]]; then sudo dnf copr enable @fedora-llvm-team/llvm${PREFER_LLVM} -y; fi",
-            "VV=$(cat .llvm-version); sudo dnf -y install llvm${VV}-devel clang${VV} clang${VV}-tools-extra lldb lld${VV} libcxx-devel libcxx-static libcxxabi-devel libcxxabi-static",
+            "VV=$(cat .llvm-version); sudo dnf -y install llvm${VV}-devel clang${VV} clang${VV}-tools-extra lldb lld${VV}",
+            "if [ $(rpm -E %fedora) -le 42 ] || [ $PREFER_LLVM -ge 19 ]; then VV=$(cat .llvm-version); sudo dnf -y install libcxx-devel libcxx-static libcxxabi-devel libcxxabi-static; fi",
             "VV=$(cat .llvm-version); if [[ -n $VV ]]; then sudo dnf copr remove @fedora-llvm-team/llvm${PREFER_LLVM} -y; fi",
+            "if [ $(rpm -E %fedora) -ge 43 ] && [ $PREFER_LLVM -lt 19 ]; then sudo dnf copr enable @fedora-llvm-team/llvm20 -y; fi",
+            "if [ $(rpm -E %fedora) -ge 43 ] && [ $PREFER_LLVM -lt 19 ]; then VV=$(cat .llvm-version); sudo dnf -y install libcxx-devel-20.* libcxx-static-20.* libcxxabi-devel-20.* libcxxabi-static-20.*; fi",
+            "if [ $(rpm -E %fedora) -ge 43 ] && [ $PREFER_LLVM -lt 19 ]; then sudo dnf copr remove @fedora-llvm-team/llvm20 -y; sudo dnf config-manager setopt exclude=libcxx,libcxx-devel,libcxx-static,libcxxabi,libcxxabi-devel,libcxxabi-static; fi",
             "rm .llvm-version"
           ]
         }
