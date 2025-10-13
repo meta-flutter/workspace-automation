@@ -1577,12 +1577,12 @@ def handle_commands_obj(obj, cwd):
         if shell_:
             # If shell is True, we need to join the command as a single string
             print(f'cmd: {cmd}')
-            subprocess.check_call(cmd, cwd=cwd, env=local_env, shell=shell_)
+            subprocess.check_call(cmd, cwd=cwd, env=local_env, shell=shell_, stderr=subprocess.STDOUT, universal_newlines=True)
         else:
             # If shell is False, we pass the command as a list
             cmd_arr = shlex.split(cmd, posix=posix)
             print(f'cmd: {cmd_arr}')
-            subprocess.check_call(cmd_arr, cwd=cwd, env=local_env, shell=shell_)
+            subprocess.check_call(cmd_arr, cwd=cwd, env=local_env, shell=shell_, stderr=subprocess.STDOUT, universal_newlines=True)
 
     os.environ.clear()
     os.environ.update(orig_env)
@@ -2260,8 +2260,8 @@ def get_github_artifact_list_json(token, url):
         return data.get('artifacts')
 
     if 'message' in data:
-        sys.exit("[get_github_artifact_list_json] GitHub Message: %s" %
-                 data.get('message'))
+        print("[get_github_artifact_list_json] GitHub Message: %s" % data.get('message'))
+        sys.exit(1)
 
     return {}
 
