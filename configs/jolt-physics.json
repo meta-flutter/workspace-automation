@@ -35,7 +35,7 @@
                 "cmds": [
                     "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
                     "cmake -G Ninja -S ${JOLT_SRC_DIR} -B ${JOLT_BUILD_DIR} ${JOLT_CMAKE_ARGS}",
-                    "cmake --build . --config Release --target install --parallel"
+                    "cmake --build . --config Release --target install"
                 ]
             }
         ],
@@ -43,7 +43,7 @@
             {
                 "cwd": "${JOLT_BUILD_DIR}",
                 "cmds": [
-                    "cmake --build . --config Release --target clean --parallel"
+                    "cmake --build . --config Release --target clean"
                 ]
             }
         ]

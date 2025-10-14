@@ -109,6 +109,9 @@ def main():
 
     print(f'Arguments {args}')
 
+    # Check if running in CI
+    is_ci = os.environ.get('CI') == 'true'
+
     #
     # Generate Release/Profile AOT
     #
@@ -185,6 +188,69 @@ def main():
         return
 
     #
+    # Limit compiler threads
+    #
+
+    # (non-CI only)
+    # decide a number of threads to use for compilation
+    # assuming each core needs at least 1GB of RAM
+    # meaning max_threads = min(num_cores, floor(total_ram_in_GB))
+    sys_core_count = os.cpu_count()
+    
+    #if linux
+    if sys.platform.startswith('linux'):
+        sys_ram_gb = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 3) # in GB
+    # if windows
+    elif sys.platform.startswith('win'):
+        # execute `systeminfo | findstr /C:"Total Physical Memory"` 
+        cmd = ['systeminfo']
+        output = subprocess.check_output(cmd, shell=True, text=True)
+        for line in output.splitlines():
+            if "Total Physical Memory" in line:
+                parts = line.split(":")
+                if len(parts) == 2:
+                    mem_str = parts[1].strip()
+                    # remove commas and "MB" or "GB"
+                    mem_str = mem_str.replace(",", "").replace("MB", "").replace("GB", "").strip()
+                    try:
+                        mem_value = float(mem_str)
+                        if "MB" in parts[1]:
+                            sys_ram_gb = mem_value / 1024  # convert MB to GB
+                        else:
+                            sys_ram_gb = mem_value  # already in GB
+                    except ValueError:
+                        sys_ram_gb = 0
+                break
+    # if macos
+    elif sys.platform.startswith('darwin'):
+        cmd = ['sysctl', 'hw.memsize']
+        output = subprocess.check_output(cmd, text=True)
+        parts = output.split(":")
+        if len(parts) == 2:
+            try:
+                mem_bytes = int(parts[1].strip())
+                sys_ram_gb = mem_bytes / (1024. ** 3)  # convert bytes to GB
+            except ValueError:
+                sys_ram_gb = 0
+    else:
+        sys_ram_gb = 0
+
+    sys_ram_gb -= 1  # leave 1GB for system
+
+    # if CI=false or not set
+    if sys_core_count and sys_ram_gb and not is_ci:
+        max_threads = int(min(sys_core_count, sys_ram_gb))
+    elif sys_core_count:
+        max_threads = int(sys_core_count)
+    else:
+        max_threads = 1
+
+    max_threads = max(1, max_threads)  # ensure at least 1 thread
+
+    os.environ['_MAX_THREADS'] = str(max_threads)
+    print("Using %s threads for compilation" % os.environ.get('_MAX_THREADS'))
+
+    #
     # Workspace Configuration
     #
     config = get_workspace_config(args.config)
@@ -194,6 +260,9 @@ def main():
         os.environ['CMAKE_BUILD_TYPE'] = globals_.get('CMAKE_BUILD_TYPE', 'MinSizeRel')
     if 'MESON_BUILD_TYPE' in globals_:
         os.environ['MESON_BUILD_TYPE'] = globals_.get('MESON_BUILD_TYPE', 'minsize')
+    # allow max threads override from globals.json
+    if '_MAX_THREADS' in globals_:
+        os.environ['_MAX_THREADS'] = globals_.get('_MAX_THREADS', str(max_threads))
 
     platforms = config.get('platforms')
     for platform_ in platforms:

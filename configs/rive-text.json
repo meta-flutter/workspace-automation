@@ -40,7 +40,7 @@
                 "cmds": [
                     "bash -c \"rm -rf * | true\"",
                     "cmake -G Ninja -S ${RIVE_TEXT_SRC_DIR} -B ${RIVE_TEXT_BUILD_DIR} ${RIVE_TEXT_CMAKE_ARGS}",
-                    "cmake --build ${RIVE_TEXT_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target rive_text --parallel"
+                    "cmake --build ${RIVE_TEXT_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target rive_text"
                 ]
             }
         ],
@@ -48,7 +48,7 @@
             {
                 "cwd": "${RIVE_TEXT_BUILD_DIR}",
                 "cmds": [
-                    "cmake --build ${RIVE_TEXT_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target clean --parallel"
+                    "cmake --build ${RIVE_TEXT_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target clean"
                 ]
             }
         ]

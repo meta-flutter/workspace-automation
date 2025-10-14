@@ -64,7 +64,7 @@
                 "cmds": [
                     "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
                     "cmake -GNinja -S ${MAPLIBRE_SRC_DIR} -B ${MAPLIBRE_BUILD_DIR} ${MAPLIBRE_CMAKE_ARGS}",
-                    "cmake --build . --config Release --target install --parallel"                    
+                    "cmake --build . --config Release --target install"                    
                 ]
             }
         ],

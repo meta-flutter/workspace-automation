@@ -16,16 +16,19 @@
     "type": "toolchain",
     "toolchain": "common",
     "env": {
-        "VERSION": "3.31"
+        "VERSION": "3.31",
+        "CMAKE_BUILD_PARALLEL_LEVEL": "${_MAX_THREADS}"
     },
     "append_to_runtime_env": {
         "common": [
             "# toolchain-common-cmake",
-            "export PATH=$FLUTTER_WORKSPACE/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH"
+            "export PATH=$FLUTTER_WORKSPACE/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
+            "export CMAKE_BUILD_PARALLEL_LEVEL=${_MAX_THREADS}"
         ],
         "windows": [
             "# toolchain-common-cmake",
-            "$env:PATH = \"$env:FLUTTER_WORKSPACE\\.config\\flutter_workspace\\toolchain-common-cmake\\bin;$env:PATH\""
+            "$env:PATH = \"$env:FLUTTER_WORKSPACE\\.config\\flutter_workspace\\toolchain-common-cmake\\bin;$env:PATH\"",
+            "$env:CMAKE_BUILD_PARALLEL_LEVEL = \"$env:_MAX_THREADS\""
         ]
     },
     "runtime": {
