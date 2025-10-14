@@ -63,6 +63,27 @@ from common import validate_sudo_user_timestamp
 from create_aot import create_platform_aot
 from create_aot import get_flutter_sdk_version
 
+# Map of _BUILD_TYPE values to CMAKE_BUILD_TYPE
+build_types_cmake = {
+    'debug': 'Debug',
+    'profile': 'RelWithDebInfo',
+    'release': 'Release'
+}
+
+# Map of _BUILD_TYPE values to MESON_BUILD_TYPE
+build_types_meson = {
+    'debug': 'debug',
+    'profile': 'releasewithdebuginfo',
+    'release': 'release'
+}
+
+# map of config names to build types
+# (if not specified, defaults to globals' _BUILD_TYPE)
+build_types = {}
+
+# `configs/globals.json` values
+globals_ = {}
+
 
 def handle_exception(exc_type, exc_value, exc_traceback):
     if issubclass(exc_type, KeyboardInterrupt):
@@ -71,6 +92,8 @@ def handle_exception(exc_type, exc_value, exc_traceback):
 
 
 def main():
+    global globals_
+    
     check_python_version()
 
     parser = argparse.ArgumentParser()
@@ -104,6 +127,10 @@ def main():
     parser.add_argument('--app-path', default='', type=str, help='Specify Application path')
     parser.add_argument('--copy-dconf-user', default=False, action='store_true',
                         help='copy $HOME/.confi/dconf/user to $FLUTTER_WORKSPACE')
+    parser.add_argument('--build-type', default='', type=str,
+                        help='Specify build types.  Format: <platform_id>:<build_type>,<platform_id>:<build_type>.  '
+                             'Valid build types are debug, profile, release.  '
+                             'If not specified, defaults to globals\' _BUILD_TYPE')
 
     args = parser.parse_args()
 
@@ -116,13 +143,35 @@ def main():
     # Generate Release/Profile AOT
     #
     if args.create_aot:
+        if args.build_type != '':
+            # if create_aot is specified then build_type will be ignored
+            print("WARNING: --build-type is ignored when --create-aot is specified")
+
         if args.app_path == '':
-            sys.exit("Must specify value for --app-path")
+            print("Must specify value for --app-path")
+            sys.exit(1)
 
         activate_python_venv()
         set_gen_snapshot('release', get_flutter_arch())
         create_platform_aot(args.app_path, get_flutter_sdk_version())
         return
+
+    #
+    # Specify build types
+    #
+    if not args.create_aot and args.build_type != '':
+        # format: --build-type <platform_id>:<build_type>,<platform_id>:<build_type>
+        build_type_list = args.build_type.split(',')
+
+        for build_type in build_type_list:
+            platform_id, build_type = build_type.split(':')
+            build_types[platform_id] = build_type
+            if build_type not in build_types_cmake:
+                # print warning and ignore
+                print(f"WARNING: Invalid build type '{build_type}' specified for platform '{platform_id}'")
+                del build_types[platform_id]
+
+        print(f"Build types: {build_types}")
 
     #
     # Copy dconf user to workspace
@@ -254,12 +303,9 @@ def main():
     # Workspace Configuration
     #
     config = get_workspace_config(args.config)
+    globals_ = config.get('globals').copy()
+    handle_build_type(os.environ, globals_.get('build_type'))
 
-    globals_ = config.get('globals')
-    if 'CMAKE_BUILD_TYPE' in globals_:
-        os.environ['CMAKE_BUILD_TYPE'] = globals_.get('CMAKE_BUILD_TYPE', 'MinSizeRel')
-    if 'MESON_BUILD_TYPE' in globals_:
-        os.environ['MESON_BUILD_TYPE'] = globals_.get('MESON_BUILD_TYPE', 'minsize')
     # allow max threads override from globals.json
     if '_MAX_THREADS' in globals_:
         os.environ['_MAX_THREADS'] = globals_.get('_MAX_THREADS', str(max_threads))
@@ -1042,7 +1088,8 @@ def add_flutter_custom_device_ex(custom_device):
     """ Add a single Flutter custom device from JSON string """
 
     if not validate_custom_device_config(custom_device):
-        sys.exit("Invalid Custom Device configuration")
+        print("Invalid Custom Device configuration")
+        sys.exit(1)
 
     device_config = fixup_custom_device(custom_device)
     # print("Adding custom-device: %s" % device_config)
@@ -1220,7 +1267,8 @@ def get_flutter_engine_version(flutter_sdk_path):
         flutter_sdk_path, 'bin/internal/engine.version')
 
     if not os.path.exists(engine_version_file):
-        sys.exit("Missing Flutter SDK")
+        print("Missing Flutter SDK")
+        sys.exit(1)
 
     with open(engine_version_file, encoding="utf-8") as f:
         engine_version = f.read()
@@ -1312,7 +1360,8 @@ def get_host_type() -> str:
 def get_flutter_engine_commit():
     workspace = os.environ.get('FLUTTER_WORKSPACE')
     if not workspace:
-        sys.exit("FLUTTER_WORKSPACE not set")
+        print("FLUTTER_WORKSPACE not set")
+        sys.exit(1)
 
     flutter_sdk_path = os.path.join(workspace, 'flutter')
 
@@ -1340,7 +1389,8 @@ def set_gen_snapshot(runtime, arch):
         get_flutter_engine_artifacts(True, runtime, arch)
 
     if not os.path.exists(gen_snapshot):
-        sys.exit('engine-sdk error')
+        print('engine-sdk error')
+        sys.exit(1)
 
     os.environ['GEN_SNAPSHOT'] = gen_snapshot
 
@@ -1513,7 +1563,8 @@ def handle_netrc_obj(obj):
         return False
 
     if not check_netrc_for_str(obj.get('machine')):
-        sys.exit("Fix ~/.netrc to continue")
+        print("Fix ~/.netrc to continue")
+        sys.exit(1)
     else:
         print('~/.netrc is good')
         return True
@@ -1646,12 +1697,12 @@ def handle_commands_obj(obj, cwd):
         if shell_:
             # If shell is True, we need to join the command as a single string
             print(f'cmd: {cmd}')
-            subprocess.check_call(cmd, cwd=cwd, env=local_env, shell=shell_)
+            subprocess.check_call(cmd, cwd=cwd, env=local_env, shell=shell_, stderr=subprocess.STDOUT, universal_newlines=True)
         else:
             # If shell is False, we pass the command as a list
             cmd_arr = shlex.split(cmd, posix=posix)
             print(f'cmd: {cmd_arr}')
-            subprocess.check_call(cmd_arr, cwd=cwd, env=local_env, shell=shell_)
+            subprocess.check_call(cmd_arr, cwd=cwd, env=local_env, shell=shell_, stderr=subprocess.STDOUT, universal_newlines=True)
 
     os.environ.clear()
     os.environ.update(orig_env)
@@ -1749,7 +1800,8 @@ def handle_qemu_obj(qemu: dict, cwd: os.path, platform_id: str, flutter_runtime:
             if is_linux_host_kvm_capable():
                 extra = '-enable-kvm '
         if host_type not in qemu['extra']:
-            sys.exit("Extra parameters not specified for this host type")
+            print("Extra parameters not specified for this host type")
+            sys.exit(1)
         extra = extra + qemu['extra'][host_type]
         os.environ['QEMU_EXTRA'] = os.path.expandvars(extra)
 
@@ -1902,7 +1954,7 @@ def handle_dotenv(dotenv_files):
             print(f'Loaded: {dotenv_path}')
 
 
-def handle_env(env_variables, local_env):
+def handle_env(env_variables, local_env, build_type=None):
     if not env_variables:
         return
 
@@ -1915,6 +1967,8 @@ def handle_env(env_variables, local_env):
                 local_env['PATH'] = local_env['PATH'] + os.pathsep + os.path.normpath(os.path.expandvars(v))
                 continue
 
+            handle_build_type(local_env, build_type)
+
             local_env[k] = os.path.normpath(os.path.expandvars(v))
         else:
             if 'PATH_PREPEND' in k:
@@ -1924,9 +1978,22 @@ def handle_env(env_variables, local_env):
                 os.environ['PATH'] = os.environ['PATH'] + os.pathsep + os.path.normpath(os.path.expandvars(v))
                 continue
 
+            handle_build_type(os.environ, build_type)
+
         os.environ[k] = os.path.normpath(os.path.expandvars(v)) 
         # print(f'global: {k} = {os.environ[k]}')
 
+
+def handle_build_type(env, build_type=None):
+    # set default from globals
+    if build_type is None:
+        build_type = globals_.get('build_type')
+
+
+    env['_BUILD_TYPE'] = build_type
+    env['CMAKE_BUILD_TYPE'] = build_types_cmake[build_type]
+    env['MESON_BUILD_TYPE'] = build_types_meson[build_type]
+    
 
 def get_platform_working_dir(platform_id):
     from pathlib import Path
@@ -2016,6 +2083,7 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, ena
 
     if 'type' in platform_:
         if platform_['type'] == 'toolchain':
+            print("WARNING! Calling setup_platform on a config of type 'toolchain'")
             return
 
     # setup environmental variable to use in later occuring CMake configs
@@ -2034,11 +2102,13 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, ena
         # skip if distro not supported
         if not is_host_type_supported(platform_['supported_host_types']):
             value = "OFF"
+            print(f'WARNING: {platform_id} not supported on this host type: {get_host_type()}')
 
         # skip if architecture not supported
         host_machine_arch = get_host_machine_arch()
         if host_machine_arch not in platform_['supported_archs']:
             value = "OFF"
+            print(f'WARNING: {platform_id} not supported on this machine architecture: {host_machine_arch}')
 
         key = f'FLUTTER_WORKSPACE_{id_upper}_LOAD'
         print(f'{key}={value}')
@@ -2073,7 +2143,9 @@ def setup_platform(platform_, git_token, cookie_file, plex, enable, disable, ena
     validate_sudo_user()
 
     handle_dotenv(platform_.get('dotenv'))
-    handle_env(platform_.get('env'), None)
+    handle_env(platform_.get('env'), None, build_types.get(platform_['id'], None))
+
+    print(f"Build type: {os.environ.get('_BUILD_TYPE', '<unset>')}")
 
     create_platform_config_file(runtime.get('config'), cwd)
     create_gclient_config_file(runtime.get('gclient_config'))
@@ -2174,7 +2246,8 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
 
         # Failsafe
         if not prefer_llvm:
-            sys.exit("PREFER_LLVM is not set and no prefer_llvm key present in toolchain config")
+            print("PREFER_LLVM is not set and no prefer_llvm key present in toolchain config")
+            sys.exit(1)
 
     platform_['type'] = 'dependency'
     do_continue = setup_platform(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin, app_folder)
@@ -2329,8 +2402,8 @@ def get_github_artifact_list_json(token, url):
         return data.get('artifacts')
 
     if 'message' in data:
-        sys.exit("[get_github_artifact_list_json] GitHub Message: %s" %
-                 data.get('message'))
+        print("[get_github_artifact_list_json] GitHub Message: %s" % data.get('message'))
+        sys.exit(1)
 
     return {}
 
@@ -2347,8 +2420,8 @@ def get_github_workflow_runs(token, owner, repo, workflow):
         return data.get('workflow_runs')
 
     if 'message' in data:
-        sys.exit("[get_github_workflow_runs] GitHub Message: %s" %
-                 data.get('message'))
+        print("[get_github_workflow_runs] GitHub Message: %s" % data.get('message'))
+        sys.exit(1)
 
     return {}
 
@@ -2365,8 +2438,8 @@ def get_github_workflow_artifacts(token, owner, repo, id_):
         return data.get('artifacts')
 
     if 'message' in data:
-        sys.exit("[get_github_workflow_artifacts] GitHub Message: %s" %
-                 data.get('message'))
+        print("[get_github_workflow_artifacts] GitHub Message: %s" % data.get('message'))
+        sys.exit(1)
 
     return {}
 
@@ -2552,8 +2625,8 @@ def install_minimum_runtime_deps():
 
         brew_path = get_mac_brew_path()
         if brew_path == '':
-            sys.exit(
-                "brew is required for this script.  Please install.  https://brew.sh")
+            print("brew is required for this script.  Please install.  https://brew.sh")
+            sys.exit(1)
 
         os.environ['NONINTERACTIVE'] = '1'
         os.environ['HOMEBREW_NO_AUTO_UPDATE'] = '1'

@@ -17,9 +17,9 @@
         "LD_LIBRARY_PATH": "${LLVM_LIBDIR}:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches",
         "JOLT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/JoltPhysics/Build",
-        "JOLT_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/JoltPhysics/cmake-build-release",
-        "JOLT_STAGING_DIR": "${JOLT_BUILD_DIR}/staging/release",
-        "JOLT_CMAKE_ARGS": "-DCMAKE_STAGING_PREFIX=${JOLT_STAGING_DIR} -DCMAKE_BUILD_TYPE=Release -DTARGET_UNIT_TESTS=OFF -DTARGET_HELLO_WORLD=ON -DTARGET_PERFORMANCE_TEST=ON -DTARGET_SAMPLES=ON -DTARGET_VIEWER=OFF"
+        "JOLT_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/JoltPhysics/cmake-build/${_BUILD_TYPE}",
+        "JOLT_STAGING_DIR": "${JOLT_BUILD_DIR}/staging",
+        "JOLT_CMAKE_ARGS": "-DCMAKE_STAGING_PREFIX=${JOLT_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DTARGET_UNIT_TESTS=OFF -DTARGET_HELLO_WORLD=ON -DTARGET_PERFORMANCE_TEST=ON -DTARGET_SAMPLES=ON -DTARGET_VIEWER=OFF"
     },
     "src": [
         {
@@ -35,7 +35,7 @@
                 "cmds": [
                     "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
                     "cmake -G Ninja -S ${JOLT_SRC_DIR} -B ${JOLT_BUILD_DIR} ${JOLT_CMAKE_ARGS}",
-                    "cmake --build . --config Release --target install"
+                    "cmake --build . --config ${CMAKE_BUILD_TYPE} --target install"
                 ]
             }
         ],
@@ -43,7 +43,7 @@
             {
                 "cwd": "${JOLT_BUILD_DIR}",
                 "cmds": [
-                    "cmake --build . --config Release --target clean"
+                    "cmake --build . --config ${CMAKE_BUILD_TYPE} --target clean"
                 ]
             }
         ]
