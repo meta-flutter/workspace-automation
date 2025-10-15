@@ -249,6 +249,7 @@ def main():
     app_folder = os.path.join(workspace, 'app')
     if args.remote:
         # comma-separated list of git repos
+        print(f"Loading Remote Platforms from: {args.remote}")
         remote_repos = args.remote.split(',')
         for repo in remote_repos:
             load_remote_platform(repo, app_folder)
@@ -743,7 +744,7 @@ def validate_custom_device_config(config):
     return True
 
 
-def get_repo(base_folder, uri, ref):
+def get_repo(base_folder, uri, ref, branch=None):
     """ Clone Git Repo """
     if not uri:
         print("repo entry needs a 'uri' key.  Skipping")
@@ -770,8 +771,14 @@ def get_repo(base_folder, uri, ref):
         subprocess.check_call(cmd, cwd=git_folder)
 
         # print_banner(f'git pull: {repo_name}')
-        cmd = ['git', 'pull', 'origin', branch]
-        subprocess.check_call(cmd, cwd=git_folder)
+        cmd = ['git', 'pull', '--ff-only']
+        if branch:
+            print(f'Using branch: {branch}')
+            cmd.extend(['origin', branch])
+        try:
+            subprocess.check_call(cmd, cwd=git_folder)
+        except subprocess.CalledProcessError as e:
+            print(f"WARNING: git pull failed, continuing anyway")
     else:
         # print_banner(f'Checking if folder exists: {git_folder}')
         if os.path.exists(git_folder):
@@ -780,16 +787,21 @@ def get_repo(base_folder, uri, ref):
             except subprocess.CalledProcessError:
                 pass
 
-        # print_banner(f'git clone {uri} -b {branch} {repo_name}')
         cmd = ['git', 'clone', uri, repo_name]
+        if branch:
+            print(f'Using branch: {branch}')
+            cmd.extend(['-b', branch])
         subprocess.check_call(cmd, cwd=base_folder)
 
     if ref:
-        # print_banner(f'git checkout {ref}')
+        print(f'git checkout {ref}')
         cmd = ['git', 'checkout', ref]
         subprocess.check_call(cmd, cwd=git_folder)
-    else:
-
+    elif branch:
+        print(f'git checkout {branch}')
+        cmd = ['git', 'checkout', branch]
+        subprocess.check_call(cmd, cwd=git_folder)
+        
     # get lfs
     git_lfs_file = os.path.join(base_folder, repo_name, '.gitattributes')
     # print_banner(f'Checking if folder exists: {git_lfs_file}')
@@ -822,16 +834,27 @@ def load_remote_platform(remote, app_folder):
 
     print_banner(f'Loading Remote Platforms from: {remote}')
 
+    remote_parts = remote.split('#')
+    print(f'remote_parts: {remote_parts}')
     # get repo folder name
-    repo_name = remote.rsplit('/', 1)[-1]
-    repo_name = repo_name.split(".")
-    repo_name = repo_name[0]
+    repo_name = remote_parts[0].rsplit('/', 1)
+    print(f'repo_name parts: {repo_name}')
+    repo_name = repo_name[-1]
+    print(f'repo_name before split: {repo_name}')
+    repo_name = repo_name.split(".")[0]
+    print(f'repo_name: {repo_name}')
     # get git ref from remote_uri
-    git_ref = remote.rsplit('#', 1)[-1]
+    git_uri = remote_parts[0]
+    git_ref = remote_parts[1] if len(remote_parts) == 2 else None
 
-    dest = str(os.path.join(app_folder, repo_name))
+    # get branch from ref (if starts with 'heads/)
+    git_branch = None
+    if git_ref and git_ref.startswith('heads/'):
+        git_branch = git_ref.split('heads/', 1)[1]
+        git_ref = None
 
-    get_repo(base_folder=app_folder, uri=remote, ref=git_ref)
+    get_repo(base_folder=app_folder, uri=git_uri, ref=git_ref, branch=git_branch)
+    git_folder = str(os.path.join(app_folder, repo_name))
 
     # link files in app/<repo name>/configs/... to configs/...
     remote_config_folder = os.path.join(git_folder, 'configs')
@@ -839,10 +862,11 @@ def load_remote_platform(remote, app_folder):
         import glob
         for filename in sorted(glob.glob(os.path.join(remote_config_folder, '*.json'))):
 
-            filepath = os.path.join(os.getcwd(), filename)``
+            filepath = os.path.join(os.getcwd(), filename)
             _, tail = os.path.split(filename)
 
-            dest_filepath = os.path.join(os.getcwd(), 'configs', tail)
+            # link file as 'configs/remote_<file>'
+            dest_filepath = os.path.join(os.getcwd(), 'configs', f'remote_{tail}')
 
             if os.path.exists(dest_filepath):
                 print(f'Config file already exists! skipping: {dest_filepath}')
@@ -889,7 +913,7 @@ def get_workspace_repos(base_folder, config):
         futures = []
         for repo in repos:
             futures.append(executor.submit(get_repo, base_folder=base_folder, uri=repo.get(
-                'uri'), ref=repo.get('rev')))
+                'uri'), ref=repo.get('rev'), branch=repo.get('branch')))
             validate_sudo_user()
 
         for _ in concurrent.futures.as_completed(futures):
@@ -924,7 +948,7 @@ def get_platform_src(src, base_folder: str):
         futures = []
         for repo in src:
             futures.append(executor.submit(get_repo, base_folder=base_folder, uri=repo.get(
-                'uri'), ref=repo.get('rev')))
+                'uri'), ref=repo.get('rev'), branch=repo.get('branch')))
             validate_sudo_user()
 
         for future in concurrent.futures.as_completed(futures):

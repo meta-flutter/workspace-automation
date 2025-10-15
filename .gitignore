@@ -145,6 +145,8 @@ app
 flutter_*.log
 qemu_run.scpt
 
+configs/remote_*.json
+
 dart-revision.json
 engine-revision.json
 
