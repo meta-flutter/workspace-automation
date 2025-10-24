@@ -33,6 +33,7 @@ import io
 import json
 import os
 import platform
+import re
 import shlex
 import shutil
 import signal
@@ -2028,34 +2029,63 @@ def handle_dotenv(dotenv_files):
             print(f'Loaded: {dotenv_path}')
 
 
-def handle_env(env_variables, local_env, build_type=None):
+def handle_env(env_variables, env=None, build_type=None):
     if not env_variables:
         return
+    
+    if env is None:
+        env = os.environ
 
+    # If k starts with +, append to existing variable
     for k, v in env_variables.items():
-        if local_env:
-            if 'PATH_PREPEND' in k:
-                local_env['PATH'] = os.path.normpath(os.path.expandvars(v)) + os.pathsep + local_env['PATH']
-                continue
-            if 'PATH_APPEND' in k:
-                local_env['PATH'] = local_env['PATH'] + os.pathsep + os.path.normpath(os.path.expandvars(v))
+        print(f'Processing env var: {k} = {v}')
+
+        # Append to existing variable if the key starts with +
+        # (then remove the + from the key)
+        append = False
+        if k.startswith('+'):
+            append = True
+            k = k[1:]
+
+        # TODO: obsolete? remove in the future
+        if 'PATH_PREPEND' in k:
+            env['PATH'] = os.path.normpath(os.path.expandvars(v)) + os.pathsep + env['PATH']
+            continue
+        if 'PATH_APPEND' in k:
+            env['PATH'] = env['PATH'] + os.pathsep + os.path.normpath(os.path.expandvars(v))
+            continue
+
+        handle_build_type(env, build_type)
+
+        v = os.path.expandvars(v)
+        if append:
+            # If append empty string, skip
+            if k == '':
                 continue
 
-            handle_build_type(local_env, build_type)
+            # if a separator is specified in the key like `(;)SOMETHING_SOMETHING`, extract it
 
-            local_env[k] = os.path.normpath(os.path.expandvars(v))
-        else:
-            if 'PATH_PREPEND' in k:
-                os.environ['PATH'] = os.path.normpath(os.path.expandvars(v)) + os.pathsep + os.environ['PATH']
-                continue
-            if 'PATH_APPEND' in k:
-                os.environ['PATH'] = os.environ['PATH'] + os.pathsep + os.path.normpath(os.path.expandvars(v))
-                continue
+            # Separator extraction logic:
+            # sep = between '(' and ')'
+            # default separator is " "
+            sep = " "
+            if k.startswith('(') and ')' in k:
+                sep = k.split('(')[1].split(')')[0]
+                k = k.split(')')[1]
 
-            handle_build_type(os.environ, build_type)
+            # Append to existing value
+            old_value = env.get(k, '')
+            if old_value != '':
+                v = old_value + sep + v
+            # skip append if there's no old value
 
-        os.environ[k] = os.path.normpath(os.path.expandvars(v)) 
-        # print(f'global: {k} = {os.environ[k]}')
+        env[k] = v
+
+        # NOTE: no idea why this is here but it works, DO NOT REMOVE IT (it's been here for 6 months)
+        if not env is os.environ:
+            os.environ[k] = v
+
+        print(f'Final env var: {k} = {os.environ[k]}')
 
 
 def handle_build_type(env, build_type=None):
