@@ -876,29 +876,6 @@ def load_remote_platform(remote, app_folder):
     else:
         print(f'No configs folder found in remote platform repo: {remote_config_folder}')
 
-    # link patches in app/<repo name>/patches to patches/
-    remote_patches_folder = os.path.join(git_folder, 'patches')
-    patches_folder = os.path.join(os.getcwd(), 'patches')
-    if os.path.exists(remote_patches_folder):
-        if not os.path.exists(patches_folder):
-            os.makedirs(patches_folder)
-
-        import glob
-        for filename in sorted(glob.glob(os.path.join(remote_patches_folder, '*'))):
-
-            filepath = os.path.join(os.getcwd(), filename)
-            _, tail = os.path.split(filename)
-
-            dest_filepath = os.path.join(patches_folder, tail)
-
-            if os.path.exists(dest_filepath):
-                print(f'Patch file already exists! skipping: {dest_filepath}')
-            else:
-                print(f'Linking patch file: {dest_filepath}')
-                os.symlink(filepath, dest_filepath)
-    else:
-        print(f'No patches folder found in remote platform repo: {remote_patches_folder}')
-
 
 def get_workspace_repos(base_folder, config):
     """ Clone GIT repos referenced in config repos dict to base_folder """
