@@ -1,0 +1,82 @@
+{
+    "id": "libcamera",
+    "load": false,
+    "supported_archs": [
+        "aarch64",
+        "arm64",
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "ubuntu",
+        "fedora"
+    ],
+    "type": "dependency",
+    "env": {
+        "CC": "${LLVM_BINDIR}/clang",
+        "CXX": "${LLVM_BINDIR}/clang++",
+        "PATH": "${LLVM_BINDIR}:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
+        "LD_LIBRARY_PATH": "${LLVM_LIBDIR}",
+        "CAMERA_SRC_DIR": "${FLUTTER_WORKSPACE}/app/libcamera",
+        "CAMERA_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/libcamera/buildDir",
+        "CAMERA_INSTALL_PREFIX": "${FLUTTER_WORKSPACE}/app/libcamera/out/usr",
+        "CAMERA_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE} --prefix=${CAMERA_INSTALL_PREFIX} -Dqcam=\"disabled\" -Dlc-compliance=\"disabled\" -Dcam=\"disabled\" -Dgstreamer=\"disabled\""
+    },
+    "src": [
+        {
+            "uri": "https://git.libcamera.org/libcamera/libcamera.git",
+            "branch": "master",
+            "rev": "v0.5.2"
+        }
+    ],
+    "runtime": {
+        "pre-requisites": {
+            "aarch64": {
+                "ubuntu": {
+                    "cmds": [
+                        "sudo apt-get install -yq libjpeg-dev libevent-dev",
+                        "pip3 install jinja2 ply pyyaml meson sphinxcontrib-doxylink"
+                    ]
+                }
+            },
+            "x86_64": {
+                "ubuntu": {
+                    "cmds": [
+                        "sudo apt-get install -yq libjpeg-dev libevent-dev",
+                        "pip3 install jinja2 ply pyyaml meson sphinxcontrib-doxylink"
+                    ]
+                },
+                "fedora": {
+                    "cmds": [
+                        "sudo dnf install -y libjpeg-devel libevent-devel",
+                        "pip3 install jinja2 ply pyyaml meson sphinxcontrib-doxylink"
+                    ]
+                }
+            }
+        },
+        "post_cmds": [
+            {
+                "cwd": "${CAMERA_SRC_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf buildDir | true\"",
+                    "meson setup buildDir ${CAMERA_MESON_ARGS}"
+                ]
+            },
+            {
+                "cwd": "${CAMERA_BUILD_DIR}",
+                "cmds": [
+                    "${REMOVE_TREE} *",
+                    "ninja -C ${CAMERA_BUILD_DIR} install",
+                    "find ${CAMERA_INSTALL_PREFIX} -name \"lib*.so.0.5.2\" -exec llvm-strip {} \\;"
+                ]
+            }
+        ],
+        "do_clean": [
+            {
+                "cwd": "${CAMERA_BUILD_DIR}",
+                "cmds": [
+                    "ninja -t clean"
+                ]
+            }
+        ]
+    }
+}

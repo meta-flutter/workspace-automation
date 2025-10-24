@@ -1,0 +1,50 @@
+{
+    "id": "sentry-native",
+    "load": false,
+    "supported_archs": [
+        "aarch64",
+        "arm64",
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "fedora",
+        "ubuntu"
+    ],
+    "type": "dependency",
+    "env": {
+        "CC": "${LLVM_BINDIR}/clang",
+        "CXX": "${LLVM_BINDIR}/clang++",
+        "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
+        "LD_LIBRARY_PATH": "${LLVM_LIBDIR}:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
+        "SENTRY_NATIVE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/sentry-native",
+        "SENTRY_NATIVE_BUILD_DIR": "${SENTRY_NATIVE_SRC_DIR}/build/${_BUILD_TYPE}",
+        "SENTRY_NATIVE_STAGING_DIR": "${SENTRY_NATIVE_BUILD_DIR}/staging",
+        "SENTRY_NATIVE_CMAKE_ARGS": "-DSENTRY_BUILD_TESTS=OFF -DSENTRY_BUILD_EXAMPLES=OFF -DSENTRY_BUILD_FORCE32=OFF -DCMAKE_STAGING_PREFIX=${SENTRY_NATIVE_STAGING_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+    },
+    "src": [
+        {
+            "uri": "https://github.com/getsentry/sentry-native.git",
+            "branch": "0.9.0"
+        }
+    ],
+    "runtime": {
+        "post_cmds": [
+            {
+                "cwd": "${SENTRY_NATIVE_BUILD_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf CMakeCache.txt CMakeFiles | true\"",
+                    "cmake -G Ninja -S ${SENTRY_NATIVE_SRC_DIR} -B ${SENTRY_NATIVE_BUILD_DIR} ${SENTRY_NATIVE_CMAKE_ARGS}",
+                    "cmake --build ${SENTRY_NATIVE_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target install"
+                ]
+            }
+        ],
+        "do_clean": [
+            {
+                "cwd": "${SENTRY_NATIVE_BUILD_DIR}",
+                "cmds": [
+                    "cmake --build ${SENTRY_NATIVE_BUILD_DIR} --config ${CMAKE_BUILD_TYPE} --target clean"
+                ]
+            }
+        ]
+    }
+}
