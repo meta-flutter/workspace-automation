@@ -25,7 +25,7 @@
         {
             "uri": "https://github.com/jrouwe/JoltPhysics.git",
             "branch": "master",
-            "rev": "v5.3.0"
+            "rev": "v5.4.0"
         }
     ],
     "runtime": {

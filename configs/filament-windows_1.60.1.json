@@ -1,0 +1,71 @@
+{
+    "id": "filament-windows",
+    "load": false,
+    "supported_archs": [
+        "ARM64",
+        "AMD64"
+    ],
+    "supported_host_types": [
+        "windows"
+    ],
+    "type": "dependency",
+    "env": {
+        "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools;${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin;C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/Llvm/X64/bin/;$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
+        "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/filament-windows",
+        "COMPILER_ARGS": "-DCMAKE_C_COMPILER=clang.exe -DCMAKE_CXX_COMPILER=clang++.exe",
+        "FILAMENT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/filament",
+        "FILAMENT_BUILD_DIR": "${FILAMENT_SRC_DIR}/build/${_BUILD_TYPE}",
+        "FILAMENT_STAGING_DIR": "${FILAMENT_BUILD_DIR}/staging",
+        "FILAMENT_CMAKE_ARGS": "-DFILAMENT_SUPPORTS_VULKAN=ON -DFILAMENT_ENABLE_LTO=OFF -DFILAMENT_SUPPORTS_OPENGL=OFF -DFILAMENT_USE_EXTERNAL_GLES3=OFF -DFILAMENT_SUPPORTS_WAYLAND=ON -DFILAMENT_SUPPORTS_X11=OFF -DFILAMENT_SUPPORTS_XCB=OFF -DFILAMENT_SUPPORTS_EGL_ON_LINUX=OFF -DFILAMENT_SKIP_SDL2=ON -DFILAMENT_SKIP_SAMPLES=ON -DFILAMENT_USE_SWIFTSHADER=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_STAGING_PREFIX=\"${FILAMENT_STAGING_DIR}\""
+    },
+    "src": [
+        {
+            "uri": "https://github.com/google/filament.git",
+            "branch": "release",
+            "rev": "v1.60.1"
+        }
+    ],
+    "runtime": {
+        "pre-requisites": {
+            "ARM64": {
+                "windows": {
+                    "cmds": [
+                        "pip3 install absl-py"
+                    ]
+                }
+            },
+            "AMD64": {
+                "windows": {
+                    "cmds": [
+                        "pip3 install absl-py"
+                    ]
+                }
+            }
+        },
+        "post_cmds": [
+            {
+                "cwd": "${FILAMENT_SRC_DIR}",
+                "cmds": [
+                    "git reset --hard",
+                    "git apply \"${PATCH_FOLDER}/0001-remove-missing-benchmark-deps.patch\""
+                ]
+            },
+            {
+                "cwd": "${FILAMENT_BUILD_DIR}",
+                "cmds": [
+                    "cmake ${COMPILER_ARGS} ${FILAMENT_CMAKE_ARGS} -S \"${FILAMENT_SRC_DIR}\" -B \"${FILAMENT_BUILD_DIR}\"",
+                    "cmake --build . --config ${CMAKE_BUILD_TYPE} --target install"
+                ]
+            }
+        ],
+        "do_clean": [
+            {
+                "cwd": "${FILAMENT_BUILD_DIR}",
+                "cmds": [
+                    "cmake --build . --config ${CMAKE_BUILD_TYPE} --target clean"
+                ]
+            }
+        ]
+    }
+}
