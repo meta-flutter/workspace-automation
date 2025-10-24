@@ -42,8 +42,6 @@ jobs:
           env
 
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
 
       - name: Build libcurl from source
         if: matrix.os == 'windows-11-arm'
