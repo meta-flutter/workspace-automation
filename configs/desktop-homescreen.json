@@ -47,11 +47,11 @@
   "src": [
     {
       "uri": "https://github.com/toyota-connected/ivi-homescreen.git",
-      "branch": "v2.0"
+      "branch": "feature/external-plugins"
     },
     {
       "uri": "https://github.com/toyota-connected/ivi-homescreen-plugins.git",
-      "branch": "v2.0"
+      "branch": "feature/remove-fluorite"
     },
     {
       "uri": "https://github.com/toyota-connected/tcna-packages.git",
