@@ -29,6 +29,7 @@
 #
 
 import argparse
+import glob
 import io
 import json
 import os
@@ -247,6 +248,14 @@ def main():
     #
     # Load Remote Platforms
     #
+    
+    # First, clear linked platforms
+    configs_dir = os.path.join(os.getcwd(), 'configs')
+    if os.path.exists(configs_dir):
+        for filename in sorted(glob.glob(os.path.join(configs_dir, 'remote_*.json'))):
+            print(f'Unlinking remote config file: {filename}')
+            os.unlink(filename)
+    # Setup remote platform
     app_folder = os.path.join(workspace, 'app')
     if args.remote:
         # comma-separated list of git repos
