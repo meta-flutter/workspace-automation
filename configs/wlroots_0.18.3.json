@@ -1,0 +1,83 @@
+{
+    "id": "wlroots",
+    "load": false,
+    "supported_archs": [
+        "aarch64",
+        "arm64",
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "fedora",
+        "ubuntu"
+    ],
+    "type": "dependency",
+    "env": {
+        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
+        "WLROOTS_SRC_DIR": "${FLUTTER_WORKSPACE}/app/wlroots",
+        "WLROOTS_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/wlroots/buildDir",
+        "WLROOTS_MESON_ARGS": "-Dbuildtype=${MESON_BUILD_TYPE}"
+    },
+    "src": [
+        {
+            "uri": "https://gitlab.freedesktop.org/wlroots/wlroots.git",
+            "branch": "0.18",
+            "rev": "0.18.3"
+        }
+    ],
+    "runtime": {
+        "pre-requisites": {
+            "x86_64": {
+                "fedora": {
+                    "cmds": [
+                        "pip3 install meson",
+                        "sudo dnf -y install libffi-devel libxml2-devel dot2tex doxygen xsltproc xmlto libXfont2-devel libwebp-devel rst2pdf libpciaccess-devel libudev-devel byacc flex libXfixes-devel libglvnd-devel libxkbcommon-devel libinput-devel libjpeg-devel libwebp-devel dbus-devel hwdata libva-devel freerdp-devel  libseat-devel systemd-devel pango-devel pixman-devel cairo-devel bison-devel pipewire-devel pam-devel wayland-devel lcms-devel colord-devel"
+                    ],
+                    "40": {
+                        "cmds": [
+                            "sudo dnf -y install ffmpeg-free-devel"
+                        ]
+                    },
+                    "41": {
+                        "cmds": [
+                            "sudo dnf -y install ffmpeg-devel"
+                        ]
+                    }
+                },
+                "ubuntu": {
+                    "cmds": [
+                        "pip3 install meson"
+                    ],
+                    "20.0.4": {
+                        "cmds": [
+                            "sudo apt-get install -yq graphviz libffi-dev libxml2-dev dot2tex doxygen xsltproc xmlto ninja-build libpixman-1-dev libxfont2 libxfont-dev libwebp-dev libcairo2-dev valgrind systemd-coredump rst2pdf libcunit1-dev libpciaccess-dev libwayland-dev libudev-dev libelf-dev libbison-dev byacc flex libxfixes-dev libxcb-glx0-dev libx11-xcb-dev libxcb-dri2-0-dev libxcb-dri3-dev libxcb-present-dev libxshmfence-dev libxxf86vm-dev libxrandr-dev glslang-tools libglvnd-dev libxkbcommon-dev libinput-dev libpango1.0-dev libpangocairo-1.0-0 libjpeg-dev libwebp-dev libsystemd-dev libdbus-1-dev hwdata liblcms2-dev libva-dev freerdp2-dev libxcursor-dev libcolord-dev libegl-mesa0 libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev libgstreamer-plugins-bad1.0-dev libseat-dev libpam0g-dev libsdl-pango-dev ffmpeg"
+                        ]
+                    },
+                    "22.0.4": {
+                        "cmds": [
+                            "sudo apt-get install -yq graphviz libffi-dev libxml2-dev dot2tex doxygen xsltproc xmlto ninja-build libpixman-1-dev libxfont2 libxfont-dev libwebp-dev libcairo2-dev valgrind systemd-coredump rst2pdf libcunit1-dev libpciaccess-dev libwayland-dev libudev-dev libelf-dev libbison-dev byacc flex libxfixes-dev libxcb-glx0-dev libx11-xcb-dev libxcb-dri2-0-dev libxcb-dri3-dev libxcb-present-dev libxshmfence-dev libxxf86vm-dev libxrandr-dev glslang-tools libglvnd-dev libxkbcommon-dev libinput-dev libpango1.0-dev libpangocairo-1.0-0 libjpeg-dev libwebp-dev libsystemd-dev libdbus-1-dev hwdata liblcms2-dev libva-dev freerdp2-dev libxcursor-dev libcolord-dev libegl-mesa0 libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev libgstreamer-plugins-bad1.0-dev libseat-dev libpam0g-dev libsdl-pango-dev ffmpeg"
+                        ]
+                    }
+                }
+            }
+        },
+        "post_cmds": [
+            {
+                "cwd": "${WLROOTS_SRC_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${WLROOTS_BUILD_DIR} | true\"",
+                    "meson setup ${WLROOTS_BUILD_DIR} ${WLROOTS_MESON_ARGS}",
+                    "${AUTONINJA} -C ${WLROOTS_BUILD_DIR}"
+                ]
+            }
+        ],
+        "do_clean": [
+            {
+                "cwd": "${WLROOTS_BUILD_DIR}",
+                "cmds": [
+                    "ninja -t clean"
+                ]
+            }
+        ]
+    }
+}
