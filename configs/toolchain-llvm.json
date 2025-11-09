@@ -87,10 +87,10 @@
             "echo \"Installing LLVM version $(cat .llvm-version)\"",
             "VV=$(cat .llvm-version); if [[ -n $VV ]]; then sudo dnf copr enable @fedora-llvm-team/llvm${PREFER_LLVM} -y; fi",
             "VV=$(cat .llvm-version); sudo dnf -y install llvm${VV}-devel clang${VV} clang${VV}-tools-extra lldb lld${VV}",
-            "if [ $(rpm -E %fedora) -le 42 ] || [ $PREFER_LLVM -ge 19 ]; then VV=$(cat .llvm-version); sudo dnf -y install libcxx-devel libcxx-static libcxxabi-devel libcxxabi-static; fi",
+            "if [ $(rpm -E %fedora) -le 42 ] || [ $PREFER_LLVM -ge 19 ]; then VV=$(cat .llvm-version); sudo dnf -y install --setopt=exclude= libcxx-devel libcxx-static libcxxabi-devel libcxxabi-static; fi",
             "VV=$(cat .llvm-version); if [[ -n $VV ]]; then sudo dnf copr remove @fedora-llvm-team/llvm${PREFER_LLVM} -y; fi",
             "if [ $(rpm -E %fedora) -ge 43 ] && [ $PREFER_LLVM -lt 19 ]; then sudo dnf copr enable @fedora-llvm-team/llvm20 -y; fi",
-            "if [ $(rpm -E %fedora) -ge 43 ] && [ $PREFER_LLVM -lt 19 ]; then VV=$(cat .llvm-version); sudo dnf -y install libcxx-devel-20.* libcxx-static-20.* libcxxabi-devel-20.* libcxxabi-static-20.*; fi",
+            "if [ $(rpm -E %fedora) -ge 43 ] && [ $PREFER_LLVM -lt 19 ]; then VV=$(cat .llvm-version); sudo dnf -y install --setopt=exclude= libcxx-devel-20.* libcxx-static-20.* libcxxabi-devel-20.* libcxxabi-static-20.*; fi",
             "if [ $(rpm -E %fedora) -ge 43 ] && [ $PREFER_LLVM -lt 19 ]; then sudo dnf copr remove @fedora-llvm-team/llvm20 -y; sudo dnf config-manager setopt exclude=libcxx,libcxx-devel,libcxx-static,libcxxabi,libcxxabi-devel,libcxxabi-static; fi",
             "rm .llvm-version"
           ]
