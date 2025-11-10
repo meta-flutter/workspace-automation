@@ -1,7 +1,7 @@
 From 9be5e09115a693ab7fc8cee2122d0a4318fc6e71 Mon Sep 17 00:00:00 2001
 From: Joel Winarske <joel.winarske@gmail.com>
 Date: Sun, 4 Aug 2024 20:53:56 +0000
-Subject: [PATCH] tonic riscv support
+Subject: [PATCH] [flutter/third_party/tonic] riscv support
 
 Upstream-Status: Inappropriate
 
