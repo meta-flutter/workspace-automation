@@ -115,7 +115,7 @@
                 "cwd": "${ENGINE_SRC_DIR}/flutter/third_party/tonic",
                 "cmds": [
                     "git reset --hard",
-                    "git apply ${PATCH_FOLDER}/0001-flutter-third_party-tonic-riscv-support.patch"
+                    "git apply ${PATCH_FOLDER}/flutter/third_party/tonic/0001-flutter-third_party-tonic-riscv-support.patch"
                 ]
             },
             {
