@@ -98,7 +98,8 @@
                 "cwd": "${ENGINE_SRC_DIR}/flutter/third_party/swiftshader",
                 "cmds": [
                     "git reset --hard",
-                    "git apply ${PATCH_FOLDER}/flutter/third_party/swiftshader/0001-flutter-third_party-swiftshader-pointer-cast-to-void.patch"
+                    "git apply ${PATCH_FOLDER}/flutter/third_party/swiftshader/0001-flutter-third_party-swiftshader-pointer-cast-to-void.patch",
+                    "git apply ${PATCH_FOLDER}/flutter/third_party/swiftshader/0002-flutter-third_party-swiftshader-llvm-16.0-required-f.patch"
                 ]
             },
             {
