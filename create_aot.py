@@ -209,7 +209,6 @@ def create_platform_aot(app_path: str, flutter_sdk_version: str):
                 depfile = f'{build_dir}/kernel_snapshot_program.d'
 
             cmd = f'{dart_runtime} \
-                --disable-analytics \
                 --disable-dart-dev \
                 {frontend_snapshot} \
                 --sdk-root {flutter_sdk_root_patched} \

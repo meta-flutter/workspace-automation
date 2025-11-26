@@ -1183,7 +1183,6 @@ def configure_flutter_sdk():
     cmd = [flutter_cmd, 'config', '--list']
     subprocess.check_call(cmd)
 
-    cmd = [dart_cmd, '--disable-analytics']
     subprocess.check_call(cmd)
     cmd = [flutter_cmd, 'doctor', '-v']
     subprocess.check_call(cmd)
