@@ -43,8 +43,10 @@ import sys
 import time
 import zipfile
 
+from pathlib import Path
 from platform import system
 from shlex import quote as shlex_quote
+from typing import Dict, List, Optional, Tuple
 
 from common import check_python_version
 from common import chown_workspace
@@ -103,7 +105,7 @@ def main():
                         help='Selects custom workspace configuration folder')
     parser.add_argument('--flutter-version', default='', type=str,
                         help='Select flutter version.  Overrides config file key:'
-                             ' flutter-version')
+                             ' flutter_version')
     parser.add_argument('--github-token', default='', type=str,
                         help='Set github-token.  Overrides _globals.json key/value')
     parser.add_argument('--cookie-file', default='', type=str,
@@ -302,17 +304,31 @@ def main():
     #
     # Workspace Configuration
     #
-    config = get_workspace_config(args.config)
-    globals_ = config.get('globals').copy()
-    handle_build_type(os.environ, globals_.get('build_type'))
+    configs, globals_config, flutter_version = load_configs(
+        Path(args.config),
+        args.flutter_version,
+        args.enable,
+        args.disable
+    )
+
+    print(f"\nResolved Flutter version: {flutter_version}")
+    print(f"Loaded {len(configs)} configs")
+    print(f'Enabled Configs')
+    for c in configs:
+        if c.get('load', True):
+            print(f" - {c.get('id', 'unknown')}")
+
+    os.environ['FLUTTER_VERSION'] = flutter_version
+    globals_ = globals_config
+
+    handle_build_type(os.environ, globals_config.get('build_type'))
 
     # allow max threads override from globals.json
-    if '_MAX_THREADS' in globals_:
-        os.environ['_MAX_THREADS'] = globals_.get('_MAX_THREADS', str(max_threads))
+    if '_MAX_THREADS' in globals_config:
+        os.environ['_MAX_THREADS'] = globals_config.get('_MAX_THREADS', str(max_threads))
 
-    platforms = config.get('platforms')
-    for platform_ in platforms:
-        if not validate_platform_config(platform_):
+    for c in configs:
+        if not validate_platform_config(c):
             print("Invalid platform configuration")
             exit(1)
 
@@ -351,14 +367,14 @@ def main():
     #
     if args.fastboot:
         print_banner("Fastboot Flash")
-        flash_fastboot(args.fastboot, args.device_id, platforms)
+        flash_fastboot(args.fastboot, args.device_id, configs)
         return
 
     #
     # Mask ROM
     #
     if args.mask_rom:
-        flash_mask_rom(args.mask_rom, args.device_id, platforms)
+        flash_mask_rom(args.mask_rom, args.device_id, configs)
         return
 
     #
@@ -368,7 +384,7 @@ def main():
     if not is_exist:
         os.makedirs(app_folder)
 
-    get_workspace_repos(app_folder, config)
+    get_workspace_repos(app_folder, configs)
 
     #
     # Prepend depot_tools to PATH
@@ -379,15 +395,6 @@ def main():
     #
     # Get Flutter SDK
     #
-    if args.flutter_version:
-        flutter_version = args.flutter_version
-    else:
-        if 'flutter-version' in globals_:
-            flutter_version = globals_.get('flutter-version')
-        else:
-            flutter_version = "main"
-    
-    os.environ['FLUTTER_VERSION'] = flutter_version
 
     print_banner("Flutter Version: %s" % flutter_version)
     flutter_sdk_path = get_flutter_sdk(flutter_version)
@@ -486,7 +493,7 @@ def main():
     #
     # Setup Platforms
     #
-    setup_platforms(platforms, github_token, cookie_file, args.plex, args.enable, args.disable, args.enable_plugin,
+    setup_platforms(configs, github_token, cookie_file, args.plex, args.enable, args.disable, args.enable_plugin,
                     args.disable_plugin, app_folder)
 
     #
@@ -533,6 +540,136 @@ def copy_dconf_user():
     print(f'Copying {dconf_user_src} to {dconf_user_dst}')
     shutil.copy(dconf_user_src, dconf_user_dst)
     print_banner('Copied')
+
+
+def load_json_config(path: Path) -> Dict:
+    """Load JSON config file."""
+    with open(path, 'r') as f:
+        return json.load(f)
+
+
+def validate_flutter_versions(configs: List[Dict], globals_config: Dict, flutter_version_override: str = '') -> str:
+    """
+    Validate Flutter version dependencies across enabled configs.
+
+    Returns:
+        The resolved Flutter version to use.
+
+    Exits:
+        If multiple conflicting versions are specified.
+    """
+    # Collect all specified Flutter versions from enabled configs
+    config_versions = set()
+    for config in configs:
+        if not isinstance(config, dict):
+            continue
+        if not config.get('load', False):
+            continue
+        version = config.get('flutter_version')
+        if version:
+            config_versions.add(version)
+
+    # Master override from command line
+    if flutter_version_override:
+        print(f"Using Flutter version override from command line: {flutter_version_override}")
+
+        # Check default version from globals
+        default_version = globals_config.get('flutter_version')
+        if default_version and default_version != flutter_version_override:
+            print(f"WARNING: Command-line override '{flutter_version_override}' differs from globals.json default '{default_version}'")
+
+        # Check enabled config versions - FAIL if they don't match override
+        if config_versions:
+            for version in config_versions:
+                if version != flutter_version_override:
+                    print(f"ERROR: Command-line override '{flutter_version_override}' conflicts with enabled config version '{version}'")
+                    print("\nEnabled configs:")
+                    for config in configs:
+                        if isinstance(config, dict) and config.get('load', False) and config.get('flutter_version'):
+                            print(f"  - {config.get('id', 'unknown')}: {config['flutter_version']}")
+                    sys.exit(1)
+
+        return flutter_version_override
+
+    default_version = globals_config.get('flutter_version')
+    if not default_version:
+        print("ERROR: No flutter_version defined in configs/globals.json")
+        sys.exit(1)
+
+    # No versions specified - use default
+    if not config_versions:
+        print(f"Using default Flutter version from globals.json: {default_version}")
+        return default_version
+
+    # Single version specified - use it
+    if len(config_versions) == 1:
+        version = list(config_versions)[0]
+        if version != default_version:
+            print(f"NOTE: Using Flutter version '{version}' from enabled config (differs from globals.json default '{default_version}')")
+        else:
+            print(f"Using Flutter version from config: {version}")
+        return version
+
+    # Multiple conflicting versions - error
+    print("ERROR: Multiple conflicting Flutter versions specified in enabled configs:")
+    for config in configs:
+        if isinstance(config, dict) and config.get('load', False) and config.get('flutter_version'):
+            print(f"  - {config.get('id', 'unknown')}: {config['flutter_version']}")
+    print("\nAll enabled configs must use the same Flutter version.")
+    sys.exit(1)
+
+
+def load_configs(config_dir: Path, flutter_version_override: str = '', enable: str = '', disable: str = '') -> Tuple[List[Dict], Dict, str]:
+    """
+    Load all configs and validate Flutter version.
+
+    Args:
+        config_dir: Path to configs directory
+        flutter_version_override: Master override for Flutter version (from command line)
+        enable: Comma-separated list of platform IDs to enable
+        disable: Comma-separated list of platform IDs to disable
+
+    Returns:
+        Tuple of (configs_list, globals_config, resolved_flutter_version)
+    """
+    # Load globals
+    globals_path = config_dir / "globals.json"
+    if not globals_path.exists():
+        print(f"ERROR: globals.json not found at {globals_path}")
+        sys.exit(1)
+
+    globals_config = load_json_config(globals_path)
+
+    # Parse enable/disable lists
+    enable_list = enable.split(',') if enable else []
+    disable_list = disable.split(',') if disable else []
+
+    # Files to skip (not platform configs)
+    skip_files = {'globals.json', 'repos.json'}
+
+    # Load all platform config files (excluding globals.json and repos.json)
+    configs = []
+    for config_file in sorted(config_dir.glob("*.json")):
+        if config_file.name in skip_files:
+            continue
+        config = load_json_config(config_file)
+        if isinstance(config, dict):
+            platform_id = config.get('id')
+
+            # Apply enable/disable overrides
+            if platform_id in enable_list:
+                config['load'] = True
+            elif platform_id in disable_list:
+                config['load'] = False
+
+            configs.append(config)
+        else:
+            print(f"WARNING: {config_file} did not load as a dict, skipping")
+
+    # Validate Flutter versions with override
+    flutter_version = validate_flutter_versions(configs, globals_config, flutter_version_override)
+
+    return configs, globals_config, flutter_version
 
 
 def get_workspace_config(path):
@@ -675,8 +812,6 @@ def validate_platform_config(platform_):
             print("platform type %s is not currently supported." %
                   (platform_['type']))
             return False
-
-        print("Platform ID: %s" % (platform_['id']))
 
     return True
 
