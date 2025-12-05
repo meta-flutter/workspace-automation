@@ -1,6 +1,6 @@
 {
   "id": "agl-ivi-demo-flutter-qemu",
-  "flutter_version": "3.32.5"
+  "flutter_version": "3.32.5",
   "load": false,
   "supported_archs": [
     "aarch64",
