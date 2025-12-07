@@ -544,6 +544,7 @@ def copy_dconf_user():
 
 def load_json_config(path: Path) -> Dict:
     """Load JSON config file."""
+    print(f"Loading config file: {path}")
     with open(path, 'r') as f:
         return json.load(f)
 
