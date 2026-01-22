@@ -29,10 +29,12 @@
 #
 
 import argparse
+import glob
 import io
 import json
 import os
 import platform
+import re
 import shlex
 import shutil
 import signal
@@ -117,6 +119,7 @@ def main():
     parser.add_argument('--plex', default='', type=str, help='Platform Load Excludes')
     parser.add_argument('--enable', default='', type=str, help='Platform Load Enable Override')
     parser.add_argument('--disable', default='', type=str, help='Platform Load Disable Override')
+    parser.add_argument('--remote', default='', type=str, help='Remote Platform Load Git Repo')
     parser.add_argument('--enable-plugin', default='', type=str, help='Plugin Enable')
     parser.add_argument('--disable-plugin', default='', type=str, help='Plugin Disable')
     parser.add_argument('--fastboot', default='', type=str, help='Update the selected platform using fastboot')
@@ -225,7 +228,11 @@ def main():
     #
     # Create Workspace
     #
-    os.makedirs(workspace, exist_ok=True)
+    os.makedirs(workspace, exist_ok=True)    #
+    app_folder = os.path.join(workspace, 'app')
+    if not os.path.exists(app_folder):
+        os.makedirs(app_folder)
+
 
     if os.path.exists(workspace):
         os.environ['FLUTTER_WORKSPACE'] = workspace
@@ -237,6 +244,27 @@ def main():
         print_banner("Fetching Engine Artifacts")
         get_flutter_engine_runtime(True, get_flutter_arch())
         return
+
+
+
+    #
+    # Load Remote Platforms
+    #
+    
+    # First, clear linked platforms
+    configs_dir = os.path.join(os.getcwd(), 'configs')
+    if os.path.exists(configs_dir):
+        for filename in sorted(glob.glob(os.path.join(configs_dir, 'remote_*.json'))):
+            print(f'Unlinking remote config file: {filename}')
+            os.unlink(filename)
+    # Setup remote platform
+    app_folder = os.path.join(workspace, 'app')
+    if args.remote:
+        # comma-separated list of git repos
+        print(f"Loading Remote Platforms from: {args.remote}")
+        remote_repos = args.remote.split(',')
+        for repo in remote_repos:
+            load_remote_platform(repo, app_folder)
 
     #
     # Limit compiler threads
@@ -332,7 +360,6 @@ def main():
             print("Invalid platform configuration")
             exit(1)
 
-    app_folder = os.path.join(workspace, 'app')
     flutter_sdk_folder = os.path.join(workspace, 'flutter')
 
     vscode_folder = os.path.join(workspace, '.vscode')
@@ -378,7 +405,7 @@ def main():
         return
 
     #
-    # App folder setup
+    # Get Repos
     #
     is_exist = os.path.exists(app_folder)
     if not is_exist:
@@ -867,13 +894,10 @@ def validate_custom_device_config(config):
     return True
 
 
-def get_repo(base_folder, uri, branch, rev):
+def get_repo(base_folder, uri, ref, branch=None):
     """ Clone Git Repo """
     if not uri:
         print("repo entry needs a 'uri' key.  Skipping")
-        return
-    if not branch:
-        print("repo entry needs a 'branch' key.  Skipping")
         return
 
     # get repo folder name
@@ -897,8 +921,14 @@ def get_repo(base_folder, uri, branch, rev):
         subprocess.check_call(cmd, cwd=git_folder)
 
         # print_banner(f'git pull: {repo_name}')
-        cmd = ['git', 'pull', 'origin', branch]
-        subprocess.check_call(cmd, cwd=git_folder)
+        cmd = ['git', 'pull', '--ff-only']
+        if branch:
+            print(f'Using branch: {branch}')
+            cmd.extend(['origin', branch])
+        try:
+            subprocess.check_call(cmd, cwd=git_folder)
+        except subprocess.CalledProcessError as e:
+            print(f"WARNING: git pull failed, continuing anyway")
     else:
         # print_banner(f'Checking if folder exists: {git_folder}')
         if os.path.exists(git_folder):
@@ -907,19 +937,21 @@ def get_repo(base_folder, uri, branch, rev):
             except subprocess.CalledProcessError:
                 pass
 
-        # print_banner(f'git clone {uri} -b {branch} {repo_name}')
-        cmd = ['git', 'clone', uri, '-b', branch, repo_name]
+        cmd = ['git', 'clone', uri, repo_name]
+        if branch:
+            print(f'Using branch: {branch}')
+            cmd.extend(['-b', branch])
         subprocess.check_call(cmd, cwd=base_folder)
 
-    if rev:
-        # print_banner(f'git checkout {rev}')
-        cmd = ['git', 'checkout', rev]
+    if ref:
+        print(f'git checkout {ref}')
+        cmd = ['git', 'checkout', ref]
         subprocess.check_call(cmd, cwd=git_folder)
-    else:
-        # print_banner(f'git checkout {branch}')
+    elif branch:
+        print(f'git checkout {branch}')
         cmd = ['git', 'checkout', branch]
         subprocess.check_call(cmd, cwd=git_folder)
-
+        
     # get lfs
     git_lfs_file = os.path.join(base_folder, repo_name, '.gitattributes')
     # print_banner(f'Checking if folder exists: {git_lfs_file}')
@@ -939,6 +971,62 @@ def get_repo(base_folder, uri, branch, rev):
     print_banner(f'Fetched: {repo_name}')
 
 
+# Load Remote Platforms
+#
+# For reach --remote=<git repo> specified on command line
+# clone the repo into app/<repo name>
+# and link the files in app/<repo name>/configs/... to configs/...
+# (but make sure not to overwrite existing files, throw error if so)
+def load_remote_platform(remote, app_folder):
+    """ Load Remote Platforms from GIT repo """
+    if not remote:
+        return
+
+    print_banner(f'Loading Remote Platforms from: {remote}')
+
+    remote_parts = remote.split('#')
+    print(f'remote_parts: {remote_parts}')
+    # get repo folder name
+    repo_name = remote_parts[0].rsplit('/', 1)
+    print(f'repo_name parts: {repo_name}')
+    repo_name = repo_name[-1]
+    print(f'repo_name before split: {repo_name}')
+    repo_name = repo_name.split(".")[0]
+    print(f'repo_name: {repo_name}')
+    # get git ref from remote_uri
+    git_uri = remote_parts[0]
+    git_ref = remote_parts[1] if len(remote_parts) == 2 else None
+
+    # get branch from ref (if starts with 'heads/)
+    git_branch = None
+    if git_ref and git_ref.startswith('heads/'):
+        git_branch = git_ref.split('heads/', 1)[1]
+        git_ref = None
+
+    get_repo(base_folder=app_folder, uri=git_uri, ref=git_ref, branch=git_branch)
+    git_folder = str(os.path.join(app_folder, repo_name))
+
+    # link files in app/<repo name>/configs/... to configs/...
+    remote_config_folder = os.path.join(git_folder, 'configs')
+    if os.path.exists(remote_config_folder):
+        import glob
+        for filename in sorted(glob.glob(os.path.join(remote_config_folder, '*.json'))):
+
+            filepath = os.path.join(os.getcwd(), filename)
+            _, tail = os.path.split(filename)
+
+            # link file as 'configs/remote_<file>'
+            dest_filepath = os.path.join(os.getcwd(), 'configs', f'remote_{tail}')
+
+            if os.path.exists(dest_filepath):
+                print(f'Config file already exists! skipping: {dest_filepath}')
+            else:
+                print(f'Linking config file: {dest_filepath}')
+                os.symlink(filepath, dest_filepath)
+    else:
+        print(f'No configs folder found in remote platform repo: {remote_config_folder}')
+
+
 def get_workspace_repos(base_folder, config):
     """ Clone GIT repos referenced in config repos dict to base_folder """
     import concurrent.futures
@@ -952,7 +1040,7 @@ def get_workspace_repos(base_folder, config):
         futures = []
         for repo in repos:
             futures.append(executor.submit(get_repo, base_folder=base_folder, uri=repo.get(
-                'uri'), branch=repo.get('branch'), rev=repo.get('rev')))
+                'uri'), ref=repo.get('rev'), branch=repo.get('branch')))
             validate_sudo_user()
 
         for _ in concurrent.futures.as_completed(futures):
@@ -987,7 +1075,7 @@ def get_platform_src(src, base_folder: str):
         futures = []
         for repo in src:
             futures.append(executor.submit(get_repo, base_folder=base_folder, uri=repo.get(
-                'uri'), branch=repo.get('branch'), rev=repo.get('rev')))
+                'uri'), ref=repo.get('rev'), branch=repo.get('branch')))
             validate_sudo_user()
 
         for future in concurrent.futures.as_completed(futures):
@@ -2089,34 +2177,63 @@ def handle_dotenv(dotenv_files):
             print(f'Loaded: {dotenv_path}')
 
 
-def handle_env(env_variables, local_env, build_type=None):
+def handle_env(env_variables, env=None, build_type=None):
     if not env_variables:
         return
+    
+    if env is None:
+        env = os.environ
 
+    # If k starts with +, append to existing variable
     for k, v in env_variables.items():
-        if local_env:
-            if 'PATH_PREPEND' in k:
-                local_env['PATH'] = os.path.normpath(os.path.expandvars(v)) + os.pathsep + local_env['PATH']
-                continue
-            if 'PATH_APPEND' in k:
-                local_env['PATH'] = local_env['PATH'] + os.pathsep + os.path.normpath(os.path.expandvars(v))
+        print(f'Processing env var: {k} = {v}')
+
+        # Append to existing variable if the key starts with +
+        # (then remove the + from the key)
+        append = False
+        if k.startswith('+'):
+            append = True
+            k = k[1:]
+
+        # TODO: obsolete? remove in the future
+        if 'PATH_PREPEND' in k:
+            env['PATH'] = os.path.normpath(os.path.expandvars(v)) + os.pathsep + env['PATH']
+            continue
+        if 'PATH_APPEND' in k:
+            env['PATH'] = env['PATH'] + os.pathsep + os.path.normpath(os.path.expandvars(v))
+            continue
+
+        handle_build_type(env, build_type)
+
+        v = os.path.expandvars(v)
+        if append:
+            # If append empty string, skip
+            if k == '':
                 continue
 
-            handle_build_type(local_env, build_type)
+            # if a separator is specified in the key like `(;)SOMETHING_SOMETHING`, extract it
 
-            local_env[k] = os.path.normpath(os.path.expandvars(v))
-        else:
-            if 'PATH_PREPEND' in k:
-                os.environ['PATH'] = os.path.normpath(os.path.expandvars(v)) + os.pathsep + os.environ['PATH']
-                continue
-            if 'PATH_APPEND' in k:
-                os.environ['PATH'] = os.environ['PATH'] + os.pathsep + os.path.normpath(os.path.expandvars(v))
-                continue
+            # Separator extraction logic:
+            # sep = between '(' and ')'
+            # default separator is " "
+            sep = " "
+            if k.startswith('(') and ')' in k:
+                sep = k.split('(')[1].split(')')[0]
+                k = k.split(')')[1]
 
-            handle_build_type(os.environ, build_type)
+            # Append to existing value
+            old_value = env.get(k, '')
+            if old_value != '':
+                v = old_value + sep + v
+            # skip append if there's no old value
 
-        os.environ[k] = os.path.normpath(os.path.expandvars(v)) 
-        # print(f'global: {k} = {os.environ[k]}')
+        env[k] = v
+
+        # NOTE: no idea why this is here but it works, DO NOT REMOVE IT (it's been here for 6 months)
+        if not env is os.environ:
+            os.environ[k] = v
+
+        print(f'Final env var: {k} = {os.environ[k]}')
 
 
 def handle_build_type(env, build_type=None):
