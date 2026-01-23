@@ -55,7 +55,7 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           pwd; ls -la
-          PREFER_LLVM=${{ matrix.llvm }} ./flutter_workspace.py --enable=filament
+          PREFER_LLVM=${{ matrix.llvm }} ./flutter_workspace.py
           echo "Checking LLVM config..."
           cat setup_env.sh; echo ""
           FOUND_LLVM_VER=$(grep -oP 'export PREFER_LLVM=\K[0-9]+' setup_env.sh)
@@ -86,4 +86,4 @@ jobs:
           cd $GITHUB_WORKSPACE
           pwd; ls -la
           . ./setup_env.sh
-          ./flutter_workspace.py --create-aot --app-path=./app/tcna-packages/packages/filament_scene/example/
+          ./flutter_workspace.py --create-aot --app-path=./app/tcna-packages/packages/flatpak/example/
