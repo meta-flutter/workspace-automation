@@ -23,40 +23,6 @@ This script reads a configuration folder of JSON files, or a single JSON configu
 
     python3 -m pip install virtualenv
 
--Requirements to build `filament-windows/flutter-engine-windows`
-  
-  -Enable long path support for git
-
-      git config --global core.longpaths true
-
-  -Enable Developer Mode to allow symlink creation without Admin rights
-
-    On Windows 10/11, enabling Developer Mode allows non-admin users to create symlinks
-
-    Go to Settings > Search for developer settings
-    Turn on Developer Mode
-    Restart your terminal
-
-  -Install Windows 10 SDK from Visual Studio installer
-
-   if ARM64 Windows machine copy `C:\Program Files (x86)\Windows Kits\10\Debuggers\arm64` to `C:\Program Files (x86)\Windows Kits\10\Debuggers\arm64` to appease flutter/tools/gen.bat
-
-  -Install ninja and add to path after depot_tools
-
-  -Optional install WinDgb - AKA Wind-Bag
-  
-    winget install Microsoft.WinDbg
-
-  -Running
-
-    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-    .\flutter_workspace.ps1 --enable "filament-windows,flutter-engine-windows"
-
-  -Running setup_env.ps1
-
-    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-    .\setup_env.ps1
-
 ### create_aot.py
 
 create AOT is used to create libapp.so for use on a device.  It requires an active FLUTTER_WORKSPACE.
@@ -187,7 +153,7 @@ Pass folder for storing dart and engine json files.
 
 Platform Load Exceptions.  Pass platform-id values.  Select multiple platform ids by seperating with `,`.
 
-e.g. `--plex=filament,firebase-cpp-sdk`
+e.g. `--plex=flatpak,firebase-cpp-sdk`
 
 This option also has the impact of forcing the environmental variable `FLUTTER_WORKSPACE_<platfor id>)_LOAD=OFF`.  This variable can be used reliably in a configuration type other than `dependency`.
 
@@ -195,7 +161,7 @@ This option also has the impact of forcing the environmental variable `FLUTTER_W
 
 Enable Platform Configuration(s).  Pass platform-id values.  Select multiple platform ids by seperating with `,`.
 
-e.g. `--enable=filament`
+e.g. `--enable=flatpak`
 
 This option also has the impact of forcing the environmental variable `FLUTTER_WORKSPACE_<platfor id>)_LOAD=ON`.  This variable can be used reliably in a configuration type other than `dependency`.
 
