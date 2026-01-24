@@ -58,7 +58,7 @@ jobs:
           cd $GITHUB_WORKSPACE
           pwd; ls -la
           chown -R user:user .
-          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && ./flutter_workspace.py --enable=filament --stdin-file=/dev/null"
+          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && ./flutter_workspace.py --stdin-file=/dev/null"
           cat ./setup_env.sh
 
       - name: Test workspace
@@ -74,4 +74,4 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           pwd; ls -la
-          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && . ./setup_env.sh && ./flutter_workspace.py --create-aot --app-path=./app/tcna-packages/packages/filament_scene/example/"
+          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && . ./setup_env.sh && ./flutter_workspace.py --create-aot --app-path=./app/tcna-packages/packages/flatpak/example/"
