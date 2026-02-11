@@ -894,7 +894,7 @@ def validate_custom_device_config(config):
     return True
 
 
-def get_repo(base_folder, uri, ref, branch=None):
+def get_repo(base_folder, uri, ref, branch=None, dest_name=None):
     """ Clone Git Repo """
     if not uri:
         print("repo entry needs a 'uri' key.  Skipping")
@@ -905,10 +905,15 @@ def get_repo(base_folder, uri, ref, branch=None):
     repo_name = repo_name.split(".")
     repo_name = repo_name[0]
 
-    print_banner(f'Fetching: {repo_name}')
+    # get destination name from config if specified
+    # (Default is to use repo name as folder name
+    if not dest_name:
+        dest_name = repo_name
 
-    git_folder = str(os.path.join(base_folder, repo_name))
+    git_folder = str(os.path.join(base_folder, dest_name))
     git_hidden_folder = os.path.join(git_folder, '.git')
+
+    print_banner(f'Fetching: {repo_name} (path: {git_folder})...')
 
     # print_banner(f'Checking if file exists: {git_hidden_folder}')
     if os.path.exists(git_hidden_folder):
@@ -937,7 +942,7 @@ def get_repo(base_folder, uri, ref, branch=None):
             except subprocess.CalledProcessError:
                 pass
 
-        cmd = ['git', 'clone', uri, repo_name]
+        cmd = ['git', 'clone', uri, dest_name]
         if branch:
             print(f'Using branch: {branch}')
             cmd.extend(['-b', branch])
@@ -953,7 +958,7 @@ def get_repo(base_folder, uri, ref, branch=None):
         subprocess.check_call(cmd, cwd=git_folder)
         
     # get lfs
-    git_lfs_file = os.path.join(base_folder, repo_name, '.gitattributes')
+    git_lfs_file = os.path.join(git_folder, '.gitattributes')
     # print_banner(f'Checking if folder exists: {git_lfs_file}')
     if os.path.exists(git_lfs_file):
         # print_banner(f'Fetching LFS: {repo_name}')
@@ -961,14 +966,14 @@ def get_repo(base_folder, uri, ref, branch=None):
         subprocess.check_call(cmd, cwd=git_folder)
 
     # get all submodules
-    git_submodule_file = os.path.join(base_folder, repo_name, '.gitmodules')
+    git_submodule_file = os.path.join(git_folder, '.gitmodules')
     # print_banner(f'Checking if folder exists: {git_submodule_file}')
     if os.path.exists(git_submodule_file):
         # print_banner(f'Fetching submodules: {repo_name}')
         cmd = ['git', 'submodule', 'update', '--init', '--recursive']
         subprocess.check_call(cmd, cwd=git_folder)
 
-    print_banner(f'Fetched: {repo_name}')
+    print_banner(f'Fetched: {repo_name} at {git_folder}')
 
 
 # Load Remote Platforms
@@ -1003,7 +1008,7 @@ def load_remote_platform(remote, app_folder):
         git_branch = git_ref.split('heads/', 1)[1]
         git_ref = None
 
-    get_repo(base_folder=app_folder, uri=git_uri, ref=git_ref, branch=git_branch)
+    get_repo(base_folder=app_folder, uri=git_uri, ref=git_ref, branch=git_branch, dest_name=repo_name)
     git_folder = str(os.path.join(app_folder, repo_name))
 
     # link files in app/<repo name>/configs/... to configs/...
@@ -1040,7 +1045,7 @@ def get_workspace_repos(base_folder, config):
         futures = []
         for repo in repos:
             futures.append(executor.submit(get_repo, base_folder=base_folder, uri=repo.get(
-                'uri'), ref=repo.get('rev'), branch=repo.get('branch')))
+                'uri'), ref=repo.get('rev'), branch=repo.get('branch'), dest_name=repo.get('dest_name')))
             validate_sudo_user()
 
         for _ in concurrent.futures.as_completed(futures):
@@ -1075,7 +1080,7 @@ def get_platform_src(src, base_folder: str):
         futures = []
         for repo in src:
             futures.append(executor.submit(get_repo, base_folder=base_folder, uri=repo.get(
-                'uri'), ref=repo.get('rev'), branch=repo.get('branch')))
+                'uri'), ref=repo.get('rev'), branch=repo.get('branch'), dest_name=repo.get('dest_name')))
             validate_sudo_user()
 
         for future in concurrent.futures.as_completed(futures):
