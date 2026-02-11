@@ -9,7 +9,8 @@
     },
     {
         "uri": "https://github.com/flutter/samples.git",
-        "branch": "main"
+        "branch": "main",
+        "dest_name": "flutter-samples"
     },
     {
         "uri": "https://github.com/flutter/games.git",
