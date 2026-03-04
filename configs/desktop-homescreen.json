@@ -49,15 +49,19 @@
   "src": [
     {
       "uri": "https://github.com/toyota-connected/ivi-homescreen.git",
-      "branch": "v2.0"
+      "branch": "feature/dynamic-plugins"
     },
     {
       "uri": "https://github.com/toyota-connected/ivi-homescreen-plugins.git",
-      "branch": "v2.0"
+      "branch": "feature/dynamic-plugins"
+    },
+    {
+      "uri": "https://github.com/toyota-connected/ivi-homescreen-plugin-template.git",
+      "branch": "feature/dynamic-plugins"
     },
     {
       "uri": "https://github.com/toyota-connected/tcna-packages.git",
-      "branch": "v2.0"
+      "branch": "feature/dynamic-plugins"
     },
     {
       "uri": "https://github.com/mogol/flutter_secure_storage.git",
