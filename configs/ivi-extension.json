@@ -1,0 +1,47 @@
+{
+    "id": "ivi-extension",
+    "load": false,
+    "supported_archs": [
+        "aarch64",
+        "arm64",
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "fedora",
+        "ubuntu"
+    ],
+    "type": "dependency",
+    "env": {
+        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
+        "WAYLAND_IVI_EXTENSION_SRC_DIR": "${FLUTTER_WORKSPACE}/app/wayland-ivi-extension",
+        "WAYLAND_IVI_EXTENSION_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/wayland-ivi-extension/build_ivi_extension",
+        "WAYLAND_IVI_EXTENSION_CMAKE_ARGS": ""
+    },
+    "src": [
+        {
+            "uri": "https://github.com/jwinarske/wayland-ivi-extension.git",
+            "branch": "jw/weston-14"
+        }
+    ],
+    "runtime": {
+        "post_cmds": [
+            {
+                "cwd": "${WAYLAND_IVI_EXTENSION_SRC_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${WAYLAND_IVI_EXTENSION_BUILD_DIR} | true\"",
+                    "cmake -S ${WAYLAND_IVI_EXTENSION_SRC_DIR} -B ${WAYLAND_IVI_EXTENSION_BUILD_DIR} ${WAYLAND_IVI_EXTENSION_CMAKE_ARGS} -GNinja",
+                    "${AUTONINJA} -C ${WAYLAND_IVI_EXTENSION_BUILD_DIR}"
+                ]
+            }
+        ],
+        "do_clean": [
+            {
+                "cwd": "${WAYLAND_IVI_EXTENSION_BUILD_DIR}",
+                "cmds": [
+                    "ninja -t clean"
+                ]
+            }
+        ]
+    }
+}
