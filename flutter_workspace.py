@@ -1494,7 +1494,18 @@ def get_flutter_engine_version(flutter_sdk_path):
 
 def get_process_stdout(cmd):
     cmd_arr = shlex.split(cmd)
-    result = subprocess.run(cmd_arr, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    result = subprocess.run(
+        cmd_arr,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        universal_newlines=True,
+    )
+    if result.returncode != 0:
+        raise subprocess.CalledProcessError(
+            result.returncode,
+            cmd_arr,
+            output=result.stdout,
+        )
     return result.stdout
 
 
@@ -2627,16 +2638,27 @@ def get_github_json(token, url):
     """Function to return the JSON of GitHub REST API"""
     try:
         import pycurl
-
-        c = pycurl.Curl()
-        c.setopt(pycurl.URL, url)
-        c.setopt(pycurl.HTTPHEADER, [
-            "Accept: application/vnd.github+json", "Authorization: Bearer %s" % token])
-        buffer = io.BytesIO()
-        c.setopt(pycurl.WRITEDATA, buffer)
-        c.perform()
-        return json.loads(buffer.getvalue().decode('utf-8'))
+        import certifi
     except ImportError:
+        pycurl = None
+        certifi = None
+
+    if pycurl is not None and certifi is not None:
+        c = pycurl.Curl()
+        try:
+            buffer = io.BytesIO()
+            c.setopt(pycurl.URL, url)
+            c.setopt(pycurl.HTTPHEADER, [
+                "Accept: application/vnd.github+json",
+                "Authorization: Bearer %s" % token
+            ])
+            c.setopt(pycurl.CAINFO, certifi.where())
+            c.setopt(pycurl.WRITEDATA, buffer)
+            c.perform()
+            return json.loads(buffer.getvalue().decode('utf-8'))
+        finally:
+            c.close()
+    else:
         import urllib.request
         req = urllib.request.Request(url)
         req.add_header("Accept", "application/vnd.github+json")
@@ -2743,7 +2765,7 @@ def get_dnf_installed(filter_: str) -> str:
     """Returns dnf package list if present, None otherwise"""
 
     dnf_result = subprocess.run(['dnf', 'list', 'installed'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    grep_result = subprocess.run(['grep', filter_], input=dnf_result.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    grep_result = subprocess.run(['grep', '--', filter_], input=dnf_result.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
     return grep_result.stdout
 
