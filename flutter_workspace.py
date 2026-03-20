@@ -198,7 +198,7 @@ def main():
     # we need to know the user running the script
     if username == 'root':
         print("Please run as non-root user")
-        exit()
+        sys.exit(1)
 
     #
     # Handle sudo for scenarios that require it
@@ -358,7 +358,7 @@ def main():
     for c in configs:
         if not validate_platform_config(c):
             print("Invalid platform configuration")
-            exit(1)
+            sys.exit(1)
 
     flutter_sdk_folder = os.path.join(workspace, 'flutter')
 
@@ -719,15 +719,15 @@ def get_workspace_config(path):
                     try:
                         data['repos'] = json.load(f)
                     except json.decoder.JSONDecodeError:
-                        print("Invalid JSON in %s" % f)
-                        exit(1)
+                        print("Invalid JSON in %s" % filepath)
+                        sys.exit(1)
 
                 elif tail == 'globals.json':
                     try:
                         data['globals'] = json.load(f)
                     except json.decoder.JSONDecodeError:
-                        print("Invalid JSON in %s" % f)
-                        exit(1)
+                        print("Invalid JSON in %s" % filepath)
+                        sys.exit(1)
 
                 else:
                     print_banner(f'Loading: {filepath}')
@@ -735,16 +735,16 @@ def get_workspace_config(path):
                         platform_ = json.load(f)
                         data['platforms'].append(platform_)
                     except json.decoder.JSONDecodeError:
-                        print("Invalid JSON in %s" % f)
-                        exit(1)
+                        print("Invalid JSON in %s" % filepath)
+                        sys.exit(1)
 
     elif os.path.isfile(path):
         with open(path, 'r', encoding="utf-8") as f:
             try:
                 data = json.load(f)
             except json.decoder.JSONDecodeError:
-                print("Invalid JSON in %s" % f)
-                exit(1)
+                print("Invalid JSON in %s" % path)
+                sys.exit(1)
 
     return data
 
@@ -1100,7 +1100,7 @@ def get_flutter_settings_folder():
             return os.path.join(appdata, 'flutter')
         else:
             print_banner("APPDATA is not set.")
-            exit(1)
+            sys.exit(1)
     elif "XDG_CONFIG_HOME" in os.environ:
         settings_folder = os.path.join(os.environ.get('XDG_CONFIG_HOME'))
     else:
@@ -1127,14 +1127,12 @@ def get_flutter_custom_devices():
     custom_config = get_flutter_custom_config_path()
     if os.path.exists(custom_config):
 
-        f = open(custom_config, encoding="utf-8")
-        try:
-            data = json.load(f)
-        except json.decoder.JSONDecodeError:
-            # in case JSON is invalid
-            print("Invalid JSON in %s" % custom_config)
-            exit(1)
-        f.close()
+        with open(custom_config, encoding="utf-8") as f:
+            try:
+                data = json.load(f)
+            except json.decoder.JSONDecodeError:
+                print("Invalid JSON in %s" % custom_config)
+                sys.exit(1)
 
         if 'custom-devices' in data:
             return data['custom-devices']
@@ -1152,14 +1150,12 @@ def remove_flutter_custom_devices_id(id_):
     custom_config = get_flutter_custom_config_path()
     if os.path.exists(custom_config):
 
-        f = open(custom_config, "r", encoding="utf-8")
-        try:
-            obj = json.load(f)
-        except json.decoder.JSONDecodeError:
-            print_banner("Invalid JSON in %s" %
-                         custom_config)  # in case JSON is invalid
-            exit(1)
-        f.close()
+        with open(custom_config, "r", encoding="utf-8") as f:
+            try:
+                obj = json.load(f)
+            except json.decoder.JSONDecodeError:
+                print_banner("Invalid JSON in %s" % custom_config)
+                sys.exit(1)
 
         new_device_list = []
         if 'custom-devices' in obj:
@@ -1169,11 +1165,6 @@ def remove_flutter_custom_devices_id(id_):
                     new_device_list.append(device)
 
         custom_devices = {'custom-devices': new_device_list}
-
-        if 'custom-devices' not in custom_devices:
-            print("Removing empty file: %s" % custom_config)
-            os.remove(custom_config)
-            return
 
         with open(custom_config, "w", encoding="utf-8") as file:
             json.dump(custom_devices, file, indent=2)
@@ -1275,7 +1266,7 @@ def add_flutter_custom_device(device_config, flutter_runtime):
     """ Add a single Flutter custom device from JSON string """
 
     if not validate_custom_device_config(device_config):
-        exit(1)
+        sys.exit(1)
 
     # print("Adding custom-device: %s" % device_config)
 
@@ -1284,13 +1275,12 @@ def add_flutter_custom_device(device_config, flutter_runtime):
     new_device_list = []
     if os.path.exists(custom_devices_file):
 
-        f = open(custom_devices_file, "r", encoding="utf-8")
-        try:
-            obj = json.load(f)
-        except json.decoder.JSONDecodeError as e:
-            print_banner(f"Invalid JSON in {custom_devices_file}: {str(e)}")
-            sys.exit(1)
-        f.close()
+        with open(custom_devices_file, "r", encoding="utf-8") as f:
+            try:
+                obj = json.load(f)
+            except json.decoder.JSONDecodeError as e:
+                print_banner(f"Invalid JSON in {custom_devices_file}: {str(e)}")
+                sys.exit(1)
 
         id_ = device_config['id']
 
@@ -1328,14 +1318,12 @@ def add_flutter_custom_device_ex(custom_device):
     new_device_list = []
     if os.path.exists(custom_devices_file):
 
-        f = open(custom_devices_file, "r", encoding="utf-8")
-        try:
-            obj = json.load(f)
-        except json.decoder.JSONDecodeError:
-            print_banner("Invalid JSON in %s" %
-                         custom_devices_file)  # in case JSON is invalid
-            exit(1)
-        f.close()
+        with open(custom_devices_file, "r", encoding="utf-8") as f:
+            try:
+                obj = json.load(f)
+            except json.decoder.JSONDecodeError:
+                print_banner("Invalid JSON in %s" % custom_devices_file)
+                sys.exit(1)
 
         id_ = device_config['id']
 
@@ -1346,7 +1334,6 @@ def add_flutter_custom_device_ex(custom_device):
                     new_device_list.append(device)
 
     new_device_list.append(device_config)
-    # patched_device_list = patch_custom_device_strings_ex(new_device_list)
 
     custom_devices = {'custom-devices': new_device_list}
 
@@ -1506,13 +1493,9 @@ def get_flutter_engine_version(flutter_sdk_path):
 
 
 def get_process_stdout(cmd):
-    process = subprocess.Popen(
-        shlex_quote(cmd), shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-    ret = ""
-    for line in process.stdout:
-        ret += str(line)
-    process.wait()
-    return ret
+    cmd_arr = shlex.split(cmd)
+    result = subprocess.run(cmd_arr, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    return result.stdout
 
 
 def get_freedesktop_os_release() -> dict:
@@ -1775,13 +1758,11 @@ def check_netrc_for_str(pattern):
         print_banner("~/.netrc does not exist")
         return False
 
-    file = open(netrc, "r", encoding="utf-8")
-    for line in file:
-        if pattern in line:
-            file.close()
-            return True
+    with open(netrc, "r", encoding="utf-8") as f:
+        for line in f:
+            if pattern in line:
+                return True
 
-    file.close()
     print_banner("Missing %s from ~/.netrc" % pattern)
     return False
 
@@ -1916,7 +1897,7 @@ def handle_commands_obj(obj, cwd):
             cmd = os.path.normpath(cmd)
             print(f'cmd normpath: {cmd}')
 
-            if cmd.startswith('python') or cmd.startswith('cmake') or cmd.startswith('git') and host_type == 'windows':
+            if cmd.startswith('python') or cmd.startswith('cmake') or cmd.startswith('git'):
                 cmd = cmd.replace('\\', '/')
                 posix = True
                 print(f'cmd: {cmd}')
@@ -2135,10 +2116,14 @@ def handle_github_obj(obj, cwd, token):
                     print("Downloaded: %s" % downloaded_file)
 
                     with zipfile.ZipFile(downloaded_file, "r") as zip_ref:
-                        zip_ref.extractall(str(cwd))
+                        dest = str(cwd)
+                        for member in zip_ref.namelist():
+                            member_path = os.path.realpath(os.path.join(dest, member))
+                            if not member_path.startswith(os.path.realpath(dest) + os.sep) and member_path != os.path.realpath(dest):
+                                raise ValueError(f"Zip path traversal detected: {member}")
+                        zip_ref.extractall(dest)
 
-                    shutil.remove(downloaded_file)
-                    subprocess.check_output(cmd)
+                    os.remove(downloaded_file)
                     continue
 
         if post_process:
@@ -2177,7 +2162,7 @@ def handle_dotenv(dotenv_files):
 
     for dotenv_file in dotenv_files:
         dotenv_path = Path(os.path.join(flutter_workspace, dotenv_file))
-        if dotenv_path.exists:
+        if dotenv_path.exists():
             load_dotenv(dotenv_path=dotenv_path, verbose=True, override=True)
             print(f'Loaded: {dotenv_path}')
 
@@ -2246,6 +2231,9 @@ def handle_build_type(env, build_type=None):
     if build_type is None:
         build_type = globals_.get('build_type')
 
+    if build_type is None:
+        print("WARNING: No build_type specified, defaulting to 'debug'")
+        build_type = 'debug'
 
     env['_BUILD_TYPE'] = build_type
     env['CMAKE_BUILD_TYPE'] = build_types_cmake[build_type]
@@ -2538,8 +2526,7 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
                 setup_llvm_vars(llvm_config)
             else:
                 print_banner(f'Failed to find llvm-config({prefer_llvm}) in {llvm_base_path}.')
-                exit()
-                return
+                sys.exit(1)
 
     elif platform_['toolchain'] == 'common':
         pass
@@ -2638,16 +2625,24 @@ def base64_to_string(b):
 
 def get_github_json(token, url):
     """Function to return the JSON of GitHub REST API"""
-    import pycurl
+    try:
+        import pycurl
 
-    c = pycurl.Curl()
-    c.setopt(pycurl.URL, url)
-    c.setopt(pycurl.HTTPHEADER, [
-        "Accept: application/vnd.github+json", "Authorization: Bearer %s" % token])
-    buffer = io.BytesIO()
-    c.setopt(pycurl.WRITEDATA, buffer)
-    c.perform()
-    return json.loads(buffer.getvalue().decode('utf-8'))
+        c = pycurl.Curl()
+        c.setopt(pycurl.URL, url)
+        c.setopt(pycurl.HTTPHEADER, [
+            "Accept: application/vnd.github+json", "Authorization: Bearer %s" % token])
+        buffer = io.BytesIO()
+        c.setopt(pycurl.WRITEDATA, buffer)
+        c.perform()
+        return json.loads(buffer.getvalue().decode('utf-8'))
+    except ImportError:
+        import urllib.request
+        req = urllib.request.Request(url)
+        req.add_header("Accept", "application/vnd.github+json")
+        req.add_header("Authorization", "Bearer %s" % token)
+        with urllib.request.urlopen(req) as response:
+            return json.loads(response.read().decode('utf-8'))
 
 
 def get_github_artifact_list_json(token, url):
@@ -2724,14 +2719,10 @@ def get_github_artifact(token: str, url: str, filename: str) -> str:
 def ubuntu_is_pkg_installed(package: str) -> bool:
     """Ubuntu - checks if package is installed"""
 
-    cmd = "dpkg-query -W --showformat='${Status}' %s" % package
-    ps = subprocess.Popen(shlex_quote(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    result = ps.communicate()[0]
+    cmd = ['dpkg-query', '-W', '--showformat=${Status}', package]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
-    if isinstance(result, bytes):
-        result = result.decode()
-
-    if 'install ok installed' in result:
+    if 'install ok installed' in result.stdout:
         print("Package %s Found" % package)
         return True
     else:
@@ -2751,14 +2742,10 @@ def ubuntu_install_pkg_if_not_installed(package):
 def get_dnf_installed(filter_: str) -> str:
     """Returns dnf package list if present, None otherwise"""
 
-    cmd = 'dnf list installed |grep %s' % filter_
-    ps = subprocess.Popen(shlex_quote(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    result = ps.communicate()[0]
+    dnf_result = subprocess.run(['dnf', 'list', 'installed'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    grep_result = subprocess.run(['grep', filter_], input=dnf_result.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-    if isinstance(result, bytes):
-        result = result.decode()
-
-    return result
+    return grep_result.stdout
 
 
 def fedora_is_pkg_installed(package: str) -> bool:
@@ -2783,13 +2770,12 @@ def fedora_install_pkg_if_not_installed(package: str):
 
 def is_linux_host_kvm_capable() -> bool:
     """Determine if CPU supports HW Hypervisor support"""
-    cmd = 'cat /proc/cpuinfo |egrep "vmx|svm"'
-    ps = subprocess.Popen(
-        shlex_quote(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    output = ps.communicate()[0]
-    if len(output):
-        return True
-    return False
+    try:
+        with open('/proc/cpuinfo', 'r') as f:
+            cpuinfo = f.read()
+        return 'vmx' in cpuinfo or 'svm' in cpuinfo
+    except (IOError, OSError):
+        return False
 
 
 def get_mac_brew_path() -> str:
@@ -2843,9 +2829,21 @@ def activate_python_virtualenv():
     else:
         scripts_folder = 'bin'
 
-    # switch to virtualenv
-    activate_this_file = os.path.join(venv_dir, scripts_folder, 'activate_this.py')
-    exec(compile(open(activate_this_file, 'rb').read(), activate_this_file, 'exec'), dict(__file__=activate_this_file))
+    # Activate virtualenv for the current process
+    os.environ['VIRTUAL_ENV'] = venv_dir
+    os.environ['PATH'] = os.path.join(venv_dir, scripts_folder) + os.pathsep + os.environ.get('PATH', '')
+
+    # Update sys.prefix so Python knows it's in a virtualenv
+    sys.prefix = venv_dir
+    sys.exec_prefix = venv_dir
+
+    # Add virtualenv site-packages to sys.path
+    if sys.platform.startswith('win'):
+        site_packages = os.path.join(venv_dir, 'Lib', 'site-packages')
+    else:
+        site_packages = os.path.join(venv_dir, 'lib', f'python{sys.version_info.major}.{sys.version_info.minor}', 'site-packages')
+    if site_packages not in sys.path:
+        sys.path.insert(0, site_packages)
 
     # switch to python in new path
     if sys.platform.startswith('win'):
@@ -2904,13 +2902,18 @@ def install_minimum_runtime_deps():
 
     # Check and install Python packages only if not already installed
     required_packages = [
-        ('pycurl', 'pycurl'),
-        ('toml', 'toml'), 
+        ('certifi', 'certifi'),
+        ('toml', 'toml'),
         ('python-dotenv', 'dotenv'),
         ('PyYAML', 'yaml')
     ]
+    # pycurl is optional - urllib fallback is used when unavailable
+    optional_packages = [
+        ('pycurl', 'pycurl'),
+    ]
     packages_to_install = []
-    
+    optional_to_install = []
+
     for package_name, import_name in required_packages:
         try:
             __import__(import_name)
@@ -2918,10 +2921,30 @@ def install_minimum_runtime_deps():
         except ImportError:
             print(f"Package {package_name} needs to be installed")
             packages_to_install.append(package_name)
-    
+
+    for package_name, import_name in optional_packages:
+        try:
+            __import__(import_name)
+            print(f"Package {package_name} is already installed")
+        except ImportError:
+            print(f"Package {package_name} needs to be installed (optional)")
+            optional_to_install.append(package_name)
+
     if packages_to_install:
         cmd = ['python3', '-m', 'pip', 'install'] + packages_to_install
         subprocess.check_output(cmd)
+
+    if optional_to_install:
+        for pkg in optional_to_install:
+            try:
+                cmd = ['python3', '-m', 'pip', 'install', pkg]
+                subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+            except subprocess.CalledProcessError:
+                print(f"Warning: Failed to install optional package {pkg}, using fallback")
+
+        # Clear import finder caches so newly installed packages are discoverable
+        import importlib
+        importlib.invalidate_caches()
     else:
         print("All required Python packages are already installed")
 
@@ -3093,20 +3116,31 @@ flutter doctor -v
 
 def get_engine_commit(version, hash_):
     """Get matching engine commit hash."""
-    import pycurl
-    import certifi
-    from io import BytesIO
+    url = f'https://raw.githubusercontent.com/flutter/flutter/{hash_}/bin/internal/engine.version'
+    try:
+        import pycurl
+        import certifi
+        from io import BytesIO
 
-    buffer = BytesIO()
-    c = pycurl.Curl()
-    c.setopt(
-        pycurl.URL, f'https://raw.githubusercontent.com/flutter/flutter/{hash_}/bin/internal/engine.version')
-    c.setopt(pycurl.WRITEDATA, buffer)
-    c.setopt(pycurl.CAINFO, certifi.where())
-    c.perform()
-    c.close()
+        buffer = BytesIO()
+        c = pycurl.Curl()
+        c.setopt(pycurl.URL, url)
+        c.setopt(pycurl.WRITEDATA, buffer)
+        c.setopt(pycurl.CAINFO, certifi.where())
+        c.perform()
+        c.close()
 
-    get_body = buffer.getvalue()
+        get_body = buffer.getvalue()
+    except ImportError:
+        import urllib.request
+        import ssl
+        try:
+            import certifi
+            ssl_context = ssl.create_default_context(cafile=certifi.where())
+        except ImportError:
+            ssl_context = ssl.create_default_context()
+        with urllib.request.urlopen(url, context=ssl_context) as response:
+            get_body = response.read()
 
     return version, get_body.decode('utf8').strip()
 

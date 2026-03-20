@@ -41,7 +41,7 @@ def get_flutter_arch():
         return 'arm64'
     else:
         print_banner(f'Unknown host arch: {host_arch}')
-        exit(1)
+        sys.exit(1)
 
 
 def check_python_version():
@@ -63,16 +63,20 @@ def handle_ctrl_c(_signal, _frame):
 def run_command(cmd: str, cwd: str) -> str:
     """ Run Command in specified working directory """
     import re
+    import shlex
     import subprocess
 
     # replace all consecutive whitespace characters (tabs, newlines, etc.) with a single space
     cmd = re.sub('\\s{2,}', ' ', cmd)
 
     print('Running [%s] in %s' % (cmd, cwd))
-    (retval, output) = subprocess.getstatusoutput(f'cd {cwd} && {cmd}')
-    if retval:
-        sys.exit("failed %s (cmd was %s)%s" % (retval, cmd, ":\n%s" % output if output else ""))
+    cmd_arr = shlex.split(cmd)
+    result = subprocess.run(cmd_arr, cwd=cwd, capture_output=True, text=True)
+    if result.returncode:
+        output = result.stdout + result.stderr
+        sys.exit("failed %s (cmd was %s)%s" % (result.returncode, cmd, ":\n%s" % output.rstrip() if output.rstrip() else ""))
 
+    output = result.stdout + result.stderr
     print(output.rstrip())
     return output.rstrip()
 
@@ -174,7 +178,7 @@ def download_https_file(cwd, url, file, cookie_file, netrc, md5, sha1, sha256, r
             expected_sha1 = get_sha1sum(download_filepath)
             if sha1 != expected_sha1:
                 sys.exit('Download artifact %s sha1: %s does not match expected: %s' %
-                         (download_filepath, md5, expected_sha1))
+                         (download_filepath, sha1, expected_sha1))
         elif sha256:
             expected_sha256 = get_sha256sum(download_filepath)
             if sha256 != expected_sha256:
@@ -219,17 +223,103 @@ def fetch_https_progress(download_t, download_d, _upload_t, _upload_d):
     stream.flush()
 
 
+def _fetch_https_binary_file_urllib(url, filename, redirect, headers, cookie_file, netrc, connect_timeout) -> bool:
+    """Fallback HTTPS file download using urllib when pycurl is unavailable"""
+    import time
+    import urllib.request
+    import ssl
+    import http.cookiejar
+
+    retries_left = 3
+    delay_between_retries = 5  # seconds
+
+    try:
+        import certifi
+        ssl_context = ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        ssl_context = ssl.create_default_context()
+
+    while retries_left > 0:
+        try:
+            req = urllib.request.Request(url)
+
+            if headers:
+                for header in headers:
+                    key, value = header.split(':', 1)
+                    req.add_header(key.strip(), value.strip())
+
+            opener_handlers = [urllib.request.HTTPSHandler(context=ssl_context)]
+
+            if cookie_file:
+                cookie_file = os.path.expandvars(cookie_file)
+                print("Using cookie file: %s" % cookie_file)
+                cj = http.cookiejar.MozillaCookieJar(cookie_file)
+                cj.load()
+                opener_handlers.append(urllib.request.HTTPCookieProcessor(cj))
+
+            opener = urllib.request.build_opener(*opener_handlers)
+
+            if connect_timeout is not None:
+                response = opener.open(req, timeout=connect_timeout)
+            else:
+                response = opener.open(req)
+
+            status = response.getcode()
+
+            if not redirect and status == 302:
+                print_banner("Download Status: %d" % status)
+                return False
+
+            with open(filename, 'wb') as f:
+                total = response.headers.get('Content-Length')
+                downloaded = 0
+                block_size = 8192
+                while True:
+                    chunk = response.read(block_size)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    if total:
+                        total_kb = int(total) // kb
+                        done_kb = downloaded // kb
+                        pct = int(downloaded / int(total) * 100)
+                        stream.write('Progress: {}/{} kiB ({}%)\r'.format(done_kb, total_kb, pct))
+                        stream.flush()
+
+            if status != 200:
+                print_banner("Download Status: %d" % status)
+                sys.exit('Download Failed')
+
+            return True
+
+        except (urllib.error.URLError, OSError):
+            retries_left -= 1
+            print('download retry')
+            time.sleep(delay_between_retries)
+
+    print_banner("Download failed after retries")
+    sys.exit('Download Failed')
+
+
 def fetch_https_binary_file(url, filename, redirect, headers, cookie_file, netrc, connect_timeout) -> bool:
     """Fetches file via HTTPS as binary"""
-    import pycurl
+    try:
+        import pycurl
+    except ImportError:
+        return _fetch_https_binary_file_urllib(url, filename, redirect, headers, cookie_file, netrc, connect_timeout)
+
     import time
 
     retries_left = 3
     delay_between_retries = 5  # seconds
     success = False
 
+    import certifi
+
     c = pycurl.Curl()
     c.setopt(pycurl.URL, url)
+    c.setopt(pycurl.CAINFO, certifi.where())
     if connect_timeout is not None:
         c.setopt(pycurl.CONNECTTIMEOUT, connect_timeout)
     c.setopt(pycurl.NOSIGNAL, 1)
@@ -242,7 +332,7 @@ def fetch_https_binary_file(url, filename, redirect, headers, cookie_file, netrc
     if redirect:
         c.setopt(pycurl.FOLLOWLOCATION, 1)
         c.setopt(pycurl.AUTOREFERER, 1)
-        c.setopt(pycurl.MAXREDIRS, 255)
+        c.setopt(pycurl.MAXREDIRS, 10)
 
     if cookie_file:
         cookie_file = os.path.expandvars(cookie_file)
@@ -310,9 +400,9 @@ def validate_sudo_user_timestamp(args):
         return
     
     if os.path.exists(args.stdin_file):
-        stdin_file = open(args.stdin_file)
-        if get_host_type() == "linux":
-            subprocess.check_call(['sudo', '-S', '-v'], stdout=subprocess.DEVNULL, stdin=stdin_file)
+        with open(args.stdin_file) as stdin_file:
+            if get_host_type() == "linux":
+                subprocess.check_call(['sudo', '-S', '-v'], stdout=subprocess.DEVNULL, stdin=stdin_file)
     else:
         if get_host_type() == "linux":
             subprocess.check_call(['sudo', '-v'], stdout=subprocess.DEVNULL)
@@ -351,22 +441,30 @@ def break_version(version):
 
 def test_internet_connection() -> bool:
     """Test internet connection by connecting to nameserver"""
-    import pycurl
-
-    c = pycurl.Curl()
-    c.setopt(pycurl.URL, "https://dns.google")
-    c.setopt(pycurl.FOLLOWLOCATION, 0)
-    c.setopt(pycurl.CONNECTTIMEOUT, 5)
-    c.setopt(pycurl.NOSIGNAL, 1)
-    c.setopt(pycurl.NOPROGRESS, 1)
-    c.setopt(pycurl.NOBODY, 1)
     try:
-        c.perform()
-    except pycurl.error:
-        pass
+        import pycurl
 
-    res = False
-    if c.getinfo(pycurl.RESPONSE_CODE) == 200:
-        res = True
+        c = pycurl.Curl()
+        c.setopt(pycurl.URL, "https://dns.google")
+        c.setopt(pycurl.FOLLOWLOCATION, 0)
+        c.setopt(pycurl.CONNECTTIMEOUT, 5)
+        c.setopt(pycurl.NOSIGNAL, 1)
+        c.setopt(pycurl.NOPROGRESS, 1)
+        c.setopt(pycurl.NOBODY, 1)
+        try:
+            c.perform()
+        except pycurl.error:
+            pass
 
-    return res
+        res = False
+        if c.getinfo(pycurl.RESPONSE_CODE) == 200:
+            res = True
+
+        return res
+    except ImportError:
+        import urllib.request
+        try:
+            urllib.request.urlopen("https://dns.google", timeout=5)
+            return True
+        except (urllib.error.URLError, OSError):
+            return False

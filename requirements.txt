@@ -1,0 +1,5 @@
+pycurl>=7.45.6
+certifi>=2023.7.22
+PyYAML>=6.0.2
+toml>=0.10.2
+python-dotenv>=1.0.1

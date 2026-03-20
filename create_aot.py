@@ -73,7 +73,7 @@ def get_yaml_obj(filepath: str):
 
     with open(filepath, "r") as stream_:
         try:
-            data_loaded = yaml.full_load(stream_)
+            data_loaded = yaml.safe_load(stream_)
 
         except yaml.YAMLError as exc:
             sys.exit(f'Failed loading {exc} - {filepath}')
@@ -142,7 +142,7 @@ def create_platform_aot(app_path: str, flutter_sdk_version: str):
 
         print_banner(f'[{runtime_mode}] flutter build {flutter_build_args}: Completed')
 
-        if runtime_mode == 'release' or 'profile':
+        if runtime_mode in ('release', 'profile'):
 
             print_banner(f'kernel_snapshot_{runtime_mode}: Starting')
 
@@ -259,7 +259,7 @@ def create_platform_aot(app_path: str, flutter_sdk_version: str):
             if runtime_mode != 'debug':
                 cmd = f'{gen_snapshot} \
                     {app_gen_snapshot_flags} \
-                    {app_path}/.dart_tool/flutter_build/*/app.dill'
+                    {build_dir}/app.dill'
 
                 run_command(cmd, app_path)
 
