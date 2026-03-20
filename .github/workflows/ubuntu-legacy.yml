@@ -9,19 +9,24 @@ on:
       - .github/workflows/windows.yaml
       - .github/workflows/fedora.yml
       - .github/workflows/ubuntu.yml
+      - .github/workflows/ubuntu-legacy.yml
       - '**/*.md'
   release:
     types: [ published, created, edited ]
   workflow_dispatch:
   schedule:
-    # daily
-    - cron:  '0 0 * * *'
+    - cron: '0 3 * * *'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
 
   run:
 
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu:20.04]
         llvm: [18, 14]
@@ -30,23 +35,18 @@ jobs:
     container:
       image: ${{ matrix.os }}
 
+    env:
+      CI: true
+      GITHUB_ACTIONS: true
+      DEBIAN_FRONTEND: noninteractive
+
     if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip ubuntu-legacy') && !contains(github.event.head_commit.message, '[skip ubuntu-legacy]')"
 
     steps:
-      - name: Check Environment
-        run: |
-          echo "Running on Ubuntu version: $(lsb_release -d | cut -f2)"
-          echo "Running on architecture: $(uname -m)"
-          echo "Current directory: $(pwd)"
-          echo "Environment variables:"
-          env
-          
       - name: Set up tools
         run: |
           apt-get update -y
-          DEBIAN_FRONTEND=noninteractive apt-get install -yq python3 python3-pip bash cmake sudo
-          python3 -m pip install --upgrade pip
-          apt install python3.8-venv -yq
+          apt-get install -yq python3 python3-pip python3.8-venv bash cmake sudo
 
       - name: Create non-root user
         run: |
@@ -57,35 +57,18 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Fix workspace permissions
-        shell: bash
-        run: |
-          cd $GITHUB_WORKSPACE
-          sudo chown -R user:user .
+        run: chown -R user:user $GITHUB_WORKSPACE
 
       - name: Create workspace
-        shell: bash
-        # Run as non-root user in the container
         run: |
-          env
-          cd $GITHUB_WORKSPACE
-          pwd; ls -la
-          export DEBIAN_FRONTEND=noninteractive; echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
-          sudo -u user bash -c "./flutter_workspace.py"
-          cat ./setup_env.sh
+          echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+          sudo -u user bash -c "cd $GITHUB_WORKSPACE && ./flutter_workspace.py"
 
       - name: Test workspace
-        shell: bash
         run: |
-          env
-          cd $GITHUB_WORKSPACE
-          pwd; ls -la
-          sudo -u user bash -c ". ./setup_env.sh && dart --version"
+          sudo -u user bash -c "cd $GITHUB_WORKSPACE && . ./setup_env.sh && dart --version"
 
       - name: Create AOT Tests
-        shell: bash
         run: |
-          env
-          cd $GITHUB_WORKSPACE
-          pwd; ls -la
-          sudo -u user bash -c ". ./setup_env.sh && \
+          sudo -u user bash -c "cd $GITHUB_WORKSPACE && . ./setup_env.sh && \
           ./flutter_workspace.py --create-aot --app-path=./app/tcna-packages/packages/flatpak/example/"
