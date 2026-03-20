@@ -13,19 +13,22 @@ on:
     types: [ published, created, edited ]
   workflow_dispatch:
   schedule:
-    # daily
-    - cron:  '0 0 * * *'
+    - cron: '0 2 * * *'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
 
   run:
 
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-22.04-arm, ubuntu-24.04, ubuntu-24.04-arm]
         llvm: [18, 14]
         exclude:
-          # LLVM < 16 not supported for >= Ubuntu 24.04
           - os: ubuntu-24.04
             llvm: 14
           - os: ubuntu-24.04-arm
@@ -33,57 +36,36 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    env:
+      CI: true
+      GITHUB_ACTIONS: true
+
     if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip ubuntu') && !contains(github.event.head_commit.message, '[skip ubuntu]')"
 
     steps:
       - name: Check Environment
         run: |
-          echo "Running on Ubuntu version: $(lsb_release -d | cut -f2)"
-          echo "Running on architecture: $(uname -m)"
-          echo "Current directory: $(pwd)"
-          echo "Environment variables:"
-          env
+          echo "Ubuntu: $(lsb_release -d | cut -f2)"
+          echo "Arch: $(uname -m)"
 
       - uses: actions/checkout@v4
 
       - name: Create workspace
-        shell: bash
-        env:
-          CI: true
-          GITHUB_ACTIONS: true
-        # If llvm != 18, do --disable=toolchain-llvm-18
         run: |
-          cd $GITHUB_WORKSPACE
-          pwd; ls -la
           PREFER_LLVM=${{ matrix.llvm }} ./flutter_workspace.py
-          echo "Checking LLVM config..."
-          cat setup_env.sh; echo ""
           FOUND_LLVM_VER=$(grep -oP 'export PREFER_LLVM=\K[0-9]+' setup_env.sh)
-          if [ "$FOUND_LLVM_VER" != ${{ matrix.llvm }} ]; then
+          if [ "$FOUND_LLVM_VER" != "${{ matrix.llvm }}" ]; then
             echo "Expected LLVM version ${{ matrix.llvm }} but found ${FOUND_LLVM_VER} in setup_env.sh"
             exit 1
           fi
 
       - name: Test workspace
-        shell: bash
-        env:
-          CI: true
-          GITHUB_ACTIONS: true
         run: |
-          cd $GITHUB_WORKSPACE
-          pwd; ls -la
           . ./setup_env.sh
-          ls -la $FLUTTER_WORKSPACE
           dart --version
 
       - name: Create AOT Tests
         if: ${{ !contains(matrix.os, 'arm') }}
-        shell: bash
-        env:
-          CI: true
-          GITHUB_ACTIONS: true
         run: |
-          cd $GITHUB_WORKSPACE
-          pwd; ls -la
           . ./setup_env.sh
           ./flutter_workspace.py --create-aot --app-path=./app/tcna-packages/packages/flatpak/example/
