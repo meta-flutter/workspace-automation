@@ -250,6 +250,12 @@ def _fetch_https_binary_file_urllib(url, filename, redirect, headers, cookie_fil
 
             opener_handlers = [urllib.request.HTTPSHandler(context=ssl_context)]
 
+            if not redirect:
+                class NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+                    def redirect_request(self, req, fp, code, msg, headers, newurl):
+                        return None
+                opener_handlers.append(NoRedirectHandler())
+
             if cookie_file:
                 cookie_file = os.path.expandvars(cookie_file)
                 print("Using cookie file: %s" % cookie_file)
@@ -259,37 +265,37 @@ def _fetch_https_binary_file_urllib(url, filename, redirect, headers, cookie_fil
 
             opener = urllib.request.build_opener(*opener_handlers)
 
+            open_kwargs = {}
             if connect_timeout is not None:
-                response = opener.open(req, timeout=connect_timeout)
-            else:
-                response = opener.open(req)
+                open_kwargs['timeout'] = connect_timeout
 
-            status = response.getcode()
+            with opener.open(req, **open_kwargs) as response:
+                status = response.getcode()
 
-            if not redirect and status == 302:
-                print_banner("Download Status: %d" % status)
-                return False
+                if not redirect and status == 302:
+                    print_banner("Download Status: %d" % status)
+                    return False
 
-            with open(filename, 'wb') as f:
-                total = response.headers.get('Content-Length')
-                downloaded = 0
-                block_size = 8192
-                while True:
-                    chunk = response.read(block_size)
-                    if not chunk:
-                        break
-                    f.write(chunk)
-                    downloaded += len(chunk)
-                    if total:
-                        total_kb = int(total) // kb
-                        done_kb = downloaded // kb
-                        pct = int(downloaded / int(total) * 100)
-                        stream.write('Progress: {}/{} kiB ({}%)\r'.format(done_kb, total_kb, pct))
-                        stream.flush()
+                with open(filename, 'wb') as f:
+                    total = response.headers.get('Content-Length')
+                    downloaded = 0
+                    block_size = 8192
+                    while True:
+                        chunk = response.read(block_size)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        if total:
+                            total_kb = int(total) // kb
+                            done_kb = downloaded // kb
+                            pct = int(downloaded / int(total) * 100)
+                            stream.write('Progress: {}/{} kiB ({}%)\r'.format(done_kb, total_kb, pct))
+                            stream.flush()
 
-            if status != 200:
-                print_banner("Download Status: %d" % status)
-                sys.exit('Download Failed')
+                if status != 200:
+                    print_banner("Download Status: %d" % status)
+                    sys.exit('Download Failed')
 
             return True
 
@@ -444,21 +450,31 @@ def test_internet_connection() -> bool:
     try:
         import pycurl
 
-        c = pycurl.Curl()
-        c.setopt(pycurl.URL, "https://dns.google")
-        c.setopt(pycurl.FOLLOWLOCATION, 0)
-        c.setopt(pycurl.CONNECTTIMEOUT, 5)
-        c.setopt(pycurl.NOSIGNAL, 1)
-        c.setopt(pycurl.NOPROGRESS, 1)
-        c.setopt(pycurl.NOBODY, 1)
         try:
-            c.perform()
-        except pycurl.error:
-            pass
+            import certifi as _certifi
+        except ImportError:
+            _certifi = None
 
-        res = False
-        if c.getinfo(pycurl.RESPONSE_CODE) == 200:
-            res = True
+        c = pycurl.Curl()
+        try:
+            c.setopt(pycurl.URL, "https://dns.google")
+            c.setopt(pycurl.FOLLOWLOCATION, 0)
+            c.setopt(pycurl.CONNECTTIMEOUT, 5)
+            c.setopt(pycurl.NOSIGNAL, 1)
+            c.setopt(pycurl.NOPROGRESS, 1)
+            c.setopt(pycurl.NOBODY, 1)
+            if _certifi is not None:
+                c.setopt(pycurl.CAINFO, _certifi.where())
+            try:
+                c.perform()
+            except pycurl.error:
+                pass
+
+            res = False
+            if c.getinfo(pycurl.RESPONSE_CODE) == 200:
+                res = True
+        finally:
+            c.close()
 
         return res
     except ImportError:
