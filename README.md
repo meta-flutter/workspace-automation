@@ -1,252 +1,270 @@
 # Flutter Workspace Automation
 
-Workspace Automation that supports embedded Flutter development
+Workspace automation that supports embedded Flutter development.
 
-We developed a Python script, `flutter_workspace.py` to automate embedded flutter setup.
-This script reads a configuration folder of JSON files, or a single JSON configuration file and sets up a Flutter Workspace.
+A Python script, `flutter_workspace.py`, reads a configuration folder of JSON files (or a single JSON configuration file) and sets up a Flutter Workspace.
 
-#### Discord Server https://discord.gg/VKcpSHgjGQ
+Discord Server: https://discord.gg/VKcpSHgjGQ
 
-### Minimum requirements
+## Prerequisites
 
-* Ubuntu
+### Ubuntu
 
-    sudo apt install -y apt-utils python3
+```bash
+sudo apt install -y apt-utils python3
+python3 -m pip install virtualenv
+```
 
-* Windows
+### Windows
 
-- Install Visual Studio
-- Install CMake
-- Install python3 from the Windows Store - enable for cmd.exe
+1. Install [Visual Studio](https://visualstudio.microsoft.com/)
+2. Install [CMake](https://cmake.org/download/)
+3. Install python3 from the Windows Store and enable it for `cmd.exe`
+4. Install the virtualenv module:
 
--Install the python virtualenv module
+```bash
+python3 -m pip install virtualenv
+```
 
-    python3 -m pip install virtualenv
+## Installation
 
-### create_aot.py
+```bash
+git clone https://github.com/meta-flutter/workspace_automation.git
+cd workspace_automation
+./flutter_workspace.py
+source ./setup_env.sh
+```
 
-create AOT is used to create libapp.so for use on a device.  It requires an active FLUTTER_WORKSPACE.
+## Usage
 
-Example use:
+### Run Flutter App with desktop-auto
 
-    source ./setup_env.sh
-    ./create_aot --path <path that holds a pubspec.yaml>
+1. Login via GDM Wayland Session
+2. Open a terminal
+3. Source the environment and run your app:
 
-#### Environmental variables used by script
+```bash
+source ${FLUTTER_WORKSPACE}/setup_env.sh
+cd <path-to-your-app>
+flutter run -d desktop-auto
+```
 
-* GEN_SNAPSHOT - (Required) Set GEN_SNAPSHOT to location of executable gen_snapshot
+### Run Flutter App with QEMU
 
-* PUB_CACHE - Set using `source ./setup_env.sh`
+1. Open a terminal and source the environment:
 
-* FLUTTER_WORKSPACE - Set using `source ./setup_env.sh`
+```bash
+source ${FLUTTER_WORKSPACE}/setup_env.sh
+```
 
-* FLUTTER_BUILD_ARGS - Defaults to 'bundle'
+2. Start QEMU and wait for the login prompt:
 
-* LOCAL_ENGINE_HOST - Defaults to f'{flutter_sdk}/bin/cache/artifacts/engine/common'
+```bash
+qemu_run
+```
 
-* APP_GEN_SNAPSHOT_FLAGS
+3. Add the remote host to your known hosts:
 
-* APP_GEN_SNAPSHOT_AOT_FILENAME - Defaults to 'libapp.so.{runtime_mode}'
+```bash
+ssh -p 2222 root@localhost who
+```
 
-* FLUTTER_PREBUILD_CMD
+4. Navigate to your app and run it:
 
-### flutter_workspace.py
+```bash
+cd <path-to-your-app>
+flutter run -run-qemu-master
+```
 
-flutter_workspace.py does the following tasks automatically for you
+### Create a hello_world Example
+
+1. Login to Ubuntu desktop via Wayland Session
+2. Open a terminal and run:
+
+```bash
+source ${FLUTTER_WORKSPACE}/setup_env.sh
+cd ${FLUTTER_WORKSPACE}/app
+flutter create hello_world -t app
+cd hello_world
+flutter run -d desktop-auto
+```
+
+### Running the `dart_pdf` Demo
+
+```bash
+./flutter_workspace.py --enable=pdfium
+source ./setup_env.sh
+export LD_LIBRARY_PATH=${FLUTTER_WORKSPACE}/app/pdfium/pdfium/out/Linux-Release/
+pushd app/dart_pdf/demo
+flutter run -d desktop-homescreen
+```
+
+## Command-Line Options
+
+| Option | Description |
+|--------|-------------|
+| `-h`, `--help` | Show help message and exit |
+| `--clean` | Wipes workspace clean |
+| `--config CONFIG` | Selects custom workspace configuration folder |
+| `--flutter-version VERSION` | Select flutter version. Overrides config file key: `flutter_version` |
+| `--github-token TOKEN` | Set github token. Overrides `_globals.json` key/value |
+| `--cookie-file FILE` | Set cookie file to use. Overrides `_globals.json` key/value |
+| `--fetch-engine` | Fetch engine artifacts |
+| `--find-working-commit` | Find GIT commit where `flutter analyze` returns true |
+| `--plex PLEX` | Platform Load Excludes (see below) |
+| `--enable ENABLE` | Platform Load Enable Override (see below) |
+| `--disable DISABLE` | Platform Load Disable Override (see below) |
+| `--remote REMOTE` | Remote Platform Load Git Repo |
+| `--enable-plugin PLUGIN` | Enable a plugin |
+| `--disable-plugin PLUGIN` | Disable a plugin |
+| `--fastboot PLATFORM` | Update the selected platform using fastboot |
+| `--mask-rom PLATFORM` | Update the selected platform using Mask ROM |
+| `--device-id ID` | Device id for flashing |
+| `--stdin-file FILE` | Pass stdin for debugging |
+| `--plugin-platform TYPE` | Specify plugin platform type |
+| `--create-aot` | Generate AOT |
+| `--app-path PATH` | Specify application path |
+| `--copy-dconf-user` | Copy `$HOME/.config/dconf/user` to `$FLUTTER_WORKSPACE` |
+| `--build-type BUILD_TYPE` | Specify build types (see below) |
+
+### --plex / --disable
+
+Excludes platform configurations by id. Separate multiple ids with `,`.
+
+```bash
+./flutter_workspace.py --plex=flatpak,firebase-cpp-sdk
+```
+
+This forces `FLUTTER_WORKSPACE_<platform-id>_LOAD=OFF`. This variable can be used reliably in a configuration type other than `dependency`.
+
+### --enable
+
+Enables platform configurations by id. Separate multiple ids with `,`.
+
+```bash
+./flutter_workspace.py --enable=flatpak
+```
+
+This forces `FLUTTER_WORKSPACE_<platform-id>_LOAD=ON`. This variable can be used reliably in a configuration type other than `dependency`.
+
+### --build-type
+
+Specify build types per platform. Format: `<platform_id>:<build_type>,<platform_id>:<build_type>`. Valid build types are `debug`, `profile`, `release`. If not specified, defaults to the globals `_BUILD_TYPE` value.
+
+```bash
+./flutter_workspace.py --build-type=my-platform:release,other-platform:profile
+```
+
+## create_aot.py
+
+Creates `libapp.so` for use on a device. Requires an active `FLUTTER_WORKSPACE`.
+
+```bash
+source ./setup_env.sh
+./create_aot --path <path-to-pubspec.yaml>
+```
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `GEN_SNAPSHOT` | **(Required)** Path to the `gen_snapshot` executable |
+| `PUB_CACHE` | Set via `source ./setup_env.sh` |
+| `FLUTTER_WORKSPACE` | Set via `source ./setup_env.sh` |
+| `FLUTTER_BUILD_ARGS` | Defaults to `bundle` |
+| `LOCAL_ENGINE_HOST` | Defaults to `{flutter_sdk}/bin/cache/artifacts/engine/common` |
+| `APP_GEN_SNAPSHOT_FLAGS` | Additional flags for gen_snapshot |
+| `APP_GEN_SNAPSHOT_AOT_FILENAME` | Defaults to `libapp.so.{runtime_mode}` |
+| `FLUTTER_PREBUILD_CMD` | Command to run before build |
+
+## flutter_workspace.py
+
+`flutter_workspace.py` automates the following:
 
 * Establishes a workspace of known state
-* Sync repos into app folder
-* .vscode debug launcher file
-* Flutter SDK
-* Flutter runtime=debug engine
-* Loads platform types
-  * QEMU, Docker, Remote, Host, Generic
-  * Each type uses a specific configuration
-* Create setup_env.sh
-* 
-* Tested on Linux, Mac, and Windows
-  * Ubuntu 20/22/24 (x86_64, aarch64)
-  * Fedora 40/41/42 (x86_64)
-  * macOS 13/14/15 (x86_64, arm64) - Mac M1/M2
-  * Windows 10 (AMD64)
-  * Windows 11 (AMD64, ARM64) - Windows Surface Elite X
+* Syncs repos into app folder
+* Creates `.vscode` debug launcher file
+* Sets up Flutter SDK and runtime=debug engine
+* Loads platform types (QEMU, Docker, Remote, Host, Generic)
+* Creates `setup_env.sh`
 
-#### Environmental Variables
+### Environment Variables
 
-* PREFER_LLVM - (optional) set the LLVM version to use.  If not found, defaults to using `llvm-config`.
+| Variable | Description |
+|----------|-------------|
+| `PREFER_LLVM` | (optional) Set the LLVM version to use. Defaults to `llvm-config` |
+| `HARDWARE_THREADS` | (optional) Max hardware thread count for building/fetching. Useful for low RAM machines |
 
-* HARDWARE_THREADS - (optional) set the maximum hardware thread count used in building and fetching.  Used for low RAM machines.
+### Platform Configuration Variables
 
-### Flutter Workspace
+`FLUTTER_WORKSPACE_<config-id>_LOAD=[ON,OFF]`
 
-A Flutter workspace contains
+Generated for each platform config. The initial value is determined by the platform config `load` key. It will be overridden to `OFF` via the `--plex=` option.
 
-* Flutter SDK
-  * flutter
-* Development Repositories (app)
-  * app
-* Host Runtime images
-  * .config/flutter_workspace/<platform-id>
-* flutter-auto binary
-  * app/ivi-homescreen/build
-* QEMU image
-  * .config/flutter_workspace/<platform>/<qemu files>)
-* Versioned x86_64 libflutter_engine.so and icudtl.dat
-  * ./config/flutter_workspace/flutter-engine
-* Custom-device configurations
-  * ./config/flutter_workspace/<platform-id>
-* Public Cache
-  * .config/flutter_workspace/pub_cache
+### Supported Platforms
 
+| Platform | Architectures |
+|----------|--------------|
+| Ubuntu 20/22/24 | x86_64, aarch64 |
+| Fedora 40/41/42 | x86_64 |
+| macOS 13/14/15 | x86_64, arm64 (M1/M2) |
+| Windows 10 | AMD64 |
+| Windows 11 | AMD64, ARM64 (Surface Elite X) |
 
-### JSON Configuration 
+## Workspace Structure
 
-flutter_workspace_config.json contains the following components
-
-* globals
-  * cookie_file
-  * netrc
-  * github_api
-  * <any key>
-* repos
-  * git
-* platform definition
-
-
-### Platform configuration environmental variables
-
-* `FLUTTER_WORKSPACE_<config id>)_LOAD=[ON,OFF]`
-  This environmental variable is generated for each platform config.  The initial value is determined by the platform config `load` key value.  It will be overriden to `OFF` via the `--plex=` command line option.
-
-
-### Installation
+A Flutter workspace contains:
 
 ```
-git clone https://github.com/meta-flutter/workspace_automation.git
-./flutter_workspace.py
+<workspace>/
+  flutter/                                        # Flutter SDK
+  app/                                            # Development repositories
+  app/ivi-homescreen/build/                       # flutter-auto binary
+  .config/flutter_workspace/<platform-id>/        # Host runtime images
+  .config/flutter_workspace/<platform>/           # QEMU image files
+  .config/flutter_workspace/flutter-engine/       # Versioned libflutter_engine.so and icudtl.dat
+  .config/flutter_workspace/<platform-id>/        # Custom-device configurations
+  .config/flutter_workspace/pub_cache/            # Public cache
 ```
 
-### Options
+## JSON Configuration
 
-#### --clean
+`flutter_workspace_config.json` contains the following components:
 
-Wipes workspace before creating
+* **globals** - `cookie_file`, `netrc`, `github_api`, `<any key>`
+* **repos** - `git`
+* **platform definition**
 
-#### --config=<folder>
+## Working with LLVM
 
-Pass configuration folder path.
+### Set the Preferred Toolchain
 
+To change the toolchain version, set the `PREFER_LLVM` variable:
 
-#### --flutter-version=x.x.x
-
-Override config/_globals.json key "flutter_version"
-
-#### --fetch-engine
-
-Fetch libflutter_engine.so and update bundle cache
-
-#### --version-files=<folder>
-
-Pass folder for storing dart and engine json files.
-
-#### --plex="..."
-
-Platform Load Exceptions.  Pass platform-id values.  Select multiple platform ids by seperating with `,`.
-
-e.g. `--plex=flatpak,firebase-cpp-sdk`
-
-This option also has the impact of forcing the environmental variable `FLUTTER_WORKSPACE_<platfor id>)_LOAD=OFF`.  This variable can be used reliably in a configuration type other than `dependency`.
-
-#### --enable="..."
-
-Enable Platform Configuration(s).  Pass platform-id values.  Select multiple platform ids by seperating with `,`.
-
-e.g. `--enable=flatpak`
-
-This option also has the impact of forcing the environmental variable `FLUTTER_WORKSPACE_<platfor id>)_LOAD=ON`.  This variable can be used reliably in a configuration type other than `dependency`.
-
-#### --disable="..."
-
-Alias to --plex.  See `--plex` description
-
-
-#### --stdin-file
-
-Use for debugging
-
-
-### Run flutter app with desktop-auto 
-
-* Login via GDM Wayland Session
-* Open Terminal and type
-* `source ${FLUTTER_WORKSPACE}/setup_env.sh`
-* Navigate to your favorite app
-* `flutter run -d desktop-auto`
-
-
-### Run flutter app with QEMU 
-
-* Open Terminal and type
-* `source ${FLUTTER_WORKSPACE}/setup_env.sh`
-* Type `qemu_run`
-* Wait until QEMU image reaches login prompt
-* Run `ssh –p 2222 root@localhost who` to add remote host to ~/.ssh/known_hosts
-* Navigate to your favorite app
-* `flutter run -run-qemu-master`
-
-
-### Create hello_world flutter example 
-
-* Login to Ubuntu desktop via Wayland Session
-* Open Terminal and type
-* `source ${FLUTTER_WORKSPACE}/setup_env.sh`
-* `cd ${FLUTTER_WORKSPACE}/app`
-* `flutter create hello_world -t app`
-* `cd hello_world`
-* `flutter run -d desktop-auto`
-
-
-### Running `dart_pdf` demo
-
-    ./flutter_workspace.py --enable=pdfium
-    source ./setup_env.sh
-    export LD_LIBRARY_PATH=${FLUTTER_WORKSPACE}/app/pdfium/pdfium/out/Linux-Release/
-    pushd app/dart_pdf/demo
-    flutter run -d desktop-homescreen
-
-
-### Working with LLVM
-
-#### Set the preferred LLVM toolchain
-
-To change the toolchain version used by flutter_workspace use the `PREFER_LLVM` variable
-```
+```bash
 PREFER_LLVM=10 ./flutter_workspace.py
 ```
 
-If the `PREFER_LLVM` key is set it overrides `clang-stable`.
+If `PREFER_LLVM` is set, it overrides `clang-stable`.
 
-If you have multiple instances of the same llvm-config-<number> file present in `/usr`, the first ocurring will be selected.  This could be an Android NDK toolchain.
+If you have multiple instances of the same `llvm-config-<number>` file in `/usr`, the first occurring will be selected (this could be an Android NDK toolchain).
 
-Refer to listing available LLVM installs for debugging toolchain selection problems.
+### List Available LLVM Installs
 
-#### List available LLVM installs
-```
+```bash
 find /usr -type f -executable -name 'llvm-config*'
 ```
 
-### Visual Studio Code
+## Visual Studio Code
 
-#### Launching on Ubuntu
+### Launching on Ubuntu
 
+```bash
+cd <your-flutter-workspace>
+source ./setup_env.sh
+code .
 ```
-    cd <your flutter workspace>
-    source ./setup_env.sh
-    code .
-```
 
-#### Debugging with VS Code
+### Debugging with VS Code
 
-`flutter_workspace.py` creates a `.vscode/launch.json` file if one is not present.
-It uses the repo json key `pubspec_path`.  If this key is present in the repo
-json, then it will add entry to `.vscode/launch.json`.
+`flutter_workspace.py` creates a `.vscode/launch.json` file if one is not present. It uses the repo json key `pubspec_path` — if present, an entry is added to `.vscode/launch.json`.
