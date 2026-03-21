@@ -10,6 +10,7 @@
 import glob
 import os
 import signal
+import subprocess
 import sys
 
 from common import handle_ctrl_c
@@ -73,7 +74,7 @@ def get_yaml_obj(filepath: str):
 
     with open(filepath, "r") as stream_:
         try:
-            data_loaded = yaml.full_load(stream_)
+            data_loaded = yaml.safe_load(stream_)
 
         except yaml.YAMLError as exc:
             sys.exit(f'Failed loading {exc} - {filepath}')
@@ -92,8 +93,18 @@ def create_platform_aot(app_path: str, flutter_sdk_version: str):
     if gen_snapshot is None:
         sys.exit('Set GEN_SNAPSHOT to location of executable gen_snapshot')
 
-    cmd = f'{gen_snapshot} --version 2>&1 | cut -d\\" -f2'
-    gen_snapshot_variant = run_command(cmd, app_path)
+    result = subprocess.run(
+        [gen_snapshot, '--version'],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        cwd=app_path,
+        universal_newlines=True,
+    )
+    if result.returncode != 0:
+        sys.exit('Failed to get gen_snapshot version (exit %d): %s' % (result.returncode, result.stdout.strip()))
+    parts = result.stdout.split('"')
+    gen_snapshot_variant = parts[1] if len(parts) >= 2 else result.stdout.strip()
+    print('gen_snapshot variant: %s' % gen_snapshot_variant)
     # if gen_snapshot_variant == 'linux_x64':
     #    sys.exit(f'{gen_snapshot} intended for host build, skipping!')
 
@@ -142,7 +153,7 @@ def create_platform_aot(app_path: str, flutter_sdk_version: str):
 
         print_banner(f'[{runtime_mode}] flutter build {flutter_build_args}: Completed')
 
-        if runtime_mode == 'release' or 'profile':
+        if runtime_mode in ('release', 'profile'):
 
             print_banner(f'kernel_snapshot_{runtime_mode}: Starting')
 
@@ -259,7 +270,7 @@ def create_platform_aot(app_path: str, flutter_sdk_version: str):
             if runtime_mode != 'debug':
                 cmd = f'{gen_snapshot} \
                     {app_gen_snapshot_flags} \
-                    {app_path}/.dart_tool/flutter_build/*/app.dill'
+                    {build_dir}/app.dill'
 
                 run_command(cmd, app_path)
 
