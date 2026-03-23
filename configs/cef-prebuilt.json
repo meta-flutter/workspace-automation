@@ -15,7 +15,8 @@
         "ARCHIVE_FILE": "cef_binary_128.4.9%2Bg9840ad9%2Bchromium-128.0.6613.120_linux64_minimal",
         "ARCHIVE_FOLDER": "cef_binary_128.4.9+g9840ad9+chromium-128.0.6613.120_linux64_minimal",
         "THIRD_PARTY_ROOT": "${FLUTTER_WORKSPACE}/app/ivi-homescreen-plugins/plugins/webview_flutter_view/third_party",
-        "CEF_ROOT": "${THIRD_PARTY_ROOT}/${ARCHIVE_FOLDER}"
+        "CEF_ROOT": "${THIRD_PARTY_ROOT}/${ARCHIVE_FOLDER}",
+        "+( )PLUGIN_ARGS": "-DCEF_ROOT=${CEF_ROOT}"
     },
     "runtime": {
         "artifacts": {

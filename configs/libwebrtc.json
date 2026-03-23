@@ -19,8 +19,13 @@
         "LIBWEBRTC_SRC_DIR": "${LIBWEBRTC_ROOT}/${LIBWEBRTC_SRC_DIR_RELATIVE}",
         "GN_ARGS": "target_os=\\\"linux\\\" target_cpu=\\\"${HOST_ARCH_GOOGLE}\\\" is_debug=true rtc_include_tests=false rtc_use_h264=true ffmpeg_branding=\\\"Chrome\\\" is_component_build=false use_rtti=true use_custom_libcxx=true rtc_enable_protobuf=false",
         "LIBWEBRTC_BUILD_DIR": "${LIBWEBRTC_SRC_DIR}/out/Linux-Debug",
+        "LIBWEBRTC_INC_DIR": "${LIBWEBRTC_SRC_DIR}/libwebrtc/include",
+        "LIBWEBRTC_LIB_DIR": "${LIBWEBRTC_BUILD_DIR}",
+        "LIBWEBRTC_LIB": "${LIBWEBRTC_LIB_DIR}/libwebrtc.so",
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/libwebrtc",
-        "VPYTHON_VIRTUALENV_ROOT": "${LIBWEBRTC_ROOT}/.vpython-root"
+        "VPYTHON_VIRTUALENV_ROOT": "${LIBWEBRTC_ROOT}/.vpython-root",
+        "+(;)STATIC_PLUGIN_DIRS": "${FLUTTER_WORKSPACE}/app/ivi-homescreen-plugins/plugins/webrtc",
+        "+( )PLUGIN_ARGS": "-DLIBWEBRTC_SRC_DIR=${LIBWEBRTC_SRC_DIR} -DLIBWEBRTC_BUILD_DIR=${LIBWEBRTC_BUILD_DIR}"
     },
     "src": [
         {

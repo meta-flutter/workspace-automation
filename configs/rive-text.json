@@ -20,7 +20,10 @@
         "LD_LIBRARY_PATH": "${LLVM_LIBDIR}:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
         "RIVE_TEXT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/rive-common",
         "RIVE_TEXT_BUILD_DIR": "${RIVE_TEXT_SRC_DIR}/build",
-        "RIVE_TEXT_CMAKE_ARGS": "-D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -D ENABLE_LTO=ON"
+        "RIVE_TEXT_LIB_DIR": "${RIVE_TEXT_BUILD_DIR}",
+        "RIVE_TEXT_CMAKE_ARGS": "-D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -D ENABLE_LTO=ON",
+        "+(;)STATIC_PLUGIN_DIRS": "${FLUTTER_WORKSPACE}/app/ivi-homescreen-plugins/plugins/rive_text",
+        "+( )PLUGIN_ARGS": "-DRIVE_TEXT_PLUGIN_DIRS=${RIVE_TEXT_PLUGIN_DIRS}"
     },
     "src": [
         {
