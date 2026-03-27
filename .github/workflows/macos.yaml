@@ -13,24 +13,18 @@ on:
     types: [ published, created, edited ]
   workflow_dispatch:
   schedule:
-    - cron: '0 5 * * *'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    # daily
+    - cron:  '0 0 * * *'
 
 jobs:
 
   run:
 
     env:
-      CI: true
-      GITHUB_ACTIONS: true
       NONINTERACTIVE: 1
       HOMEBREW_NO_AUTO_UPDATE: 1
 
     strategy:
-      fail-fast: false
       matrix:
         os: [ macos-14, macos-15 ]
 
@@ -40,21 +34,44 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Check Environment
         run: |
-          echo "macOS: $(sw_vers -productVersion)"
-          echo "Arch: $(uname -m)"
-
+          echo "Running on macOS version: $(sw_vers -productVersion)"
+          echo "Running on architecture: $(uname -m)"
+          echo "Current directory: $(pwd)"
+          echo "Environment variables:"
+          env
+          
       - name: Brew fixup
         run: |
-          brew cleanup || true
-          brew doctor || true
-
+          brew upgrade |true
+          brew cleanup |true
+          brew doctor |true
+          ruby -v
+          
       - name: Create workspace
-        run: ./flutter_workspace.py
+        shell: bash
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
+        run: |
+          env
+          cd $GITHUB_WORKSPACE
+          pwd; ls -la
+          ./flutter_workspace.py
+          cat ./setup_env.sh
 
       - name: Test workspace
+        shell: bash
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
         run: |
+          env
+          cd $GITHUB_WORKSPACE
+          pwd; ls -la
           . ./setup_env.sh
           dart --version

@@ -13,22 +13,18 @@ on:
     types: [ published, created, edited ]
   workflow_dispatch:
   schedule:
-    - cron: '0 6 * * *'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    # daily
+    - cron:  '0 0 * * *'
 
 jobs:
 
   run:
 
     env:
-      CI: true
-      GITHUB_ACTIONS: true
+      NONINTERACTIVE: 1
+      HOMEBREW_NO_AUTO_UPDATE: 1
 
     strategy:
-      fail-fast: false
       matrix:
         os: [windows-2022, windows-2025]
 
@@ -39,8 +35,11 @@ jobs:
     steps:
       - name: Check Environment
         run: |
-          echo "Windows: $(powershell -Command [System.Environment]::OSVersion.Version)"
-          echo "Arch: $(uname -m)"
+          echo "Running on Windows version: $(powershell -Command [System.Environment]::OSVersion.Version)"
+          echo "Running on architecture: $(uname -m)"
+          echo "Current directory: $(pwd)"
+          echo "Environment variables:"
+          env
 
       - uses: actions/checkout@v4
 
@@ -110,8 +109,11 @@ jobs:
 
       - name: Create workspace
         env:
+          CI: true
+          GITHUB_ACTIONS: true
           PIP_PREFER_BINARY: "1"
         run: |
+          Set-Location $env:GITHUB_WORKSPACE
           git config --global core.longpaths true
           python3.exe -m pip install --upgrade pip
           python3.exe -m pip install virtualenv
@@ -151,6 +153,10 @@ jobs:
           ./flutter_workspace.ps1
 
       - name: Test workspace
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
         run: |
+          Set-Location $env:GITHUB_WORKSPACE
           & .\setup_env.ps1
           dart --version
