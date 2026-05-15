@@ -25,7 +25,7 @@
     "src": [
         {
             "uri": "https://github.com/getsentry/sentry-native.git",
-            "branch": "0.9.0"
+            "branch": "0.14.2"
         }
     ],
     "runtime": {
