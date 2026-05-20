@@ -2510,21 +2510,6 @@ def get_hardware_threads():
     except AttributeError:
         return multiprocessing.cpu_count()
 
-
-def setup_llvm_vars(llvm_config):
-    print_banner(f"Setting up LLVM variables using {llvm_config}")
-
-    llvm_bindir = get_llvm_config(llvm_config, 'bindir')
-    llvm_libdir = get_llvm_config(llvm_config, 'libdir')
-
-    os.environ['LLVM_BINDIR'] = llvm_bindir
-    os.environ['LLVM_LIBDIR'] = llvm_libdir
-    os.environ['LLVM_CONFIG'] = llvm_bindir + '/llvm-config'
-
-    print(f"LLVM_BINDIR: {os.environ['LLVM_BINDIR']}")
-    print(f"LLVM_CONFIG: {os.environ['LLVM_CONFIG']}")
-
-
 def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin,
                     app_folder):
     if not 'toolchain' in platform_:
@@ -2563,30 +2548,7 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
         host_type = get_freedesktop_os_release_id()
 
 
-    if platform_['toolchain'] == 'llvm':
-        llvm_base_path = '/usr'
-
-        if host_type == 'darwin':
-            llvm_base_path = get_mac_brew_prefix('llvm' + '@' + prefer_llvm)
-        elif host_type == 'ubuntu':
-            llvm_base_path = '/usr/lib/llvm-' + prefer_llvm + '/bin'
-        elif host_type == 'fedora':
-            llvm_base_path = '/usr/lib64/llvm' + prefer_llvm + '/bin'
-
-        print(f'Looking for llvm-config in {llvm_base_path}')
-        llvm_config = get_first_file_in_path(llvm_base_path, 'llvm-config')
-        if llvm_config:
-            setup_llvm_vars(llvm_config)
-        else:
-            llvm_base_path = '/usr'
-            llvm_config = get_first_file_in_path(llvm_base_path, 'llvm-config')
-            if llvm_config:
-                setup_llvm_vars(llvm_config)
-            else:
-                print_banner(f'Failed to find llvm-config({prefer_llvm}) in {llvm_base_path}.')
-                sys.exit(1)
-
-    elif platform_['toolchain'] == 'common':
+    if platform_['toolchain'] == 'common':
         pass
     else:
         print_banner("Toolchain not supported")
@@ -2934,8 +2896,8 @@ def install_minimum_runtime_deps():
         os_release_id = get_freedesktop_os_release_id()
 
         if os_release_id == 'ubuntu':
-            subprocess.check_output(['sudo', 'apt', 'update', '-y'])
-            packages = 'sudo apt install --no-install-recommends -y git git-lfs unzip curl python3-dev python3-virtualenv libcurl4-openssl-dev libssl-dev libgtk-3-dev build-essential libcurl4-openssl-dev'.split(
+            subprocess.check_output(['sudo', 'apt-get', 'update', '-y'])
+            packages = 'sudo apt-get install --no-install-recommends -y git git-lfs unzip curl python3-dev python3-virtualenv libcurl4-openssl-dev libssl-dev libgtk-3-dev build-essential libcurl4-openssl-dev'.split(
                 ' ')
             subprocess.check_output(packages)
 
