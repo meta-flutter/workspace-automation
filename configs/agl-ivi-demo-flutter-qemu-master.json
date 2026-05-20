@@ -75,27 +75,33 @@
       "http": {
         "url": "https://download.automotivelinux.org/AGL/snapshots/${RELEASE_NAME}/${RELEASE_VERSION}",
         "artifacts": {
-          "x86_64": [
-            {
-              "endpoint": "/qemux86-64/deploy/images/qemux86-64/agl-ivi-demo-flutter-qemux86-64.wic.xz"
-            }
-          ],
-          "aarch64": [
-            {
-              "endpoint": "/qemuarm64/deploy/images/qemuarm64/agl-ivi-demo-flutter-qemuarm64.ext4.xz"
-            },
-            {
-              "endpoint": "/qemuarm64/deploy/images/qemuarm64/Image-qemuarm64.bin"
-            }
-          ],
-          "arm64": [
-            {
-              "endpoint": "/qemuarm64/deploy/images/qemuarm64/agl-ivi-demo-flutter-qemuarm64.ext4.xz"
-            },
-            {
-              "endpoint": "/qemuarm64/deploy/images/qemuarm64/Image-qemuarm64.bin"
-            }
-          ]
+          "x86_64": {
+            "common": [
+              {
+                "endpoint": "/qemux86-64/deploy/images/qemux86-64/agl-ivi-demo-flutter-qemux86-64.wic.xz"
+              }
+            ]
+          },
+          "aarch64": {
+            "common": [
+              {
+                "endpoint": "/qemuarm64/deploy/images/qemuarm64/agl-ivi-demo-flutter-qemuarm64.ext4.xz"
+              },
+              {
+                "endpoint": "/qemuarm64/deploy/images/qemuarm64/Image-qemuarm64.bin"
+              }
+            ]
+          },
+          "arm64": {
+            "common": [
+              {
+                "endpoint": "/qemuarm64/deploy/images/qemuarm64/agl-ivi-demo-flutter-qemuarm64.ext4.xz"
+              },
+              {
+                "endpoint": "/qemuarm64/deploy/images/qemuarm64/Image-qemuarm64.bin"
+              }
+            ]
+          }
         }
       }
     },
