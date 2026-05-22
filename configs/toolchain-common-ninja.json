@@ -34,68 +34,76 @@
             "http": {
                 "url": "https://github.com/ninja-build/ninja",
                 "artifacts": {
-                    "x86_64": [
-                        {
-                            "filename": "${ARCHIVE_FILE}",
-                            "endpoint": "/releases/download/v${VERSION}/ninja-linux.zip",
-                            "sha1": "0adea0f99aceafdac3361d091bc90b9dab722f2b",
-                            "post_cmds": [
-                                {
-                                    "cwd": "${PLATFORM_ID_DIR}",
-                                    "cmds": [
-                                        "python3 -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" .",
-                                        "chmod +x ninja"
-                                    ]
-                                }
-                            ]
-                        }
-                    ],
-                    "aarch64": [
-                        {
-                            "filename": "${ARCHIVE_FILE}",
-                            "endpoint": "/releases/download/v${VERSION}/ninja-linux-aarch64.zip",
-                            "sha1": "31ce26f7fc77df4dcbc6ca56cc3b9794778e4ea5",
-                            "post_cmds": [
-                                {
-                                    "cwd": "${PLATFORM_ID_DIR}",
-                                    "cmds": [
-                                        "python3 -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" .",
-                                        "chmod +x ninja"
-                                    ]
-                                }
-                            ]
-                        }
-                    ],
-                    "AMD64": [
-                        {
-                            "filename": "${ARCHIVE_FILE}",
-                            "endpoint": "/releases/download/v${VERSION}/ninja-win.zip",
-                            "sha256": "f550fec705b6d6ff58f2db3c374c2277a37691678d6aba463adcbb129108467a",
-                            "post_cmds": [
-                                {
-                                    "cwd": "${PLATFORM_ID_DIR}",
-                                    "cmds": [
-                                        "python3.exe -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" ."
-                                    ]
-                                }
-                            ]
-                        }
-                    ],
-                    "ARM64": [
-                        {
-                            "filename": "${ARCHIVE_FILE}",
-                            "endpoint": "/releases/download/v${VERSION}/ninja-winarm64.zip",
-                            "sha256": "79c96a50e0deafec212cfa85aa57c6b74003f52d9d1673ddcd1eab1c958c5900",
-                            "post_cmds": [
-                                {
-                                    "cwd": "${PLATFORM_ID_DIR}",
-                                    "cmds": [
-                                        "python3.exe -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" ."
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
+                    "x86_64": {
+                        "common": [
+                            {
+                                "filename": "${ARCHIVE_FILE}",
+                                "endpoint": "/releases/download/v${VERSION}/ninja-linux.zip",
+                                "sha1": "0adea0f99aceafdac3361d091bc90b9dab722f2b",
+                                "post_cmds": [
+                                    {
+                                        "cwd": "${PLATFORM_ID_DIR}",
+                                        "cmds": [
+                                            "python3 -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" .",
+                                            "chmod +x ninja"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "aarch64": {
+                        "common": [
+                            {
+                                "filename": "${ARCHIVE_FILE}",
+                                "endpoint": "/releases/download/v${VERSION}/ninja-linux-aarch64.zip",
+                                "sha1": "31ce26f7fc77df4dcbc6ca56cc3b9794778e4ea5",
+                                "post_cmds": [
+                                    {
+                                        "cwd": "${PLATFORM_ID_DIR}",
+                                        "cmds": [
+                                            "python3 -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" .",
+                                            "chmod +x ninja"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "AMD64": {
+                        "windows": [
+                            {
+                                "filename": "${ARCHIVE_FILE}",
+                                "endpoint": "/releases/download/v${VERSION}/ninja-win.zip",
+                                "sha256": "f550fec705b6d6ff58f2db3c374c2277a37691678d6aba463adcbb129108467a",
+                                "post_cmds": [
+                                    {
+                                        "cwd": "${PLATFORM_ID_DIR}",
+                                        "cmds": [
+                                            "python3.exe -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" ."
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "ARM64": {
+                        "windows": [
+                            {
+                                "filename": "${ARCHIVE_FILE}",
+                                "endpoint": "/releases/download/v${VERSION}/ninja-winarm64.zip",
+                                "sha256": "79c96a50e0deafec212cfa85aa57c6b74003f52d9d1673ddcd1eab1c958c5900",
+                                "post_cmds": [
+                                    {
+                                        "cwd": "${PLATFORM_ID_DIR}",
+                                        "cmds": [
+                                            "python3.exe -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" ."
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
                 }
             }
         }

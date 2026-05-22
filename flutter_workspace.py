@@ -1803,7 +1803,23 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
         cookie_file = obj['cookie_file']
 
     if host_machine_arch in artifacts:
-        host_specific_artifacts = artifacts[host_machine_arch]
+        arch_artifacts = artifacts[host_machine_arch]
+
+        host_type = get_host_type()
+        if host_type == "linux":
+            host_os_release_id = get_freedesktop_os_release_id()
+        elif host_type == "darwin":
+            host_os_release_id = "darwin"
+        elif host_type == "windows":
+            host_os_release_id = "windows"
+        else:
+            host_os_release_id = ''
+
+        host_specific_artifacts = arch_artifacts.get(host_os_release_id) or arch_artifacts.get('common')
+
+        if not host_specific_artifacts:
+            print(f'handle_http_obj: No artifacts for [{host_machine_arch}, {host_os_release_id}]')
+            return
 
         url = None
         if 'url' in obj:
