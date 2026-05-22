@@ -14,8 +14,8 @@
     "env": {
         "CC": "${LLVM_BINDIR}/clang",
         "CXX": "${LLVM_BINDIR}/clang++",
-        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
-        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
+        "PATH": "${FLUTTER_WORKSPACE}/.tmp/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.tmp/toolchain-common-cmake/bin:$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.tmp/toolchain-common-cmake/lib",
         "MAPLIBRE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native",
         "MAPLIBRE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native/build",
         "MAPLIBRE_STAGING_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native/staging",

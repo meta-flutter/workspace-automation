@@ -12,8 +12,8 @@
     ],
     "type": "dependency",
     "env": {
-        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
-        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
+        "PATH": "${FLUTTER_WORKSPACE}/.tmp/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.tmp/toolchain-common-cmake/bin:$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.tmp/toolchain-common-cmake/lib",
         "FIREBASE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk",
         "FIREBASE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/firebase-cpp-sdk/build",
         "FIREBASE_STAGING_DIR": "${FIREBASE_BUILD_DIR}/staging/release",

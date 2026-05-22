@@ -136,6 +136,8 @@ def main():
                         help='Specify build types.  Format: <platform_id>:<build_type>,<platform_id>:<build_type>.  '
                              'Valid build types are debug, profile, release.  '
                              'If not specified, defaults to globals\' _BUILD_TYPE')
+    parser.add_argument('--clean-cache', default=False,
+                        action='store_true', help='Wipes .cache folder')
 
     args = parser.parse_args()
 
@@ -236,6 +238,17 @@ def main():
 
     if os.path.exists(workspace):
         os.environ['FLUTTER_WORKSPACE'] = workspace
+
+    #
+    # Clean Cache
+    #
+    if args.clean_cache:
+        print_banner("Cleaning Cache")
+        clear_folder(str(get_cache_folder()))
+        tmp_folder = os.path.join(workspace, '.tmp')
+        if os.path.exists(tmp_folder):
+            clear_folder(tmp_folder)
+        return
 
     #
     # Fetch Engine Artifacts
@@ -451,6 +464,16 @@ def main():
     flutter_sdk_path = get_flutter_sdk(flutter_version)
     flutter_bin_path = os.path.join(flutter_sdk_path, 'bin')
 
+    # Redirect flutter/bin/cache/ to persistent .cache/flutter-sdk-cache/ so that
+    # downloaded artifacts (Dart SDK, engine) survive Docker runs.
+    flutter_bin_cache = os.path.join(flutter_sdk_path, 'bin', 'cache')
+    sdk_cache_dir = str(get_cache_folder() / 'flutter-sdk-cache')
+    os.makedirs(sdk_cache_dir, exist_ok=True)
+    if not os.path.islink(flutter_bin_cache):
+        if os.path.isdir(flutter_bin_cache):
+            shutil.rmtree(flutter_bin_cache)
+        os.symlink(sdk_cache_dir, flutter_bin_cache)
+
     # force tool rebuild
     force_tool_rebuild(flutter_sdk_folder)
 
@@ -465,8 +488,7 @@ def main():
     os.environ['PATH'] = f"{flutter_bin_path}{os.pathsep}{os.environ.get('PATH')}"
     print("PATH=%s" % os.environ.get('PATH'))
 
-    os.environ['PUB_CACHE'] = os.path.join(os.environ.get('FLUTTER_WORKSPACE'), '.config', 'flutter_workspace',
-                                           'pub_cache')
+    os.environ['PUB_CACHE'] = str(get_cache_folder() / 'pub_cache')
     print("PUB_CACHE=%s" % os.environ.get('PUB_CACHE'))
 
     if sys.platform.startswith('win'):
@@ -535,11 +557,11 @@ def main():
     if sys.platform.startswith('win'):
         append_to_env_script(workspace, '$env:FLUTTER_ENGINE_VERSION="${FLUTTER_ENGINE_VERSION}"')
         append_to_env_script(workspace, '$env:HOST_ARCH_GOOGLE="${HOST_ARCH_GOOGLE}"')
-        append_to_env_script(workspace, '$env:GEN_SNAPSHOT="$FLUTTER_WORKSPACE/.config/flutter_workspace/flutter-engine/$FLUTTER_ENGINE_VERSION/engine-sdk-release-$HOST_ARCH_GOOGLE/flutter/engine/src/out/linux_release_$HOST_ARCH_GOOGLE/engine-sdk/bin/gen_snapshot"')
+        append_to_env_script(workspace, '$env:GEN_SNAPSHOT="$FLUTTER_WORKSPACE/.tmp/flutter-engine/$FLUTTER_ENGINE_VERSION/engine-sdk-release-$HOST_ARCH_GOOGLE/flutter/engine/src/out/linux_release_$HOST_ARCH_GOOGLE/engine-sdk/bin/gen_snapshot"')
     else:
         append_to_env_script(workspace, 'export FLUTTER_ENGINE_VERSION="${FLUTTER_ENGINE_VERSION}"')
         append_to_env_script(workspace, 'export HOST_ARCH_GOOGLE="${HOST_ARCH_GOOGLE}"')
-        append_to_env_script(workspace, 'export GEN_SNAPSHOT="$FLUTTER_WORKSPACE/.config/flutter_workspace/flutter-engine/$FLUTTER_ENGINE_VERSION/engine-sdk-release-$HOST_ARCH_GOOGLE/flutter/engine/src/out/linux_release_$HOST_ARCH_GOOGLE/engine-sdk/bin/gen_snapshot"')
+        append_to_env_script(workspace, 'export GEN_SNAPSHOT="$FLUTTER_WORKSPACE/.tmp/flutter-engine/$FLUTTER_ENGINE_VERSION/engine-sdk-release-$HOST_ARCH_GOOGLE/flutter/engine/src/out/linux_release_$HOST_ARCH_GOOGLE/engine-sdk/bin/gen_snapshot"')
 
     #
     # Setup Platforms
@@ -933,6 +955,20 @@ def validate_custom_device_config(config):
     return True
 
 
+def cache_mirror_repo(source_git_folder, dest_name):
+    """Mirror a working git repo to .cache/repos/<dest_name>.git as a bare clone.
+    Creates the mirror on first call; updates it on subsequent calls."""
+    bare = str(get_cache_repos_folder() / (dest_name + '.git'))
+    if os.path.exists(os.path.join(bare, 'HEAD')):
+        print_banner(f'Updating repo mirror: {bare}')
+        cmd = ['git', 'fetch', '--all']
+        subprocess.check_call(cmd, cwd=bare)
+    else:
+        print_banner(f'Creating repo mirror: {bare}')
+        cmd = ['git', 'clone', '--mirror', source_git_folder, bare]
+        subprocess.check_call(cmd)
+
+
 def get_repo(base_folder, uri, ref, branch=None, dest_name=None):
     """ Clone Git Repo """
     if not uri:
@@ -954,63 +990,63 @@ def get_repo(base_folder, uri, ref, branch=None, dest_name=None):
 
     print_banner(f'Fetching: {repo_name} (path: {git_folder})...')
 
-    # print_banner(f'Checking if file exists: {git_hidden_folder}')
+    cache_dir = str(get_cache_repos_folder() / dest_name)
+    cache_exists = os.path.isdir(os.path.join(cache_dir, '.git'))
+
+    restored_from_cache = False
+
     if os.path.exists(git_hidden_folder):
-        # print_banner(f'git reset --hard: {repo_name}')
-        cmd = ['git', 'reset', '--hard']
-        subprocess.check_call(cmd, cwd=git_folder)
-
-        # print_banner(f'git fetch --all: {repo_name}')
-        cmd = ['git', 'fetch', '--all']
-        subprocess.check_call(cmd, cwd=git_folder)
-
-        # print_banner(f'git pull: {repo_name}')
+        # re-run: repo already present — update in-place
+        subprocess.check_call(['git', 'reset', '--hard'], cwd=git_folder)
+        subprocess.check_call(['git', 'fetch', '--all'], cwd=git_folder)
         cmd = ['git', 'pull', '--ff-only']
         if branch:
             print(f'Using branch: {branch}')
             cmd.extend(['origin', branch])
         try:
             subprocess.check_call(cmd, cwd=git_folder)
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             print(f"WARNING: git pull failed, continuing anyway")
-    else:
-        # print_banner(f'Checking if folder exists: {git_folder}')
-        if os.path.exists(git_folder):
-            try:
-                subprocess.run(['rm', '-rf', git_folder], cwd=base_folder, check=True)
-            except subprocess.CalledProcessError:
-                pass
 
+    elif cache_exists:
+        # restore full working tree (includes LFS objects and submodule content)
+        print_banner(f'Restoring {repo_name} from local cache')
+        if os.path.exists(git_folder):
+            shutil.rmtree(git_folder)
+        shutil.copytree(cache_dir, git_folder, symlinks=True)
+        restored_from_cache = True
+
+    else:
+        # fresh clone from network
+        if os.path.exists(git_folder):
+            shutil.rmtree(git_folder)
         cmd = ['git', 'clone', uri, dest_name]
         if branch:
             print(f'Using branch: {branch}')
             cmd.extend(['-b', branch])
         subprocess.check_call(cmd, cwd=base_folder)
 
+    # Hydrate: checkout desired ref/branch, resolve LFS pointers, init submodules
     if ref:
         print(f'git checkout {ref}')
-        cmd = ['git', 'checkout', ref]
-        subprocess.check_call(cmd, cwd=git_folder)
+        subprocess.check_call(['git', 'checkout', ref], cwd=git_folder)
     elif branch:
         print(f'git checkout {branch}')
-        cmd = ['git', 'checkout', branch]
-        subprocess.check_call(cmd, cwd=git_folder)
-        
-    # get lfs
-    git_lfs_file = os.path.join(git_folder, '.gitattributes')
-    # print_banner(f'Checking if folder exists: {git_lfs_file}')
-    if os.path.exists(git_lfs_file):
-        # print_banner(f'Fetching LFS: {repo_name}')
-        cmd = ['git', 'lfs', 'fetch', '--all']
-        subprocess.check_call(cmd, cwd=git_folder)
+        subprocess.check_call(['git', 'checkout', branch], cwd=git_folder)
 
-    # get all submodules
-    git_submodule_file = os.path.join(git_folder, '.gitmodules')
-    # print_banner(f'Checking if folder exists: {git_submodule_file}')
-    if os.path.exists(git_submodule_file):
-        # print_banner(f'Fetching submodules: {repo_name}')
-        cmd = ['git', 'submodule', 'update', '--init', '--recursive']
-        subprocess.check_call(cmd, cwd=git_folder)
+    if os.path.exists(os.path.join(git_folder, '.gitattributes')):
+        subprocess.check_call(['git', 'lfs', 'fetch', '--all'], cwd=git_folder)
+        subprocess.check_call(['git', 'lfs', 'checkout'], cwd=git_folder)
+
+    if os.path.exists(os.path.join(git_folder, '.gitmodules')):
+        subprocess.check_call(['git', 'submodule', 'update', '--init', '--recursive'], cwd=git_folder)
+
+    # Save to cache (skip only when we just restored from it)
+    if not restored_from_cache:
+        print_banner(f'Updating cache for {repo_name}')
+        if os.path.exists(cache_dir):
+            shutil.rmtree(cache_dir)
+        shutil.copytree(git_folder, cache_dir, symlinks=True)
 
     print_banner(f'Fetched: {repo_name} at {git_folder}')
 
@@ -1479,6 +1515,10 @@ def get_flutter_sdk(version):
 
     flutter_sdk_path = os.path.join(workspace, 'flutter')
 
+    flutter_repo = 'https://github.com/flutter/flutter.git'
+    bare_cache = str(get_cache_repos_folder() / 'flutter.git')
+    cache_exists = os.path.exists(os.path.join(bare_cache, 'HEAD'))
+
     #
     # GIT repo
     #
@@ -1492,9 +1532,20 @@ def get_flutter_sdk(version):
         cmd = ["git", "checkout", version]
         subprocess.check_call(cmd, cwd=flutter_sdk_path)
 
-    else:
+    elif cache_exists:
+        # fast local clone from bare cache, then sync with real remote
+        print_banner("Cloning Flutter SDK from local cache, then fetching from remote")
+        cmd = ['git', 'clone', bare_cache, flutter_sdk_path]
+        env_skip_lfs = {**os.environ, 'GIT_LFS_SKIP_SMUDGE': '1'}
+        subprocess.check_call(cmd, env=env_skip_lfs)
+        subprocess.check_call(['git', 'remote', 'set-url', 'origin', flutter_repo], cwd=flutter_sdk_path)
+        subprocess.check_call(['git', 'fetch', 'origin'], cwd=flutter_sdk_path)
 
-        flutter_repo = 'https://github.com/flutter/flutter.git'
+        print('Checking out %s' % version)
+        cmd = ["git", "checkout", version]
+        subprocess.check_call(cmd, cwd=flutter_sdk_path)
+
+    else:
 
         cmd = ['git', 'clone', flutter_repo, flutter_sdk_path]
         subprocess.check_call(cmd)
@@ -1502,6 +1553,9 @@ def get_flutter_sdk(version):
         print('Checking out %s' % version)
         cmd = ["git", "checkout", version]
         subprocess.check_call(cmd, cwd=flutter_sdk_path)
+
+    # keep bare mirror up to date
+    cache_mirror_repo(flutter_sdk_path, 'flutter')
 
     print_banner("FLUTTER_SDK: %s" % flutter_sdk_path)
 
@@ -1640,9 +1694,10 @@ def set_gen_snapshot(runtime, arch):
 
     linux_runtime = f'linux_{runtime}_{arch}'
 
-    platform_path = get_platform_working_dir('flutter-engine')
+    workspace = os.environ['FLUTTER_WORKSPACE']
+    restore_folder = os.path.join(workspace, '.tmp', 'flutter-engine', commit, engine_sdk)
 
-    engine_sdk_root = os.path.join(platform_path, commit, engine_sdk, 'flutter', 'engine', 'src', 'out', linux_runtime, 'engine-sdk')
+    engine_sdk_root = os.path.join(restore_folder, 'flutter', 'engine', 'src', 'out', linux_runtime, 'engine-sdk')
 
     gen_snapshot = os.path.join(engine_sdk_root, 'bin', 'gen_snapshot')
     
@@ -1673,9 +1728,11 @@ def get_flutter_engine_artifacts(clean_workspace, runtime, arch):
 
     _, filename = os.path.split(base_url)
 
+    # bundle staging lives in the platform working dir (derived, not downloaded)
     cwd = get_platform_working_dir('flutter-engine')
 
-    cwd_engine = os.path.join(cwd, engine_version)
+    # archive and extracted SDK are stored in the shared cache
+    cwd_engine = str(get_cache_artifacts_folder() / 'flutter-engine' / engine_version)
 
     archive_file = os.path.join(cwd_engine, filename)
     sha256_file = os.path.join(cwd_engine, filename + '.sha256')
@@ -1693,9 +1750,15 @@ def get_flutter_engine_artifacts(clean_workspace, runtime, arch):
     else:
         print_banner("Skipping Engine artifact download")
 
-    restore_folder = os.path.join(cwd_engine, f'engine-sdk-{runtime}-{arch}')
-    os.makedirs(restore_folder, exist_ok=True)
-    subprocess.check_call(['tar', '-xzf', archive_file, '-C', restore_folder])
+    workspace = os.environ['FLUTTER_WORKSPACE']
+    restore_folder = os.path.join(workspace, '.tmp', 'flutter-engine', engine_version, f'engine-sdk-{runtime}-{arch}')
+
+    # skip extraction if the folder is already populated and the archive is unchanged
+    if os.path.isdir(restore_folder) and os.listdir(restore_folder):
+        print_banner("Skipping Engine artifact extraction (already extracted)")
+    else:
+        os.makedirs(restore_folder, exist_ok=True)
+        subprocess.check_call(['tar', '-xzf', archive_file, '-C', restore_folder])
 
     if clean_workspace:
         if os.path.exists(bundle_folder):
@@ -2191,6 +2254,9 @@ def handle_github_obj(obj, cwd, token):
 
         artifacts = get_github_workflow_artifacts(token, owner, repo, run_id)
 
+        github_cache_dir = str(get_cache_artifacts_folder() / 'github')
+        os.makedirs(github_cache_dir, exist_ok=True)
+
         for artifact in artifacts:
 
             name = artifact.get('name')
@@ -2204,8 +2270,9 @@ def handle_github_obj(obj, cwd, token):
                     print("Downloading %s run_id: %s via %s" %
                           (workflow, run_id, url))
 
-                    filename = "%s.zip" % name
-                    downloaded_file = get_github_artifact(token, url, filename)
+                    # cache key includes run_id so a new CI build invalidates the entry
+                    filename = "%s-%s.zip" % (name, run_id)
+                    downloaded_file = get_github_artifact(token, url, filename, github_cache_dir)
                     if downloaded_file is None or downloaded_file == '':
                         print_banner("Failed to download %s" % filename)
                         continue
@@ -2220,7 +2287,7 @@ def handle_github_obj(obj, cwd, token):
                                 raise ValueError(f"Zip path traversal detected: {member}")
                         zip_ref.extractall(dest)
 
-                    os.remove(downloaded_file)
+                    # do not delete — keep zip in cache for future runs
                     continue
 
         if post_process:
@@ -2234,7 +2301,8 @@ def handle_artifacts_obj(obj, host_machine_arch, cwd, git_token, cookie_file):
     if not obj:
         return
 
-    artifacts = os.path.join(cwd, 'artifacts')
+    platform_id = os.path.basename(cwd)
+    artifacts = str(get_cache_artifacts_folder() / platform_id)
     os.makedirs(artifacts, exist_ok=True)
     os.environ['ARTIFACTS_DIR'] = artifacts
     cwd = artifacts
@@ -2337,12 +2405,38 @@ def handle_build_type(env, build_type=None):
     env['MESON_BUILD_TYPE'] = build_types_meson[build_type]
     
 
+def get_cache_folder():
+    """Returns the workspace-level cache folder: <workspace>/.cache"""
+    from pathlib import Path
+    workspace = Path(os.environ.get('FLUTTER_WORKSPACE'))
+    cache = workspace / '.cache'
+    os.makedirs(cache, exist_ok=True)
+    return cache
+
+
+def get_cache_artifacts_folder():
+    """Returns <workspace>/.cache/artifacts"""
+    artifacts = get_cache_folder() / 'artifacts'
+    os.makedirs(artifacts, exist_ok=True)
+    return artifacts
+
+
+def get_cache_repos_folder():
+    """Returns <workspace>/.cache/repos"""
+    repos = get_cache_folder() / 'repos'
+    os.makedirs(repos, exist_ok=True)
+    return repos
+
+
 def get_platform_working_dir(platform_id):
     from pathlib import Path
     workspace = Path(os.environ.get('FLUTTER_WORKSPACE'))
     cwd = workspace.joinpath('.config', 'flutter_workspace', platform_id)
     os.environ["PLATFORM_ID_DIR_RELATIVE"] = '.' + platform_id
     os.environ["PLATFORM_ID_DIR"] = str(cwd)
+    tmp_dir = workspace / '.tmp' / platform_id
+    os.environ["PLATFORM_TMP_DIR"] = str(tmp_dir)
+    os.makedirs(tmp_dir, exist_ok=True)
     print(f'Working Directory: {cwd}')
     os.makedirs(cwd, exist_ok=True)
     return cwd
@@ -2767,21 +2861,34 @@ def get_github_workflow_artifacts(token, owner, repo, id_):
 
 
 def get_workspace_tmp_folder() -> str:
-    """ Gets tmp folder path located in workspace"""
+    """Gets tmp folder path located in the workspace root (sibling of .cache)"""
     workspace = os.getenv("FLUTTER_WORKSPACE")
-    tmp_folder = os.path.join(workspace, '.config', 'flutter_workspace', 'tmp')
+    tmp_folder = os.path.join(workspace, '.tmp')
     os.makedirs(tmp_folder, exist_ok=True)
     return tmp_folder
 
 
-def get_github_artifact(token: str, url: str, filename: str) -> str:
-    """ Gets artifact via GitHub URL"""
+def get_github_artifact(token: str, url: str, filename: str, cache_dir: str = None) -> str:
+    """ Gets artifact via GitHub URL, storing it in cache_dir (or tmp if not specified) """
 
-    tmp_file = "%s/%s" % (get_workspace_tmp_folder(), filename)
+    if cache_dir is None:
+        cache_dir = get_workspace_tmp_folder()
+
+    cached_file = os.path.join(cache_dir, filename)
+    sha256_file = cached_file + '.sha256'
+
+    # return cached copy if it still has a matching sha256 sidecar
+    if os.path.exists(cached_file) and os.path.exists(sha256_file):
+        from common import compare_sha256
+        if compare_sha256(cached_file, sha256_file):
+            print("GitHub artifact cache hit: %s" % cached_file)
+            return cached_file
 
     headers = ['Authorization: token %s' % token]
-    if fetch_https_binary_file(url, tmp_file, True, headers, None, False, None):
-        return tmp_file
+    if fetch_https_binary_file(url, cached_file, True, headers, None, False, None):
+        from common import write_sha256_file
+        write_sha256_file(cache_dir, filename)
+        return cached_file
 
     return ''
 
@@ -2922,7 +3029,12 @@ def activate_python_virtualenv():
         python_path = subprocess.check_output(['which', 'python3']).decode().strip()
     os.environ['PYTHON'] = python_path
 
-    cmd = f'{python_path} -m pip install --upgrade pip'.split(' ')
+    # use workspace-level pip cache
+    pip_cache_dir = str(os.path.join(workspace, '.cache', 'pip'))
+    os.makedirs(pip_cache_dir, exist_ok=True)
+    os.environ['PIP_CACHE_DIR'] = pip_cache_dir
+
+    cmd = f'{python_path} -m pip install --cache-dir {pip_cache_dir} --upgrade pip'.split(' ')
     subprocess.check_output(cmd)
     
 
@@ -3001,13 +3113,21 @@ def install_minimum_runtime_deps():
             optional_to_install.append(package_name)
 
     if packages_to_install:
-        cmd = ['python3', '-m', 'pip', 'install'] + packages_to_install
+        pip_cache_dir = os.environ.get('PIP_CACHE_DIR', '')
+        cmd = ['python3', '-m', 'pip', 'install']
+        if pip_cache_dir:
+            cmd += ['--cache-dir', pip_cache_dir]
+        cmd += packages_to_install
         subprocess.check_output(cmd)
 
     if optional_to_install:
+        pip_cache_dir = os.environ.get('PIP_CACHE_DIR', '')
         for pkg in optional_to_install:
             try:
-                cmd = ['python3', '-m', 'pip', 'install', pkg]
+                cmd = ['python3', '-m', 'pip', 'install']
+                if pip_cache_dir:
+                    cmd += ['--cache-dir', pip_cache_dir]
+                cmd.append(pkg)
                 subprocess.check_output(cmd, stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError:
                 print(f"Warning: Failed to install optional package {pkg}, using fallback")
@@ -3056,7 +3176,7 @@ if ($SCRIPT_PATH.EndsWith('\')) {
 
 $env:FLUTTER_WORKSPACE = $SCRIPT_PATH
 $env:PATH = "$env:FLUTTER_WORKSPACE\\flutter\\bin;$env:PATH"
-$env:PUB_CACHE = "$env:FLUTTER_WORKSPACE\\.config\\flutter_workspace\\pub_cache"
+$env:PUB_CACHE = "$env:FLUTTER_WORKSPACE\\.cache\\pub_cache"
 
 Write-Host "********************************************"
 Write-Host "* Setting FLUTTER_WORKSPACE to:"
@@ -3117,7 +3237,7 @@ echo "SCRIPT_PATH=$SCRIPT_PATH"
 
 export FLUTTER_WORKSPACE="$SCRIPT_PATH"
 export PATH="$FLUTTER_WORKSPACE/flutter/bin:$PATH"
-export PUB_CACHE="$FLUTTER_WORKSPACE/.config/flutter_workspace/pub_cache"
+export PUB_CACHE="$FLUTTER_WORKSPACE/.cache/pub_cache"
 export XDG_CONFIG_HOME="$FLUTTER_WORKSPACE/.config/flutter"
 
 echo "********************************************"
@@ -3344,7 +3464,7 @@ def validate_fastboot_req(device_id: str, platform_: dict):
 
     platform_id = platform_['id']
     working_dir = get_platform_working_dir(platform_id)
-    artifacts_dir = os.path.join(working_dir, 'artifacts')
+    artifacts_dir = str(get_cache_artifacts_folder() / platform_id)
     update_image_by_fastboot(device_id, artifacts_dir, http.get('artifacts'))
 
 

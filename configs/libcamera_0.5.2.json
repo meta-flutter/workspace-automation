@@ -14,7 +14,7 @@
     "env": {
         "CC": "${LLVM_BINDIR}/clang",
         "CXX": "${LLVM_BINDIR}/clang++",
-        "PATH": "${LLVM_BINDIR}:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
+        "PATH": "${LLVM_BINDIR}:${FLUTTER_WORKSPACE}/.tmp/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.tmp/toolchain-common-cmake/bin:$PATH",
         "LD_LIBRARY_PATH": "${LLVM_LIBDIR}",
         "CAMERA_SRC_DIR": "${FLUTTER_WORKSPACE}/app/libcamera",
         "CAMERA_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/libcamera/buildDir",

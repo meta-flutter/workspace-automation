@@ -16,7 +16,7 @@
   "toolchain": "llvm",
   "env": {
     "LLVM_VERSION": "18.1.8",
-    "LLVM_BASE_DIR": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-llvm-${LLVM_VERSION}",
+    "LLVM_BASE_DIR": "${FLUTTER_WORKSPACE}/.tmp/toolchain-llvm-${LLVM_VERSION}",
     "LLVM_BINDIR": "${LLVM_BASE_DIR}/bin",
     "LLVM_LIBDIR": "${LLVM_BASE_DIR}/lib",
     "LLVM_CONFIG": "${LLVM_BINDIR}/llvm-config",
@@ -55,7 +55,7 @@
                       "if [ $(lsb_release -rs) = \"22.04\" ]; then sudo apt-get install -yq libtinfo5; fi",
                       "sudo apt-get remove libunwind-* -yq || true",
                       "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-aarch64-linux-gnu.tar.xz\" --strip-components=1",
+                      "tar -xf \"${ARTIFACTS_DIR}/clang+llvm-${LLVM_VERSION}-aarch64-linux-gnu.tar.xz\" --strip-components=1",
                       "${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu/libc++abi.a"
                     ]
                   }
@@ -73,7 +73,7 @@
                     "cmds": [
                       "sudo dnf install ncurses-compat-libs -yq",
                       "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-aarch64-linux-gnu.tar.xz\" --strip-components=1",
+                      "tar -xf \"${ARTIFACTS_DIR}/clang+llvm-${LLVM_VERSION}-aarch64-linux-gnu.tar.xz\" --strip-components=1",
                       "${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu/libc++abi.a",
                       "sudo dnf -y update", 
                       "sudo dnf install -y libstdc++ libstdc++-devel libstdc++-static"
@@ -94,7 +94,7 @@
                     "shell": true,
                     "cmds": [
                       "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-arm64-apple-macos11.tar.xz\" --strip-components=1"
+                      "tar -xf \"${ARTIFACTS_DIR}/clang+llvm-${LLVM_VERSION}-arm64-apple-macos11.tar.xz\" --strip-components=1"
                     ]
                   }
                 ]
@@ -116,7 +116,7 @@
                       "if [ $(lsb_release -rs) = \"24.04\" ]; then wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb -O /tmp/libtinfo5_6.3-2ubuntu0.1_amd64.deb && sudo apt install /tmp/libtinfo5_6.3-2ubuntu0.1_amd64.deb; fi",
                       "sudo apt-get remove libunwind-* -yq || true",
                       "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04.tar.xz\" --strip-components=1",
+                      "tar -xf \"${ARTIFACTS_DIR}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04.tar.xz\" --strip-components=1",
                       "${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++abi.a"
                     ]
                   }
@@ -134,7 +134,7 @@
                     "cmds": [
                       "sudo dnf install ncurses-compat-libs -yq",
                       "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04.tar.xz\" --strip-components=1",
+                      "tar -xf \"${ARTIFACTS_DIR}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04.tar.xz\" --strip-components=1",
                       "${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++abi.a",
                       "sudo dnf -y update", 
                       "sudo dnf install -y libstdc++ libstdc++-devel libstdc++-static"

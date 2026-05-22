@@ -22,11 +22,11 @@
     "append_to_runtime_env": {
         "common": [
             "# toolchain-common-ninja",
-            "export PATH=$FLUTTER_WORKSPACE/.config/flutter_workspace/toolchain-common-ninja:$PATH"
+            "export PATH=$FLUTTER_WORKSPACE/.tmp/toolchain-common-ninja:$PATH"
         ],
         "windows": [
             "# toolchain-common-ninja",
-            "$env:PATH = \"$env:FLUTTER_WORKSPACE\\.config\\flutter_workspace\\toolchain-common-ninja;$env:PATH\""
+            "$env:PATH = \"$env:FLUTTER_WORKSPACE\\.tmp\\toolchain-common-ninja;$env:PATH\""
         ]
     },
     "runtime": {
@@ -42,9 +42,9 @@
                                 "sha1": "0adea0f99aceafdac3361d091bc90b9dab722f2b",
                                 "post_cmds": [
                                     {
-                                        "cwd": "${PLATFORM_ID_DIR}",
+                                        "cwd": "${PLATFORM_TMP_DIR}",
                                         "cmds": [
-                                            "python3 -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" .",
+                                            "python3 -m zipfile -e \"${ARTIFACTS_DIR}/${ARCHIVE_FILE}\" .",
                                             "chmod +x ninja"
                                         ]
                                     }
@@ -60,9 +60,9 @@
                                 "sha1": "31ce26f7fc77df4dcbc6ca56cc3b9794778e4ea5",
                                 "post_cmds": [
                                     {
-                                        "cwd": "${PLATFORM_ID_DIR}",
+                                        "cwd": "${PLATFORM_TMP_DIR}",
                                         "cmds": [
-                                            "python3 -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" .",
+                                            "python3 -m zipfile -e \"${ARTIFACTS_DIR}/${ARCHIVE_FILE}\" .",
                                             "chmod +x ninja"
                                         ]
                                     }
@@ -78,9 +78,9 @@
                                 "sha256": "f550fec705b6d6ff58f2db3c374c2277a37691678d6aba463adcbb129108467a",
                                 "post_cmds": [
                                     {
-                                        "cwd": "${PLATFORM_ID_DIR}",
+                                        "cwd": "${PLATFORM_TMP_DIR}",
                                         "cmds": [
-                                            "python3.exe -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" ."
+                                            "python3.exe -m zipfile -e \"${ARTIFACTS_DIR}/${ARCHIVE_FILE}\" ."
                                         ]
                                     }
                                 ]
@@ -95,9 +95,9 @@
                                 "sha256": "79c96a50e0deafec212cfa85aa57c6b74003f52d9d1673ddcd1eab1c958c5900",
                                 "post_cmds": [
                                     {
-                                        "cwd": "${PLATFORM_ID_DIR}",
+                                        "cwd": "${PLATFORM_TMP_DIR}",
                                         "cmds": [
-                                            "python3.exe -m zipfile -e \"${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}\" ."
+                                            "python3.exe -m zipfile -e \"${ARTIFACTS_DIR}/${ARCHIVE_FILE}\" ."
                                         ]
                                     }
                                 ]

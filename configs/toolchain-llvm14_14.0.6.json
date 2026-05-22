@@ -15,7 +15,7 @@
   "toolchain": "llvm",
   "env": {
     "LLVM_VERSION": "14.0.6",
-    "LLVM_BASE_DIR": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-llvm-${LLVM_VERSION}",
+    "LLVM_BASE_DIR": "${FLUTTER_WORKSPACE}/.tmp/toolchain-llvm-${LLVM_VERSION}",
     "LLVM_BINDIR": "${LLVM_BASE_DIR}/bin",
     "LLVM_LIBDIR": "${LLVM_BASE_DIR}/lib",
     "LLVM_CONFIG": "${LLVM_BINDIR}/llvm-config",
@@ -53,7 +53,7 @@
                       "if [ $(lsb_release -rs) = \"22.04\" ]; then sudo apt-get install -yq libtinfo5; fi",
                       "sudo apt-get remove libunwind-* -yq || true",
                       "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-aarch64-linux-gnu.tar.xz\" --strip-components=1",
+                      "tar -xf \"${ARTIFACTS_DIR}/clang+llvm-${LLVM_VERSION}-aarch64-linux-gnu.tar.xz\" --strip-components=1",
                       "${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/libc++.a ${LLVM_BASE_DIR}/lib/libc++abi.a"
                     ]
                   }
@@ -79,7 +79,7 @@
                     "shell": true,
                     "cmds": [
                       "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-arm64-apple-darwin22.3.0.tar.xz\" --strip-components=1"
+                      "tar -xf \"${ARTIFACTS_DIR}/clang+llvm-${LLVM_VERSION}-arm64-apple-darwin22.3.0.tar.xz\" --strip-components=1"
                     ]
                   }
                 ]
@@ -97,7 +97,7 @@
                     "shell": true,
                     "cmds": [
                       "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-x86_64-apple-darwin.tar.xz\" --strip-components=1"
+                      "tar -xf \"${ARTIFACTS_DIR}/clang+llvm-${LLVM_VERSION}-x86_64-apple-darwin.tar.xz\" --strip-components=1"
                     ]
                   }
                 ]

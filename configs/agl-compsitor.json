@@ -10,8 +10,8 @@
     ],
     "type": "dependency",
     "env": {
-        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
-        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
+        "PATH": "${FLUTTER_WORKSPACE}/.tmp/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.tmp/toolchain-common-cmake/bin:$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.tmp/toolchain-common-cmake/lib",
         "INSTALL_PREFIX": "${FLUTTER_WORKSPACE}/AGL/",
         "SEATD_SRC_DIR": "${FLUTTER_WORKSPACE}/app/seatd",
         "SEATD_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/seatd/buildDir",
