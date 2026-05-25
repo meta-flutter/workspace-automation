@@ -1808,18 +1808,33 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
         host_type = get_host_type()
         if host_type == "linux":
             host_os_release_id = get_freedesktop_os_release_id()
+            host_os_version_id = get_freedesktop_os_release_version_id()
         elif host_type == "darwin":
             host_os_release_id = "darwin"
+            host_os_version_id = get_darwin_major_version()
         elif host_type == "windows":
             host_os_release_id = "windows"
+            host_os_version_id = get_windows_major_version()
         else:
             host_os_release_id = ''
+            host_os_version_id = ''
 
         host_specific_artifacts = arch_artifacts.get(host_os_release_id) or arch_artifacts.get('common')
 
         if not host_specific_artifacts:
             print(f'handle_http_obj: No artifacts for [{host_machine_arch}, {host_os_release_id}]')
             return
+
+        # Filter artifacts by optional per-artifact os_release version (e.g. "22.04", "40")
+        filtered_artifacts = []
+        for artifact in host_specific_artifacts:
+            artifact_os_release = artifact.get('os_release')
+            if artifact_os_release and artifact_os_release != host_os_version_id:
+                print(f'handle_http_obj: Skipping artifact {artifact.get("filename", artifact.get("endpoint", ""))} '
+                      f'(os_release={artifact_os_release}, host={host_os_version_id})')
+                continue
+            filtered_artifacts.append(artifact)
+        host_specific_artifacts = filtered_artifacts
 
         url = None
         if 'url' in obj:
