@@ -95,7 +95,8 @@
           "shell": true,
           "cmds": [
             "sudo-apt-workspace update -y",
-            "if [ -n \"$GITHUB_ACTIONS\" ]; then sudo-apt-workspace install -yq libsystemd-dev flatpak libflatpak-dev gnome-software-plugin-flatpak; fi",
+            "sudo-apt-workspace install -yq --no-install-recommends libsystemd-dev",
+            "if [ -n \"$GITHUB_ACTIONS\" ]; then sudo-apt-workspace install -yq flatpak libflatpak-dev gnome-software-plugin-flatpak; fi",
             "if [ -n \"$GITHUB_ACTIONS\" ]; then sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo; fi",
             "if [ -n \"$GITHUB_ACTIONS\" ]; then flatpak remotes; fi"
           ],
