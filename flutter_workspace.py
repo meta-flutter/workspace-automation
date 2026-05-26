@@ -1819,22 +1819,38 @@ def handle_http_obj(obj, host_machine_arch, cwd, cookie_file, netrc):
             host_os_release_id = ''
             host_os_version_id = ''
 
-        host_specific_artifacts = arch_artifacts.get(host_os_release_id) or arch_artifacts.get('common')
+        host_specific_artifacts = arch_artifacts.get(host_os_release_id)
+        selected_from_common = not host_specific_artifacts
+        if selected_from_common:
+            host_specific_artifacts = arch_artifacts.get('common')
 
         if not host_specific_artifacts:
             print(f'handle_http_obj: No artifacts for [{host_machine_arch}, {host_os_release_id}]')
             return
 
-        # Filter artifacts by optional per-artifact os_release version (e.g. "22.04", "40")
-        filtered_artifacts = []
-        for artifact in host_specific_artifacts:
-            artifact_os_release = artifact.get('os_release')
-            if artifact_os_release and artifact_os_release != host_os_version_id:
-                print(f'handle_http_obj: Skipping artifact {artifact.get("filename", artifact.get("endpoint", ""))} '
-                      f'(os_release={artifact_os_release}, host={host_os_version_id})')
-                continue
-            filtered_artifacts.append(artifact)
-        host_specific_artifacts = filtered_artifacts
+        # Filter artifacts by optional per-artifact os_release version.
+        # Accepts a single version string (e.g. "22.04") or a list (e.g. ["22.04", "24.04"]).
+        # Skipped when artifacts were selected from the 'common' block.
+        if not selected_from_common:
+            filtered_artifacts = []
+            for artifact in host_specific_artifacts:
+                artifact_os_release = artifact.get('os_release')
+                if artifact_os_release:
+                    os_release_versions = artifact_os_release if isinstance(artifact_os_release, list) else [artifact_os_release]
+                    if host_os_version_id not in os_release_versions:
+                        print(f'handle_http_obj: Skipping artifact {artifact.get("filename", artifact.get("endpoint", ""))} '
+                              f'(os_release={artifact_os_release}, host={host_os_version_id})')
+                        continue
+                filtered_artifacts.append(artifact)
+            host_specific_artifacts = filtered_artifacts
+        # os_release is invalid inside a 'common' block — raise an error if found there.
+        else:
+            for artifact in host_specific_artifacts:
+                if artifact.get('os_release'):
+                    raise ValueError(
+                        f'handle_http_obj: `os_release` is not allowed in a `common` artifacts block '
+                        f'(artifact: {artifact.get("filename", artifact.get("endpoint", ""))})'
+                    )
 
         url = None
         if 'url' in obj:
