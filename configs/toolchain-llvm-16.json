@@ -9,7 +9,6 @@
   ],
   "supported_host_types": [
     "darwin",
-    "fedora",
     "ubuntu"
   ],
   "type": "toolchain",
@@ -64,27 +63,6 @@
                   }
                 ]
               }
-            ],
-            "fedora": [
-              {
-                "filename": "clang+llvm-${LLVM_VERSION}-aarch64-linux-gnu.tar.xz",
-                "endpoint": "/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-aarch64-linux-gnu.tar.xz",
-                "post_cmds": [
-                  {
-                    "cwd": "${LLVM_BASE_DIR}",
-                    "shell": true,
-                    "cmds": [
-                      "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-aarch64-linux-gnu.tar.xz\" --strip-components=1",
-                      "test -d ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu && ${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu/libc++abi.a || true",
-                      "sudo dnf -y update", 
-                      "sudo dnf install -y libstdc++ libstdc++-devel libstdc++-static",
-                      "if [ $(rpm -E %fedora) -le 42 ]; then sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libxatracker; fi", 
-                      "if [ $(rpm -E %fedora) -ge 43 ]; then sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-compat-libxatracker; fi"
-                    ]
-                  }
-                ]
-              }
             ]
           },
           "x86_64": {
@@ -107,27 +85,6 @@
                       "mkdir -p ${LLVM_BASE_DIR}",
                       "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-22.04.tar.xz\" --strip-components=1",
                       "${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++abi.a"
-                    ]
-                  }
-                ]
-              }
-            ],
-            "fedora": [
-              {
-                "filename": "clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-22.04.tar.xz",
-                "endpoint": "/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-22.04.tar.xz",
-                "post_cmds": [
-                  {
-                    "cwd": "${LLVM_BASE_DIR}",
-                    "shell": true,
-                    "cmds": [
-                      "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-22.04.tar.xz\" --strip-components=1",
-                      "test -d ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu && ${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++abi.a || true",
-                      "sudo dnf -y update", 
-                      "sudo dnf install -y libstdc++ libstdc++-devel libstdc++-static",
-                      "if [ $(rpm -E %fedora) -le 42 ]; then sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libxatracker; fi", 
-                      "if [ $(rpm -E %fedora) -ge 43 ]; then sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-compat-libxatracker; fi"
                     ]
                   }
                 ]

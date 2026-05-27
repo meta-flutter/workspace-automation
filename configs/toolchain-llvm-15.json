@@ -9,7 +9,6 @@
   ],
   "supported_host_types": [
     "darwin",
-    "fedora",
     "ubuntu"
   ],
   "type": "toolchain",
