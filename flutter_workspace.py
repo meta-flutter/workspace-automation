@@ -329,6 +329,30 @@ def main():
     os.environ['_MAX_THREADS'] = str(max_threads)
     print("Using %s threads for compilation" % os.environ.get('_MAX_THREADS'))
 
+    # Get default LLVM version
+    _prefer_llvm = os.environ.get('PREFER_LLVM')
+    if not _prefer_llvm:
+        _default_llvm_major = get_default_llvm_major(Path(args.config))
+        if not _default_llvm_major:
+            print("ERROR: No default LLVM version found in globals.json")
+            sys.exit(1)
+
+        _prefer_llvm = _default_llvm_major
+        os.environ['PREFER_LLVM'] = _prefer_llvm
+        print(f'PREFER_LLVM: {_prefer_llvm} (from globals.json default_llvm_version)')
+
+    # Apply PREFER_LLVM to enable the appropriate per-version LLVM config
+
+
+    # Check that PREFER_LLVM matches an available LLVM version config
+    if not os.path.exists(os.path.join(configs_dir, f'toolchain-llvm-{_prefer_llvm}.json')):
+        print(f"ERROR: PREFER_LLVM={_prefer_llvm} does not match any available LLVM versions")
+        sys.exit(1)
+
+    _llvm_enable = f'toolchain-llvm-{_prefer_llvm}'
+    args.enable = f'{args.enable},{_llvm_enable}' if args.enable else _llvm_enable
+    print(f'PREFER_LLVM={_prefer_llvm}: enabling toolchain-llvm-{_prefer_llvm}')
+
     #
     # Workspace Configuration
     #
@@ -747,6 +771,21 @@ def get_workspace_config(path):
                 sys.exit(1)
 
     return data
+
+
+def get_default_llvm_major(config_dir: Path) -> str:
+    globals_path = config_dir / "globals.json"
+    if not globals_path.exists():
+        print(f"ERROR: globals.json not found at {globals_path}")
+        sys.exit(1)
+
+    globals_config = load_json_config(globals_path)
+    default_llvm_version = globals_config.get('default_llvm_version')
+    if default_llvm_version is None or default_llvm_version == '':
+        print("ERROR: No default_llvm_version defined in configs/globals.json")
+        sys.exit(1)
+
+    return str(default_llvm_version)
 
 
 def validate_platform_config(platform_):
@@ -2526,15 +2565,15 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
     if platform_['toolchain'] == 'llvm':
         prefer_llvm = os.environ.get('PREFER_LLVM', None)
         if not prefer_llvm:
-            # If not set by ENV variable, get default from platform config
-            if 'DEFAULT_VERSION' in platform_['env']:
-                prefer_llvm = platform_['env']['DEFAULT_VERSION']
+            default_llvm_version = globals_.get('default_llvm_version')
+            if default_llvm_version is not None and default_llvm_version != '':
+                prefer_llvm = str(default_llvm_version)
                 os.environ['PREFER_LLVM'] = prefer_llvm
-                print(f'PREFER_LLVM: {prefer_llvm}')
+                print(f'PREFER_LLVM: {prefer_llvm} (from globals.json default_llvm_version)')
 
         # Failsafe
         if not prefer_llvm:
-            print("PREFER_LLVM is not set and no prefer_llvm key present in toolchain config")
+            print("PREFER_LLVM is not set and no default_llvm_version present in globals.json")
             sys.exit(1)
 
     platform_['type'] = 'dependency'

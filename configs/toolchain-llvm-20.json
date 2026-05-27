@@ -1,0 +1,215 @@
+{
+  "id": "toolchain-llvm-20",
+  "description": "LLVM 20 toolchain for Flutter development.",
+  "load": false,
+  "supported_archs": [
+    "aarch64",
+    "arm64",
+    "x86_64"
+  ],
+  "supported_host_types": [
+    "darwin",
+    "fedora",
+    "ubuntu"
+  ],
+  "type": "toolchain",
+  "toolchain": "llvm",
+  "env": {
+    "LLVM_VERSION": "20.1.8",
+    "LLVM_BASE_DIR": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-llvm-${LLVM_VERSION}",
+    "LLVM_BINDIR": "${LLVM_BASE_DIR}/bin",
+    "LLVM_LIBDIR": "${LLVM_BASE_DIR}/lib",
+    "LLVM_CONFIG": "${LLVM_BINDIR}/llvm-config",
+    "PATH": "${LLVM_BINDIR}:$PATH",
+    "LD_LIBRARY_PATH": "${LLVM_LIBDIR}:$LD_LIBRARY_PATH"
+  },
+  "append_to_runtime_env": {
+      "common": [
+        "# toolchain-llvm",
+        "export PREFER_LLVM=${PREFER_LLVM}",
+        "export LLVM_BASE_DIR=${LLVM_BASE_DIR}",
+        "export LLVM_BINDIR=$LLVM_BASE_DIR/bin",
+        "export LLVM_LIBDIR=$LLVM_BASE_DIR/lib",
+        "export LLVM_CONFIG=$LLVM_BINDIR/llvm-config",
+        "export PATH=$LLVM_BINDIR:$PATH",
+        "export LD_LIBRARY_PATH=$LLVM_LIBDIR:$LD_LIBRARY_PATH"
+      ]
+  },
+  "runtime": {
+    "artifacts": {
+      "http": {
+        "url": "https://github.com/llvm/llvm-project",
+        "artifacts": {
+          "aarch64": {
+            "ubuntu": [
+              {
+                "os_release": ["22.04", "24.04"],
+                "filename": "LLVM-${LLVM_VERSION}-Linux-ARM64.tar.xz",
+                "endpoint": "/releases/download/llvmorg-${LLVM_VERSION}/LLVM-${LLVM_VERSION}-Linux-ARM64.tar.xz",
+                "post_cmds": [
+                  {
+                    "cwd": "${LLVM_BASE_DIR}",
+                    "shell": true,
+                    "cmds": [
+                      "sudo apt-get install -yq lsb-release wget software-properties-common gnupg apt-file build-essential libtool",
+                      "sudo add-apt-repository -y ppa:kisak/kisak-mesa", 
+                      "sudo apt-get update -yq", 
+                      "if [ \"$CI\" = \"true\" ]; then sudo apt-get upgrade -yq --fix-missing || sudo apt-get upgrade -yq -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" || echo 'Upgrade completed with some errors - continuing'; else sudo apt-get upgrade -yq; fi", 
+                      "sudo apt-get install -yq libxkbcommon-dev libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libsecret-1-dev libsdl2-dev libjpeg-dev zenity", 
+                      "sudo apt-get remove libunwind-* -yq || true",
+                      "mkdir -p ${LLVM_BASE_DIR}",
+                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/LLVM-${LLVM_VERSION}-Linux-ARM64.tar.xz\" --strip-components=1",
+                      "${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu/libc++abi.a"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "fedora": [
+              {
+                "filename": "LLVM-${LLVM_VERSION}-Linux-ARM64.tar.xz",
+                "endpoint": "/releases/download/llvmorg-${LLVM_VERSION}/LLVM-${LLVM_VERSION}-Linux-ARM64.tar.xz",
+                "post_cmds": [
+                  {
+                    "cwd": "${LLVM_BASE_DIR}",
+                    "shell": true,
+                    "cmds": [
+                      "mkdir -p ${LLVM_BASE_DIR}",
+                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/LLVM-${LLVM_VERSION}-Linux-ARM64.tar.xz\" --strip-components=1",
+                      "${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu/libc++abi.a",
+                      "sudo dnf -y update", 
+                      "sudo dnf install -y libstdc++ libstdc++-devel libstdc++-static",
+                      "if [ $(rpm -E %fedora) -le 42 ]; then sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libxatracker; fi", 
+                      "if [ $(rpm -E %fedora) -ge 43 ]; then sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-compat-libxatracker; fi"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "arm64": {
+            "darwin": [
+              {
+                "filename": "LLVM-${LLVM_VERSION}-macOS-ARM64.tar.xz",
+                "endpoint": "/releases/download/llvmorg-${LLVM_VERSION}/LLVM-${LLVM_VERSION}-macOS-ARM64.tar.xz",
+                "post_cmds": [
+                  {
+                    "cwd": "${LLVM_BASE_DIR}",
+                    "shell": true,
+                    "cmds": [
+                      "mkdir -p ${LLVM_BASE_DIR}",
+                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/LLVM-${LLVM_VERSION}-macOS-ARM64.tar.xz\" --strip-components=1"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "x86_64": {
+            "ubuntu": [
+              {
+                "os_release": ["22.04", "24.04"],
+                "filename": "LLVM-${LLVM_VERSION}-Linux-X64.tar.xz",
+                "endpoint": "/releases/download/llvmorg-${LLVM_VERSION}/LLVM-${LLVM_VERSION}-Linux-X64.tar.xz",
+                "post_cmds": [
+                  {
+                    "cwd": "${LLVM_BASE_DIR}",
+                    "shell": true,
+                    "cmds": [
+                      "sudo apt-get install -yq lsb-release wget software-properties-common gnupg apt-file build-essential libtool",
+                      "sudo add-apt-repository -y ppa:kisak/kisak-mesa", 
+                      "sudo apt-get update -yq", 
+                      "if [ \"$CI\" = \"true\" ]; then sudo apt-get upgrade -yq --fix-missing || sudo apt-get upgrade -yq -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" || echo 'Upgrade completed with some errors - continuing'; else sudo apt-get upgrade -yq; fi", 
+                      "sudo apt-get install -yq libxkbcommon-dev libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libsecret-1-dev libsdl2-dev libjpeg-dev zenity", 
+                      "sudo apt-get remove libunwind-* -yq || true",
+                      "mkdir -p ${LLVM_BASE_DIR}",
+                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/LLVM-${LLVM_VERSION}-Linux-X64.tar.xz\" --strip-components=1",
+                      "${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++abi.a"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "fedora": [
+              {
+                "filename": "LLVM-${LLVM_VERSION}-Linux-X64.tar.xz",
+                "endpoint": "/releases/download/llvmorg-${LLVM_VERSION}/LLVM-${LLVM_VERSION}-Linux-X64.tar.xz",
+                "post_cmds": [
+                  {
+                    "cwd": "${LLVM_BASE_DIR}",
+                    "shell": true,
+                    "cmds": [
+                      "mkdir -p ${LLVM_BASE_DIR}",
+                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/LLVM-${LLVM_VERSION}-Linux-X64.tar.xz\" --strip-components=1",
+                      "${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++abi.a",
+                      "sudo dnf -y update", 
+                      "sudo dnf install -y libstdc++ libstdc++-devel libstdc++-static",
+                      "if [ $(rpm -E %fedora) -le 42 ]; then sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-libxatracker; fi", 
+                      "if [ $(rpm -E %fedora) -ge 43 ]; then sudo dnf -y install libxkbcommon-devel wayland-devel wayland-protocols-devel mesa-dri-drivers mesa-filesystem mesa-libEGL-devel mesa-libGL-devel mesa-libGLU-devel mesa-libgbm-devel mesa-compat-libxatracker; fi"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "darwin": [
+              {
+                "filename": "LLVM-${LLVM_VERSION}-macOS-X64.tar.xz",
+                "endpoint": "/releases/download/llvmorg-${LLVM_VERSION}/LLVM-${LLVM_VERSION}-macOS-X64.tar.xz",
+                "post_cmds": [
+                  {
+                    "cwd": "${LLVM_BASE_DIR}",
+                    "shell": true,
+                    "cmds": [
+                      "mkdir -p ${LLVM_BASE_DIR}",
+                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/LLVM-${LLVM_VERSION}-macOS-X64.tar.xz\" --strip-components=1"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "pre-requisites": {
+      "aarch64": {
+        "ubuntu": {
+          "shell": true,
+          "20.04": {
+            "cmds": [
+              "sudo apt-get install -yq lsb-release wget software-properties-common gnupg apt-file build-essential libtool",
+              "sudo add-apt-repository -y ppa:kisak/kisak-mesa", 
+              "sudo apt-get update -yq", 
+              "if [ \"$CI\" = \"true\" ]; then sudo apt-get upgrade -yq --fix-missing || sudo apt-get upgrade -yq -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" || echo 'Upgrade completed with some errors - continuing'; else sudo apt-get upgrade -yq; fi", 
+              "sudo apt-get install -yq libxkbcommon-dev libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libsecret-1-dev libsdl2-dev libjpeg-dev zenity", 
+              "wget https://apt.llvm.org/llvm.sh", 
+              "chmod +x llvm.sh", 
+              "sudo ./llvm.sh ${PREFER_LLVM} all", 
+              "rm ./llvm.sh",
+              "bash -c 'export MAJOR_VERSION=$(echo ${LLVM_VERSION} | cut -d. -f1); LLVM_INSTALL_DIR=$(/usr/bin/llvm-config-$MAJOR_VERSION --prefix) && sudo ln -s $LLVM_INSTALL_DIR ${LLVM_BASE_DIR}'"
+            ]
+          }
+        }
+      },
+      "x86_64": {
+        "ubuntu": {
+          "20.04": {
+            "shell": true,
+            "cmds": [
+              "sudo apt-get install -yq lsb-release wget software-properties-common gnupg apt-file build-essential libtool",
+              "sudo add-apt-repository -y ppa:kisak/kisak-mesa", 
+              "sudo apt-get update -yq", 
+              "if [ \"$CI\" = \"true\" ]; then sudo apt-get upgrade -yq --fix-missing || sudo apt-get upgrade -yq -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\" || echo 'Upgrade completed with some errors - continuing'; else sudo apt-get upgrade -yq; fi", 
+              "sudo apt-get install -yq libxkbcommon-dev libwayland-dev wayland-protocols mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev mesa-utils libsecret-1-dev libsdl2-dev libjpeg-dev zenity", 
+              "wget https://apt.llvm.org/llvm.sh", 
+              "chmod +x llvm.sh", 
+              "sudo ./llvm.sh ${PREFER_LLVM} all", 
+              "rm ./llvm.sh",
+              "bash -c 'export MAJOR_VERSION=$(echo ${LLVM_VERSION} | cut -d. -f1); LLVM_INSTALL_DIR=$(/usr/bin/llvm-config-$MAJOR_VERSION --prefix) && sudo ln -s $LLVM_INSTALL_DIR ${LLVM_BASE_DIR}'"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -17,19 +17,22 @@ on:
     - cron:  '0 0 * * *'
 
 jobs:
-
   run:
-
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-22.04-arm, ubuntu-24.04, ubuntu-24.04-arm]
-        llvm: [18, 14]
+        llvm: [14, 15, 16, 17, 18, 19, 20, 21, 22]
         exclude:
           # LLVM < 16 not supported for >= Ubuntu 24.04
           - os: ubuntu-24.04
             llvm: 14
           - os: ubuntu-24.04-arm
             llvm: 14
+          - os: ubuntu-24.04
+            llvm: 15
+          - os: ubuntu-24.04-arm
+            llvm: 15
 
     runs-on: ${{ matrix.os }}
 
