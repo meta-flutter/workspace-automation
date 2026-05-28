@@ -1,6 +1,6 @@
 {
-  "id": "toolchain-llvm-21",
-  "description": "LLVM 21 toolchain for Flutter development.",
+  "id": "toolchain-llvm20",
+  "description": "LLVM 20 toolchain for Flutter development.",
   "load": false,
   "supported_archs": [
     "aarch64",
@@ -15,7 +15,7 @@
   "type": "toolchain",
   "toolchain": "llvm",
   "env": {
-    "LLVM_VERSION": "21.1.8",
+    "LLVM_VERSION": "20.1.8",
     "LLVM_BASE_DIR": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-llvm-${LLVM_VERSION}",
     "LLVM_BINDIR": "${LLVM_BASE_DIR}/bin",
     "LLVM_LIBDIR": "${LLVM_BASE_DIR}/lib",

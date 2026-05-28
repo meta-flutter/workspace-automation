@@ -1,5 +1,5 @@
 {
-  "id": "toolchain-llvm-15",
+  "id": "toolchain-llvm15",
   "description": "LLVM 15 toolchain for Flutter development. Uses release tarballs where available.",
   "load": false,
   "supported_archs": [

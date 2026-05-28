@@ -345,13 +345,13 @@ def main():
 
 
     # Check that PREFER_LLVM matches an available LLVM version config
-    if not os.path.exists(os.path.join(configs_dir, f'toolchain-llvm-{_prefer_llvm}.json')):
+    if not glob.glob(os.path.join(configs_dir, f'toolchain-llvm{_prefer_llvm}_*.json')):
         print(f"ERROR: PREFER_LLVM={_prefer_llvm} does not match any available LLVM versions")
         sys.exit(1)
 
-    _llvm_enable = f'toolchain-llvm-{_prefer_llvm}'
+    _llvm_enable = f'toolchain-llvm{_prefer_llvm}'
     args.enable = f'{args.enable},{_llvm_enable}' if args.enable else _llvm_enable
-    print(f'PREFER_LLVM={_prefer_llvm}: enabling toolchain-llvm-{_prefer_llvm}')
+    print(f'PREFER_LLVM={_prefer_llvm}: enabling {_llvm_enable}')
 
     #
     # Workspace Configuration
