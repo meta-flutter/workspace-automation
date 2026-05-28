@@ -42,15 +42,15 @@
           "arm64": {
             "darwin": [
               {
-                "filename": "clang+llvm-${LLVM_VERSION}-arm64-apple-darwin22.0.tar.xz",
-                "endpoint": "/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-arm64-apple-darwin22.0.tar.xz",
+                "filename": "clang+llvm-${LLVM_VERSION}-arm64-apple-darwin21.0.tar.xz",
+                "endpoint": "/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-arm64-apple-darwin21.0.tar.xz",
                 "post_cmds": [
                   {
                     "cwd": "${LLVM_BASE_DIR}",
                     "shell": true,
                     "cmds": [
                       "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-arm64-apple-darwin22.0.tar.xz\" --strip-components=1"
+                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-arm64-apple-darwin21.0.tar.xz\" --strip-components=1"
                     ]
                   }
                 ]
@@ -85,22 +85,6 @@
             ]
           },
           "x86_64": {
-            "darwin": [
-              {
-                "filename": "clang+llvm-${LLVM_VERSION}-x86_64-apple-darwin21.0.tar.xz",
-                "endpoint": "/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-apple-darwin21.0.tar.xz",
-                "post_cmds": [
-                  {
-                    "cwd": "${LLVM_BASE_DIR}",
-                    "shell": true,
-                    "cmds": [
-                      "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-x86_64-apple-darwin21.0.tar.xz\" --strip-components=1"
-                    ]
-                  }
-                ]
-              }
-            ],
             "ubuntu": [
               {
                 "os_release": ["20.04", "22.04"],
@@ -142,6 +126,12 @@
         }
       },
       "x86_64": {
+        "darwin": {
+          "shell": true,
+          "cmds": [
+            "brew install llvm@15"
+          ]
+        },
         "ubuntu": {
           "24.04": {
             "shell": true,

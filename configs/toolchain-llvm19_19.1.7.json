@@ -194,6 +194,12 @@
         }
       },
       "x86_64": {
+        "darwin": {
+          "shell": true,
+          "cmds": [
+            "brew install llvm@19"
+          ]
+        },
         "ubuntu": {
           "20.04": {
             "shell": true,

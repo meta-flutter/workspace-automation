@@ -198,9 +198,7 @@
               "bash -c 'export MAJOR_VERSION=$(echo ${LLVM_VERSION} | cut -d. -f1); LLVM_INSTALL_DIR=$(/usr/bin/llvm-config-$MAJOR_VERSION --prefix) && sudo ln -s $LLVM_INSTALL_DIR ${LLVM_BASE_DIR}'"
             ]
           }
-        }
-      },
-      "arm64": {
+        },
         "darwin": {
           "shell": true,
           "cmds": [

@@ -39,6 +39,24 @@
       "http": {
         "url": "https://github.com/llvm/llvm-project",
         "artifacts": {
+          "arm64": {
+            "darwin": [
+              {
+                "filename": "clang+llvm-${LLVM_VERSION}-arm64-apple-darwin22.0.tar.xz",
+                "endpoint": "/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-arm64-apple-darwin22.0.tar.xz",
+                "post_cmds": [
+                  {
+                    "cwd": "${LLVM_BASE_DIR}",
+                    "shell": true,
+                    "cmds": [
+                      "mkdir -p ${LLVM_BASE_DIR}",
+                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-arm64-apple-darwin22.0.tar.xz\" --strip-components=1"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
           "aarch64": {
             "ubuntu": [
               {
@@ -96,12 +114,6 @@
     },
     "pre-requisites": {
       "aarch64": {
-        "darwin": {
-          "shell": true,
-          "cmds": [
-            "brew install llvm@16"
-          ]
-        },
         "ubuntu": {
           "shell": true,
           "20.04": {

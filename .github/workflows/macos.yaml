@@ -19,14 +19,15 @@ on:
 jobs:
 
   run:
-
     env:
       NONINTERACTIVE: 1
       HOMEBREW_NO_AUTO_UPDATE: 1
 
     strategy:
+      fail-fast: false
       matrix:
         os: [ macos-14, macos-15 ]
+        llvm: [15, 16, 17, 18, 19, 20, 21, 22]
 
     runs-on: ${{ matrix.os }}
 
@@ -61,7 +62,7 @@ jobs:
           env
           cd $GITHUB_WORKSPACE
           pwd; ls -la
-          ./flutter_workspace.py
+          PREFER_LLVM=${{ matrix.llvm }} ./flutter_workspace.py
           cat ./setup_env.sh
 
       - name: Test workspace
