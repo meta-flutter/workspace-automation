@@ -17,12 +17,25 @@ on:
     - cron:  '0 0 * * *'
 
 jobs:
+  build-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      llvm-versions: ${{ steps.assemble-matrix.outputs.llvm-versions }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Assemble build matrix
+        id: assemble-matrix
+        uses: ./.github/actions/build-matrix
+
   run:
+    needs: build-matrix
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-22.04-arm, ubuntu-24.04, ubuntu-24.04-arm]
-        llvm: [14, 15, 16, 17, 18, 19, 20, 21, 22]
+        llvm: ${{ fromJSON(needs.build-matrix.outputs.llvm-versions) }}
         exclude:
           # LLVM < 16 not supported for >= Ubuntu 24.04
           - os: ubuntu-24.04

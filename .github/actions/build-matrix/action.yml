@@ -1,0 +1,122 @@
+name: Detect Modified LLVM Versions
+description: "GitHub Action to detect which LLVM versions have been modified in a pull request and output a JSON array of those versions. If the workflow file itself is modified, all available LLVM versions will be output."
+
+inputs:
+  default-llvm-versions:
+    description: "Default LLVM major version numbers to test if no specific versions are modified (as a JSON array string, e.g. '[14, 18, 22]')"
+    required: false
+    default: '[14, 18, 22]'
+    type: string
+  exclude-llvm-versions:
+    description: "LLVM major version numbers to exclude from testing (as a JSON array string, e.g. '[14, 15]')"
+    required: false
+    default: '[]'
+    type: string
+
+outputs:
+  llvm-versions:
+    description: "JSON array of LLVM major version numbers that were modified"
+    value: ${{ steps.merge.outputs.versions }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Discover all available LLVM versions
+      id: discover-all
+      shell: bash
+      run: |
+        # Find all toolchain-llvm*.json files and extract major versions
+        versions=$(ls configs/toolchain-llvm*.json 2>/dev/null | \
+          sed -n 's/.*toolchain-llvm\([0-9]\+\)_.*/\1/p' | \
+          sort -n | \
+          uniq)
+        
+        # Convert to JSON array
+        json_array="["
+        first=true
+        for version in $versions; do
+          if [ "$first" = true ]; then
+            first=false
+          else
+            json_array="$json_array, "
+          fi
+          json_array="$json_array$version"
+        done
+        json_array="$json_array]"
+        
+        echo "all-versions=$json_array" >> $GITHUB_OUTPUT
+        echo "Discovered LLVM versions: $json_array"
+    
+    - name: Get changed toolchain files
+      id: changed-files
+      uses: tj-actions/changed-files@v45
+      with:
+        files: configs/toolchain-llvm*.json
+    
+    - name: Check if workflow itself changed
+      id: workflow-changed
+      uses: tj-actions/changed-files@v45
+      with:
+        files: .github/workflows/ubuntu-legacy.yml
+    
+    - name: Merge changed versions with defaults
+      id: merge
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const workflowChanged = '${{ steps.workflow-changed.outputs.all_changed_files }}' !== '';
+          
+          // Extract LLVM versions from changed files
+          const changedFiles = '${{ steps.changed-files.outputs.all_changed_files }}';
+          const changedVersions = [];
+          
+          if (changedFiles) {
+            const files = changedFiles.split(' ');
+            for (const file of files) {
+              const match = file.match(/toolchain-llvm(\d+)_/);
+              if (match) {
+                changedVersions.push(parseInt(match[1]));
+              }
+            }
+          }
+          
+          // Default LLVM versions for this workflow
+          let defaults = JSON.parse('${{ inputs.default-llvm-versions }}');
+          // if defaults are empty, read from globals.json
+          if (defaults.length === 0) {
+            const configPath = 'configs/globals.json';
+            if (fs.existsSync(configPath)) {
+              const configContent = fs.readFileSync(configPath, 'utf8');
+              const config = JSON.parse(configContent);
+              defaults = config.default_llvm_versions || [];
+              console.log(`Read default LLVM versions from ${configPath}:`, defaults);
+            } else {
+              console.warn(`No default LLVM versions provided and ${configPath} not found. Defaulting to empty list.`);
+            }
+          }
+          
+          // Excluded LLVM versions
+          const excluded = JSON.parse('${{ inputs.exclude-llvm-versions }}');
+          
+          // Merge and deduplicate
+          const merged = [...new Set([...changedVersions, ...defaults])];
+          
+          // Sort in ascending order
+          const sorted = merged.sort((a, b) => a - b);
+          
+          console.log('Updated LLVM scripts:', changedVersions);
+
+          // If workflow itself changed, test all LLVM versions
+          if (workflowChanged) {
+            const allVersions = JSON.parse('${{ steps.discover-all.outputs.all-versions }}');
+            const filtered = allVersions.filter(v => !excluded.includes(v));
+            console.log('Workflow file changed - testing all LLVM versions:', filtered);
+            core.setOutput('versions', JSON.stringify(filtered));
+          } else {
+            const filtered = sorted.filter(v => !excluded.includes(v));
+            console.log('LLVM versions to check:', filtered);
+            core.setOutput('versions', JSON.stringify(filtered));
+          }

@@ -16,12 +16,28 @@ on:
     - cron:  '0 0 * * *'
 
 jobs:
+  build-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      llvm-versions: ${{ steps.assemble-matrix.outputs.llvm-versions }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Assemble build matrix
+        id: assemble-matrix
+        uses: ./.github/actions/build-matrix
+        with:
+          # Exclude older LLVM versions that are not available on Fedora
+          exclude-llvm-versions: '[14, 15, 16, 17]' 
+
   run:
+    needs: build-matrix
     strategy:
       fail-fast: false
       matrix:
         os: [fedora:41, fedora:42, fedora:43]
-        llvm: [18, 19, 20, 21, 22]
+        llvm: ${{ fromJSON(needs.build-matrix.outputs.llvm-versions) }}
 
     # NOTE: GitHub Actions does not support running on Fedora directly, so we run it in a container.
     runs-on: ubuntu-latest

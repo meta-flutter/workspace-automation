@@ -18,14 +18,28 @@ on:
     - cron:  '0 0 * * *'
 
 jobs:
+  build-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      llvm-versions: ${{ steps.assemble-matrix.outputs.llvm-versions }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Assemble build matrix
+        id: assemble-matrix
+        uses: ./.github/actions/build-matrix
+        with:
+          # Default LLVM versions to test for this workflow
+          default-llvm-versions: '[14, 18, 22]'
 
   run:
-
+    needs: build-matrix
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu:20.04]
-        llvm: [14, 15, 16, 17, 18, 19, 20, 21, 22]
+        llvm: ${{ fromJSON(needs.build-matrix.outputs.llvm-versions) }}
 
     runs-on: ubuntu-latest
     container:
