@@ -18,6 +18,7 @@ on:
 
 jobs:
   build-matrix:
+    if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip macos')"
     runs-on: ubuntu-latest
     outputs:
       llvm-versions: ${{ steps.assemble-matrix.outputs.llvm-versions }}
@@ -42,8 +43,6 @@ jobs:
         llvm: ${{ fromJSON(needs.build-matrix.outputs.llvm-versions) }}
 
     runs-on: ${{ matrix.os }}
-
-    if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip macos') && !contains(github.event.head_commit.message, '[skip macos]')"
 
     steps:
       - uses: actions/checkout@v4

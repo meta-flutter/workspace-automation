@@ -19,6 +19,7 @@ on:
 
 jobs:
   build-matrix:
+    if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip ubuntu-legacy')"
     runs-on: ubuntu-latest
     outputs:
       llvm-versions: ${{ steps.assemble-matrix.outputs.llvm-versions }}
@@ -44,8 +45,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ${{ matrix.os }}
-
-    if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip ubuntu-legacy') && !contains(github.event.head_commit.message, '[skip ubuntu-legacy]')"
 
     steps:
       - name: Check Environment

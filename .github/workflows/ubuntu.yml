@@ -18,6 +18,7 @@ on:
 
 jobs:
   build-matrix:
+    if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip ubuntu')"
     runs-on: ubuntu-latest
     outputs:
       llvm-versions: ${{ steps.assemble-matrix.outputs.llvm-versions }}
@@ -48,8 +49,6 @@ jobs:
             llvm: 15
 
     runs-on: ${{ matrix.os }}
-
-    if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip ubuntu') && !contains(github.event.head_commit.message, '[skip ubuntu]')"
 
     steps:
       - name: Check Environment

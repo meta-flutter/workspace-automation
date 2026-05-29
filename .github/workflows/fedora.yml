@@ -17,6 +17,7 @@ on:
 
 jobs:
   build-matrix:
+    if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip fedora')"
     runs-on: ubuntu-latest
     outputs:
       llvm-versions: ${{ steps.assemble-matrix.outputs.llvm-versions }}
@@ -43,8 +44,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ${{ matrix.os }}
-
-    if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip fedora') && !contains(github.event.head_commit.message, '[skip fedora]')"
 
     steps:
       - name: Check Environment

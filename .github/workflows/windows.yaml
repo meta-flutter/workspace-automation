@@ -17,9 +17,7 @@ on:
     - cron:  '0 0 * * *'
 
 jobs:
-
   run:
-
     env:
       NONINTERACTIVE: 1
       HOMEBREW_NO_AUTO_UPDATE: 1
@@ -30,7 +28,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip windows') && !contains(github.event.head_commit.message, '[skip windows]')"
+    if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip windows')"
 
     steps:
       - name: Check Environment
