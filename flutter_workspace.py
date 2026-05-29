@@ -213,9 +213,16 @@ def main():
     # Target Folder
     #
     workspace = get_ws_folder()
+    if os.path.exists(workspace):
+        os.environ['FLUTTER_WORKSPACE'] = workspace
+    
     config_folder = os.path.join(workspace, '.config')
 
     print_banner("Setting up Flutter Workspace in: %s" % workspace)
+
+    # Prepend workspace bin/ to PATH so sudo-apt-workspace / sudo-dnf-workspace are found
+    # by all subprocesses, including install_minimum_runtime_deps() below.
+    os.environ['PATH'] = os.path.join(workspace, 'bin') + os.pathsep + os.environ.get('PATH', '')
 
     #
     # Recursively change ownership to logged-in user
@@ -234,10 +241,6 @@ def main():
     app_folder = os.path.join(workspace, 'app')
     if not os.path.exists(app_folder):
         os.makedirs(app_folder)
-
-
-    if os.path.exists(workspace):
-        os.environ['FLUTTER_WORKSPACE'] = workspace
 
     #
     # Clean Cache
@@ -2912,14 +2915,14 @@ def ubuntu_install_pkg_if_not_installed(package):
     if not ubuntu_is_pkg_installed(package):
         print("\n* Installing runtime package dependency: %s" % package)
 
-        cmd = ["sudo", "apt-get", "install", "-y", package]
+        cmd = ["sudo-apt-workspace", "install", "-y", package]
         subprocess.call(cmd)
 
 
 def get_dnf_installed(filter_: str) -> str:
     """Returns dnf package list if present, None otherwise"""
 
-    dnf_result = subprocess.run(['dnf', 'list', 'installed'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    dnf_result = subprocess.run(['sudo-dnf-workspace', 'list', 'installed'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     grep_result = subprocess.run(['grep', '--', filter_], input=dnf_result.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
     return grep_result.stdout
@@ -2941,7 +2944,7 @@ def fedora_install_pkg_if_not_installed(package: str):
     if not fedora_is_pkg_installed(package):
         print("\n* Installing runtime package dependency: %s" % package)
 
-        cmd = ["sudo", "dnf", "install", "-y", package]
+        cmd = ["sudo-dnf-workspace", "install", "-y", package]
         subprocess.call(cmd)
 
 
@@ -3047,14 +3050,14 @@ def install_minimum_runtime_deps():
         os_release_id = get_freedesktop_os_release_id()
 
         if os_release_id == 'ubuntu':
-            subprocess.check_output(['sudo', 'apt-get', 'update', '-y'])
-            packages = 'sudo apt-get install --no-install-recommends -y git git-lfs unzip curl python3-dev python3-virtualenv libcurl4-openssl-dev libssl-dev libgtk-3-dev build-essential libcurl4-openssl-dev'.split(
+            subprocess.check_output(['sudo-apt-workspace', 'update', '-y'])
+            packages = 'sudo-apt-workspace install --no-install-recommends -y git git-lfs unzip curl python3-dev python3-virtualenv libcurl4-openssl-dev libssl-dev libgtk-3-dev build-essential libcurl4-openssl-dev'.split(
                 ' ')
             subprocess.check_output(packages)
 
         elif os_release_id == 'fedora':
-            subprocess.check_output(['sudo', 'dnf', '-y', 'update'])
-            packages = 'sudo dnf -y install dnf-plugins-core git git-lfs unzip curl python3-devel python3-virtualenv libcurl-devel openssl-devel gtk3-devel gcc libcurl-devel'.split(
+            subprocess.check_output(['sudo-dnf-workspace', '-y', 'update'])
+            packages = 'sudo-dnf-workspace -y install dnf-plugins-core git git-lfs unzip curl python3-devel python3-virtualenv libcurl-devel openssl-devel gtk3-devel gcc libcurl-devel'.split(
                 ' ')
             subprocess.check_output(packages)
 
@@ -3236,6 +3239,7 @@ cd "$ORIGINAL_DIR" || exit 1
 echo "SCRIPT_PATH=$SCRIPT_PATH"
 
 export FLUTTER_WORKSPACE="$SCRIPT_PATH"
+export PATH="$FLUTTER_WORKSPACE/bin:$PATH"
 export PATH="$FLUTTER_WORKSPACE/flutter/bin:$PATH"
 export PUB_CACHE="$FLUTTER_WORKSPACE/.cache/pub_cache"
 export XDG_CONFIG_HOME="$FLUTTER_WORKSPACE/.config/flutter"

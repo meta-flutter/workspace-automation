@@ -45,12 +45,12 @@
                 "darwin": {},
                 "fedora": {
                     "cmds": [
-                        "sudo dnf install -y nasm"
+                        "sudo-dnf-workspace install -y nasm"
                     ]
                 },
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt-get install -yq nasm"
+                        "sudo-apt-workspace install -yq nasm"
                     ]
                 }
             }

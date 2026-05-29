@@ -60,7 +60,7 @@
                 "fedora": {
                     "cmds": [
                         "pip3 install absl-py",
-                        "sudo dnf install go"
+                        "sudo-dnf-workspace install go"
                     ]
                 }
             }

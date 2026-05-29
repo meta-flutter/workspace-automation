@@ -33,7 +33,7 @@
             "aarch64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt-get install -yq libjpeg-dev libevent-dev",
+                        "sudo-apt-workspace install -yq libjpeg-dev libevent-dev",
                         "pip3 install jinja2 ply pyyaml meson sphinxcontrib-doxylink"
                     ]
                 }
@@ -41,13 +41,13 @@
             "x86_64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt-get install -yq libjpeg-dev libevent-dev",
+                        "sudo-apt-workspace install -yq libjpeg-dev libevent-dev",
                         "pip3 install jinja2 ply pyyaml meson sphinxcontrib-doxylink"
                     ]
                 },
                 "fedora": {
                     "cmds": [
-                        "sudo dnf install -y libjpeg-devel libevent-devel",
+                        "sudo-dnf-workspace install -y libjpeg-devel libevent-devel",
                         "pip3 install jinja2 ply pyyaml meson sphinxcontrib-doxylink"
                     ]
                 }

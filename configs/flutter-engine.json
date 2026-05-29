@@ -47,19 +47,19 @@
             "aarch64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt-get install -yq pkg-config libfreetype-dev git"
+                        "sudo-apt-workspace install -yq pkg-config libfreetype-dev git"
                     ]
                 }
             },
             "x86_64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt-get install -yq pkg-config libfreetype-dev git"
+                        "sudo-apt-workspace install -yq pkg-config libfreetype-dev git"
                     ]
                 },
                 "fedora": {
                     "cmds": [
-                        "sudo dnf install -y pkg-config freetype-devel git"
+                        "sudo-dnf-workspace install -y pkg-config freetype-devel git"
                     ]
                 }
             }
