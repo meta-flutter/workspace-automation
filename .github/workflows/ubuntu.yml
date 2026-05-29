@@ -52,6 +52,8 @@ jobs:
 
     steps:
       - name: Check Environment
+        id: check_environment
+        shell: bash
         run: |
           echo "Running on Ubuntu version: $(lsb_release -d | cut -f2)"
           echo "Running on architecture: $(uname -m)"
@@ -59,25 +61,18 @@ jobs:
           echo "Environment variables:"
           env
 
+          # Get username
+          echo "user=$(whoami)" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v4
 
       - name: Create workspace
-        shell: bash
-        env:
-          CI: true
-          GITHUB_ACTIONS: true
-        # If llvm != 18, do --disable=toolchain-llvm-18
-        run: |
-          cd $GITHUB_WORKSPACE
-          pwd; ls -la
-          PREFER_LLVM=${{ matrix.llvm }} ./flutter_workspace.py
-          echo "Checking LLVM config..."
-          cat setup_env.sh; echo ""
-          FOUND_LLVM_VER=$(grep -oP 'export PREFER_LLVM=\K[0-9]+' setup_env.sh)
-          if [ "$FOUND_LLVM_VER" != ${{ matrix.llvm }} ]; then
-            echo "Expected LLVM version ${{ matrix.llvm }} but found ${FOUND_LLVM_VER} in setup_env.sh"
-            exit 1
-          fi
+        uses: ./.github/actions/setup-workspace
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          cache: true
+          cache-key: ${{ matrix.os }}-llvm${{ matrix.llvm }}
+          user: ${{ steps.check_environment.outputs.user }}
 
       - name: Test workspace
         shell: bash
@@ -85,13 +80,12 @@ jobs:
           CI: true
           GITHUB_ACTIONS: true
         run: |
-          cd $GITHUB_WORKSPACE
           pwd; ls -la
-          . ./setup_env.sh
+          source ./setup_env.sh
           ls -la $FLUTTER_WORKSPACE
           dart --version
 
-      - name: Create AOT Tests
+      - name: Test AOT
         if: ${{ !contains(matrix.os, 'arm') }}
         shell: bash
         env:
@@ -100,5 +94,5 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           pwd; ls -la
-          . ./setup_env.sh
+          source ./setup_env.sh
           ./flutter_workspace.py --create-aot --app-path=./app/tcna-packages/packages/flatpak/example/
