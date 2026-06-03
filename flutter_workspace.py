@@ -88,6 +88,20 @@ build_types = {}
 # `configs/globals.json` values
 globals_ = {}
 
+# Dictionary to store repo overrides from CLI
+# e.g., { 'https://github.com/user/repo': { 'ref': None, 'branch': 'main' } }
+REPO_OVERRIDES = {}
+
+
+def normalize_git_uri(uri):
+    """Normalize a Git URI by removing trailing slashes and .git suffix."""
+    if not uri:
+        return uri
+    uri = uri.rstrip('/')
+    if uri.endswith('.git'):
+        uri = uri[:-4]
+    return uri
+
 
 def handle_exception(exc_type, exc_value, exc_traceback):
     if issubclass(exc_type, KeyboardInterrupt):
@@ -120,6 +134,10 @@ def main():
     parser.add_argument('--enable', default='', type=str, help='Platform Load Enable Override')
     parser.add_argument('--disable', default='', type=str, help='Platform Load Disable Override')
     parser.add_argument('--remote', default='', type=str, help='Remote Platform Load Git Repo')
+    parser.add_argument('--override-repo', default='', type=str,
+                        help='Override repo branch/ref. Format: `uri#<ref>` or `uri#heads/<branch>`. ' 
+                             'Multiple entries supported (comma-separated). ' 
+                             'Example: https://github.com/user/repo.git#main,https://github.com/user/repo2#heads/feature')
     parser.add_argument('--enable-plugin', default='', type=str, help='Plugin Enable')
     parser.add_argument('--disable-plugin', default='', type=str, help='Plugin Disable')
     parser.add_argument('--fastboot', default='', type=str, help='Update the selected platform using fastboot')
@@ -142,6 +160,24 @@ def main():
     args = parser.parse_args()
 
     print(f'Arguments {args}')
+
+    #
+    # Parse --override-repo
+    #
+    global REPO_OVERRIDES
+    if args.override_repo:
+        for entry in args.override_repo.split(','):
+            if '#' in entry:
+                uri, ref = entry.split('#', 1)
+                uri = normalize_git_uri(uri)
+                branch = None
+                if ref.startswith('heads/'):
+                    branch = ref.split('heads/', 1)[1]
+                    ref = None
+                REPO_OVERRIDES[uri] = {'ref': ref, 'branch': branch}
+            else:
+                print(f"WARNING: Invalid --override-repo entry '{entry}' (missing '#'), skipping")
+        print(f'Loaded repo overrides: {REPO_OVERRIDES}')
 
     # Check if running in CI
     is_ci = os.environ.get('CI') == 'true'
@@ -977,6 +1013,17 @@ def get_repo(base_folder, uri, ref, branch=None, dest_name=None):
     if not uri:
         print("repo entry needs a 'uri' key.  Skipping")
         return
+
+    # Check for overrides from --override-repo
+    normalized_uri = normalize_git_uri(uri)
+    if normalized_uri in REPO_OVERRIDES:
+        override = REPO_OVERRIDES[normalized_uri]
+        old_ref, old_branch = ref, branch
+        ref = override.get('ref')
+        branch = override.get('branch')
+        print_banner(f'Applying override for {normalized_uri}: branch={branch}, ref={ref}')
+        if old_ref != ref or old_branch != branch:
+            print(f'  (was: branch={old_branch}, ref={old_ref})')
 
     # get repo folder name
     repo_name = uri.rsplit('/', 1)[-1]
