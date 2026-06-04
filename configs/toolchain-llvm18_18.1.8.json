@@ -21,6 +21,7 @@
     "LLVM_LIBDIR": "${LLVM_BASE_DIR}/lib",
     "LLVM_CONFIG": "${LLVM_BINDIR}/llvm-config",
     "PATH": "${LLVM_BINDIR}:$PATH",
+    "CXXFLAGS": "-stdlib=libc++ -lc++abi",
     "LD_LIBRARY_PATH": "${LLVM_LIBDIR}:$LD_LIBRARY_PATH"
   },
   "append_to_runtime_env": {
@@ -32,6 +33,7 @@
         "export LLVM_LIBDIR=$LLVM_BASE_DIR/lib",
         "export LLVM_CONFIG=$LLVM_BINDIR/llvm-config",
         "export PATH=$LLVM_BINDIR:$PATH",
+        "export CXXFLAGS='-stdlib=libc++ -lc++abi'",
         "export LD_LIBRARY_PATH=$LLVM_LIBDIR:$LD_LIBRARY_PATH"
       ]
   },

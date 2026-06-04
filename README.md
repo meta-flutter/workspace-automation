@@ -206,7 +206,7 @@ Generated for each platform config. The initial value is determined by the platf
 | Platform | Architectures |
 |----------|--------------|
 | Ubuntu 20/22/24 | x86_64, aarch64 |
-| Fedora 40/41/42 | x86_64 |
+| Fedora 42/43/44 | x86_64 |
 | macOS 13/14/15 | x86_64, arm64 (M1/M2) |
 | Windows 10 | AMD64 |
 | Windows 11 | AMD64, ARM64 (Surface Elite X) |

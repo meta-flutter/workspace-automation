@@ -42,11 +42,6 @@
                         "cmds": [
                             "sudo-dnf-workspace -y install ffmpeg-free-devel"
                         ]
-                    },
-                    "41": {
-                        "cmds": [
-                            "sudo-dnf-workspace -y install ffmpeg-devel"
-                        ]
                     }
                 },
                 "ubuntu": {
