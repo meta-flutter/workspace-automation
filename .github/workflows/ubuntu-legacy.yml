@@ -18,19 +18,33 @@ on:
     - cron:  '0 0 * * *'
 
 jobs:
+  build-matrix:
+    if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip ubuntu-legacy')"
+    runs-on: ubuntu-latest
+    outputs:
+      llvm-versions: ${{ steps.assemble-matrix.outputs.llvm-versions }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Assemble build matrix
+        id: assemble-matrix
+        uses: ./.github/actions/build-matrix
+        with:
+          # Default LLVM versions to test for this workflow
+          default-llvm-versions: '[14, 18, 22]'
 
   run:
-
+    needs: build-matrix
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu:20.04]
-        llvm: [18, 14]
+        llvm: ${{ fromJSON(needs.build-matrix.outputs.llvm-versions) }}
 
     runs-on: ubuntu-latest
     container:
       image: ${{ matrix.os }}
-
-    if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip ubuntu-legacy') && !contains(github.event.head_commit.message, '[skip ubuntu-legacy]')"
 
     steps:
       - name: Check Environment

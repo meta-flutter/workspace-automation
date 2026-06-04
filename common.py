@@ -216,8 +216,25 @@ def write_sha256_file(cwd: str, filename: str):
         f.write(sha256_val)
 
 
+_fetch_https_progress_last_time = 0.0
+_fetch_https_progress_last_values = (None, None)
+
+
 def fetch_https_progress(download_t, download_d, _upload_t, _upload_d):
     """callback function for pycurl transfer info function"""
+    import time
+    global _fetch_https_progress_last_time, _fetch_https_progress_last_values
+
+    if os.environ.get('CI') == 'true':
+        # Skips printing progress more than once a second or if values haven't changed to avoid log spew.
+        now = time.monotonic()
+        current_values = (download_t, download_d)
+        if current_values == _fetch_https_progress_last_values or (now - _fetch_https_progress_last_time) < 1.0:
+            return
+
+        _fetch_https_progress_last_time = now
+        _fetch_https_progress_last_values = current_values
+    
     stream.write('Progress: {}/{} kiB ({}%)\r'.format(str(int(download_d / kb)), str(int(download_t / kb)),
                                                       str(int(download_d / download_t * 100) if download_t > 0 else 0)))
     stream.flush()

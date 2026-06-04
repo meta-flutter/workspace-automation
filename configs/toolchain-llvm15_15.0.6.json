@@ -1,0 +1,136 @@
+{
+  "id": "toolchain-llvm15",
+  "description": "LLVM 15 toolchain for Flutter development. Uses release tarballs where available.",
+  "load": false,
+  "supported_archs": [
+    "aarch64",
+    "arm64",
+    "x86_64"
+  ],
+  "supported_host_types": [
+    "darwin",
+    "ubuntu"
+  ],
+  "type": "toolchain",
+  "toolchain": "llvm",
+  "env": {
+    "LLVM_VERSION": "15.0.6",
+    "LLVM_BASE_DIR": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-llvm-${LLVM_VERSION}",
+    "LLVM_BINDIR": "${LLVM_BASE_DIR}/bin",
+    "LLVM_LIBDIR": "${LLVM_BASE_DIR}/lib",
+    "LLVM_CONFIG": "${LLVM_BINDIR}/llvm-config",
+    "PATH": "${LLVM_BINDIR}:$PATH",
+    "LD_LIBRARY_PATH": "${LLVM_LIBDIR}:$LD_LIBRARY_PATH"
+  },
+  "append_to_runtime_env": {
+      "common": [
+        "# toolchain-llvm",
+        "export PREFER_LLVM=${PREFER_LLVM}",
+        "export LLVM_BASE_DIR=${LLVM_BASE_DIR}",
+        "export LLVM_BINDIR=$LLVM_BASE_DIR/bin",
+        "export LLVM_LIBDIR=$LLVM_BASE_DIR/lib",
+        "export LLVM_CONFIG=$LLVM_BINDIR/llvm-config",
+        "export PATH=$LLVM_BINDIR:$PATH",
+        "export LD_LIBRARY_PATH=$LLVM_LIBDIR:$LD_LIBRARY_PATH"
+      ]
+  },
+  "runtime": {
+    "artifacts": {
+      "http": {
+        "url": "https://github.com/llvm/llvm-project",
+        "artifacts": {
+          "arm64": {
+            "darwin": [
+              {
+                "filename": "clang+llvm-${LLVM_VERSION}-arm64-apple-darwin21.0.tar.xz",
+                "endpoint": "/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-arm64-apple-darwin21.0.tar.xz",
+                "post_cmds": [
+                  {
+                    "cwd": "${LLVM_BASE_DIR}",
+                    "shell": true,
+                    "cmds": [
+                      "mkdir -p ${LLVM_BASE_DIR}",
+                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-arm64-apple-darwin21.0.tar.xz\" --strip-components=1"
+                    ]
+                  }
+                ]
+              }
+            ]
+        },
+        "aarch64": {
+            "ubuntu": [
+              {
+                "os_release": ["20.04", "22.04"],
+                "filename": "clang+llvm-${LLVM_VERSION}-aarch64-linux-gnu.tar.xz",
+                "endpoint": "/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-aarch64-linux-gnu.tar.xz",
+                "post_cmds": [
+                  {
+                    "cwd": "${LLVM_BASE_DIR}",
+                    "shell": true,
+                    "cmds": [
+                      "if [ $(lsb_release -rs) = \"22.04\" ]; then sudo apt-get install -yq libtinfo5; fi",
+                      "sudo apt-get remove libunwind-* -yq || true",
+                      "mkdir -p ${LLVM_BASE_DIR}",
+                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-aarch64-linux-gnu.tar.xz\" --strip-components=1",
+                      "${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu/libc++abi.a"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "x86_64": {
+            "ubuntu": [
+              {
+                "os_release": ["20.04", "22.04"],
+                "filename": "clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04.tar.xz",
+                "endpoint": "/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04.tar.xz",
+                "post_cmds": [
+                  {
+                    "cwd": "${LLVM_BASE_DIR}",
+                    "shell": true,
+                    "cmds": [
+                      "if [ $(lsb_release -rs) = \"22.04\" ]; then sudo apt-get install -yq libtinfo5; fi",
+                      "sudo apt-get remove libunwind-* -yq || true",
+                      "mkdir -p ${LLVM_BASE_DIR}",
+                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04.tar.xz\" --strip-components=1",
+                      "${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++abi.a"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    "pre-requisites": {
+      "aarch64": {
+        "ubuntu": {
+          "24.04": {
+            "shell": true,
+            "cmds": [
+              "echo 'ERROR: LLVM ${LLVM_VERSION} is not supported for Ubuntu 24.04' && false"
+            ]
+          }
+        }
+      },
+      "x86_64": {
+        "darwin": {
+          "shell": true,
+          "cmds": [
+            "brew install llvm@15"
+          ]
+        },
+        "ubuntu": {
+          "24.04": {
+            "shell": true,
+            "cmds": [
+              "echo 'ERROR: LLVM ${LLVM_VERSION} is not supported for Ubuntu 24.04' && false"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

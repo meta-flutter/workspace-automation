@@ -16,17 +16,34 @@ on:
     - cron:  '0 0 * * *'
 
 jobs:
+  build-matrix:
+    if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip fedora')"
+    runs-on: ubuntu-latest
+    outputs:
+      llvm-versions: ${{ steps.assemble-matrix.outputs.llvm-versions }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Assemble build matrix
+        id: assemble-matrix
+        uses: ./.github/actions/build-matrix
+        with:
+          # Exclude older LLVM versions that are not available on Fedora
+          exclude-llvm-versions: '[14, 15, 16, 17]' 
+
   run:
+    needs: build-matrix
     strategy:
+      fail-fast: false
       matrix:
         os: [fedora:41, fedora:42, fedora:43]
+        llvm: ${{ fromJSON(needs.build-matrix.outputs.llvm-versions) }}
 
     # NOTE: GitHub Actions does not support running on Fedora directly, so we run it in a container.
     runs-on: ubuntu-latest
     container:
       image: ${{ matrix.os }}
-
-    if: "!contains(github.event.pull_request.labels.*.name, 'ci: skip fedora') && !contains(github.event.head_commit.message, '[skip fedora]')"
 
     steps:
       - name: Check Environment
@@ -58,7 +75,7 @@ jobs:
           cd $GITHUB_WORKSPACE
           pwd; ls -la
           chown -R user:user .
-          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && ./flutter_workspace.py --stdin-file=/dev/null"
+          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && PREFER_LLVM=${{ matrix.llvm }} ./flutter_workspace.py --stdin-file=/dev/null"
           cat ./setup_env.sh
 
       - name: Test workspace

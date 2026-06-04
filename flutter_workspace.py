@@ -329,6 +329,30 @@ def main():
     os.environ['_MAX_THREADS'] = str(max_threads)
     print("Using %s threads for compilation" % os.environ.get('_MAX_THREADS'))
 
+    # Get default LLVM version
+    _prefer_llvm = os.environ.get('PREFER_LLVM')
+    if not _prefer_llvm:
+        _default_llvm_major = get_default_llvm_major(Path(args.config))
+        if not _default_llvm_major:
+            print("ERROR: No default LLVM version found in globals.json")
+            sys.exit(1)
+
+        _prefer_llvm = _default_llvm_major
+        os.environ['PREFER_LLVM'] = _prefer_llvm
+        print(f'PREFER_LLVM: {_prefer_llvm} (from globals.json default_llvm_version)')
+
+    # Apply PREFER_LLVM to enable the appropriate per-version LLVM config
+
+
+    # Check that PREFER_LLVM matches an available LLVM version config
+    if not glob.glob(os.path.join(configs_dir, f'toolchain-llvm{_prefer_llvm}_*.json')):
+        print(f"ERROR: PREFER_LLVM={_prefer_llvm} does not match any available LLVM versions")
+        sys.exit(1)
+
+    _llvm_enable = f'toolchain-llvm{_prefer_llvm}'
+    args.enable = f'{args.enable},{_llvm_enable}' if args.enable else _llvm_enable
+    print(f'PREFER_LLVM={_prefer_llvm}: enabling {_llvm_enable}')
+
     #
     # Workspace Configuration
     #
@@ -747,6 +771,21 @@ def get_workspace_config(path):
                 sys.exit(1)
 
     return data
+
+
+def get_default_llvm_major(config_dir: Path) -> str:
+    globals_path = config_dir / "globals.json"
+    if not globals_path.exists():
+        print(f"ERROR: globals.json not found at {globals_path}")
+        sys.exit(1)
+
+    globals_config = load_json_config(globals_path)
+    default_llvm_version = globals_config.get('default_llvm_version')
+    if default_llvm_version is None or default_llvm_version == '':
+        print("ERROR: No default_llvm_version defined in configs/globals.json")
+        sys.exit(1)
+
+    return str(default_llvm_version)
 
 
 def validate_platform_config(platform_):
@@ -2510,21 +2549,6 @@ def get_hardware_threads():
     except AttributeError:
         return multiprocessing.cpu_count()
 
-
-def setup_llvm_vars(llvm_config):
-    print_banner(f"Setting up LLVM variables using {llvm_config}")
-
-    llvm_bindir = get_llvm_config(llvm_config, 'bindir')
-    llvm_libdir = get_llvm_config(llvm_config, 'libdir')
-
-    os.environ['LLVM_BINDIR'] = llvm_bindir
-    os.environ['LLVM_LIBDIR'] = llvm_libdir
-    os.environ['LLVM_CONFIG'] = llvm_bindir + '/llvm-config'
-
-    print(f"LLVM_BINDIR: {os.environ['LLVM_BINDIR']}")
-    print(f"LLVM_CONFIG: {os.environ['LLVM_CONFIG']}")
-
-
 def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, enable_plugin, disable_plugin,
                     app_folder):
     if not 'toolchain' in platform_:
@@ -2541,15 +2565,15 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
     if platform_['toolchain'] == 'llvm':
         prefer_llvm = os.environ.get('PREFER_LLVM', None)
         if not prefer_llvm:
-            # If not set by ENV variable, get default from platform config
-            if 'DEFAULT_VERSION' in platform_['env']:
-                prefer_llvm = platform_['env']['DEFAULT_VERSION']
+            default_llvm_version = globals_.get('default_llvm_version')
+            if default_llvm_version is not None and default_llvm_version != '':
+                prefer_llvm = str(default_llvm_version)
                 os.environ['PREFER_LLVM'] = prefer_llvm
-                print(f'PREFER_LLVM: {prefer_llvm}')
+                print(f'PREFER_LLVM: {prefer_llvm} (from globals.json default_llvm_version)')
 
         # Failsafe
         if not prefer_llvm:
-            print("PREFER_LLVM is not set and no prefer_llvm key present in toolchain config")
+            print("PREFER_LLVM is not set and no default_llvm_version present in globals.json")
             sys.exit(1)
 
     platform_['type'] = 'dependency'
@@ -2563,30 +2587,7 @@ def setup_toolchain(platform_, git_token, cookie_file, plex, enable, disable, en
         host_type = get_freedesktop_os_release_id()
 
 
-    if platform_['toolchain'] == 'llvm':
-        llvm_base_path = '/usr'
-
-        if host_type == 'darwin':
-            llvm_base_path = get_mac_brew_prefix('llvm' + '@' + prefer_llvm)
-        elif host_type == 'ubuntu':
-            llvm_base_path = '/usr/lib/llvm-' + prefer_llvm + '/bin'
-        elif host_type == 'fedora':
-            llvm_base_path = '/usr/lib64/llvm' + prefer_llvm + '/bin'
-
-        print(f'Looking for llvm-config in {llvm_base_path}')
-        llvm_config = get_first_file_in_path(llvm_base_path, 'llvm-config')
-        if llvm_config:
-            setup_llvm_vars(llvm_config)
-        else:
-            llvm_base_path = '/usr'
-            llvm_config = get_first_file_in_path(llvm_base_path, 'llvm-config')
-            if llvm_config:
-                setup_llvm_vars(llvm_config)
-            else:
-                print_banner(f'Failed to find llvm-config({prefer_llvm}) in {llvm_base_path}.')
-                sys.exit(1)
-
-    elif platform_['toolchain'] == 'common':
+    if platform_['toolchain'] == 'common':
         pass
     else:
         print_banner("Toolchain not supported")
@@ -2934,8 +2935,8 @@ def install_minimum_runtime_deps():
         os_release_id = get_freedesktop_os_release_id()
 
         if os_release_id == 'ubuntu':
-            subprocess.check_output(['sudo', 'apt', 'update', '-y'])
-            packages = 'sudo apt install --no-install-recommends -y git git-lfs unzip curl python3-dev python3-virtualenv libcurl4-openssl-dev libssl-dev libgtk-3-dev build-essential libcurl4-openssl-dev'.split(
+            subprocess.check_output(['sudo', 'apt-get', 'update', '-y'])
+            packages = 'sudo apt-get install --no-install-recommends -y git git-lfs unzip curl python3-dev python3-virtualenv libcurl4-openssl-dev libssl-dev libgtk-3-dev build-essential libcurl4-openssl-dev'.split(
                 ' ')
             subprocess.check_output(packages)
 

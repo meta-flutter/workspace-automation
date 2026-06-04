@@ -2,5 +2,6 @@
     "flutter_version": "3.38.3",
     "github_token": "",
     "cookie_file": "",
-    "build_type": "release"
+    "build_type": "release",
+    "default_llvm_version": 18
 }
