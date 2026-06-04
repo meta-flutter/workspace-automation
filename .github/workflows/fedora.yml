@@ -55,13 +55,12 @@ jobs:
           env
 
       - name: Set up tools
+        shell: bash
         run: |
-          dnf install -y python3 python3-pip python3-pyyaml which cmake util-linux
-          python3 -m pip install --upgrade pip
+          dnf install -y \
+            python3 python3-pip which util-linux git sudo
 
-      - name: Create non-root user
-        run: |
-          dnf install -y sudo
+          # Create non-root user
           groupadd -g 1000 user
           useradd -m -u 1000 -g user -G wheel -s /bin/bash user
           echo "user ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/user
@@ -69,26 +68,35 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Create workspace
-        shell: bash
-        # Run as non-root user in the container
-        run: |
-          cd $GITHUB_WORKSPACE
-          pwd; ls -la
-          chown -R user:user .
-          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && PREFER_LLVM=${{ matrix.llvm }} ./flutter_workspace.py --stdin-file=/dev/null"
-          cat ./setup_env.sh
+        uses: ./.github/actions/setup-workspace
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          cache: true
+          cache-key: ${{ matrix.os }}-llvm${{ matrix.llvm }}
+          user: user
 
       - name: Test workspace
         shell: bash
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
         run: |
-          cd $GITHUB_WORKSPACE
-          pwd; ls -la
-          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && . ./setup_env.sh && dart --version"
+          sudo -E -u user bash -c " \
+            cd $GITHUB_WORKSPACE && \
+            pwd && ls -la && \
+            source ./setup_env.sh && \
+            dart --version \
+          "
 
       - name: Test AOT creation
-        working-directory: ${{ github.workspace }}
         shell: bash
+        env:
+          CI: true
+          GITHUB_ACTIONS: true
         run: |
-          cd $GITHUB_WORKSPACE
-          pwd; ls -la
-          su - user -c "cd $GITHUB_WORKSPACE && pwd && ls -la && export CI=true && export GITHUB_ACTIONS=true && . ./setup_env.sh && ./flutter_workspace.py --create-aot --app-path=./app/tcna-packages/packages/flatpak/example/"
+          sudo -E -u user bash -c " \
+            cd $GITHUB_WORKSPACE && \
+            pwd && ls -la && \
+            source ./setup_env.sh && \
+            ./flutter_workspace.py --create-aot --app-path=./app/tcna-packages/packages/flatpak/example/ \
+          "

@@ -46,6 +46,11 @@ jobs:
     container:
       image: ${{ matrix.os }}
 
+    env:
+      # Set DEBIAN_FRONTEND to noninteractive to avoid prompts during package installation
+      DEBIAN_FRONTEND: noninteractive
+      NONINTERACTIVE: 'true'
+
     steps:
       - name: Check Environment
         run: |
@@ -55,51 +60,50 @@ jobs:
           echo "Environment variables:"
           env
           
+      #  OS-specific tool installation
       - name: Set up tools
+        shell: bash
         run: |
-          apt-get update -y
-          DEBIAN_FRONTEND=noninteractive apt-get install -yq python3 python3-pip bash cmake sudo
-          python3 -m pip install --upgrade pip
-          apt install python3.8-venv -yq
+          apt-get update -yq
+          apt-get install -yq \
+            bash sudo git apt-utils \
+            python3 python3-pip python3.8-venv \
+            libssl-dev libcurl4-openssl-dev
 
-      - name: Create non-root user
-        run: |
+          # Set non-interactive shell
+          echo "debconf debconf/frontend select Noninteractive" | debconf-set-selections
+
+          # Create non-root user
           groupadd -g 1000 user
-          useradd -m -u 1000 -g user -s /bin/bash user
+          useradd -m -d /home/user -u 1000 -g user -s /bin/bash user
           echo "user ALL=(ALL) NOPASSWD: ALL" | tee /etc/sudoers.d/user
 
       - uses: actions/checkout@v4
 
-      - name: Fix workspace permissions
-        shell: bash
-        run: |
-          cd $GITHUB_WORKSPACE
-          sudo chown -R user:user .
-
-      - name: Create workspace
-        shell: bash
-        # Run as non-root user in the container
-        run: |
-          env
-          cd $GITHUB_WORKSPACE
-          pwd; ls -la
-          export DEBIAN_FRONTEND=noninteractive; echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
-          sudo -u user bash -c "./flutter_workspace.py"
-          cat ./setup_env.sh
-
+      - name: Setup workspace
+        uses: ./.github/actions/setup-workspace
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          cache: true
+          cache-key: ${{ matrix.os }}-llvm${{ matrix.llvm }}
+          user: user
       - name: Test workspace
         shell: bash
         run: |
-          env
-          cd $GITHUB_WORKSPACE
-          pwd; ls -la
-          sudo -u user bash -c ". ./setup_env.sh && dart --version"
+          sudo -E -u user bash -c " \
+            cd $GITHUB_WORKSPACE && \
+            pwd && ls -la && \
+            source ./setup_env.sh && \
+            dart --version \
+          "
 
-      - name: Create AOT Tests
+      - name: Test AOT creation
         shell: bash
         run: |
           env
           cd $GITHUB_WORKSPACE
           pwd; ls -la
-          sudo -u user bash -c ". ./setup_env.sh && \
-          ./flutter_workspace.py --create-aot --app-path=./app/tcna-packages/packages/flatpak/example/"
+          sudo -E -u user bash -c " \
+            source ./setup_env.sh && \
+            ./flutter_workspace.py --create-aot --app-path=./app/tcna-packages/packages/flatpak/example/ \
+          "

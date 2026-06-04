@@ -1,0 +1,247 @@
+# Composite action — sets up a Flutter workspace via workspace-automation.
+#
+# Usage from another repository:
+#
+#   jobs:
+#     build:
+#       uses: meta-flutter/workspace_automation/
+#       with:
+#         args: '--disable=toolchain-llvm-18'
+#         post-setup-cmd: './my_build_script.sh'
+#
+# Security note: `post-setup-cmd` is passed directly to the shell.
+# Only use trusted, static strings — never interpolate untrusted user input
+# into this field, as it would enable script injection.
+
+name: 'Setup Flutter Workspace'
+description: "Sets up a workspace-automation environment for meta-flutter development."
+
+inputs:
+  ref:
+    description: 'Branch, tag, or SHA of `workspace-automation` to checkout'
+    type: string
+    default: 'main'
+
+  args:
+    description: 'Additional arguments passed verbatim to flutter_workspace.py'
+    type: string
+    default: ''
+
+  post-setup-cmd:
+    description: >
+      Command or script to execute after flutter_workspace.py completes.
+      Runs inside the workspace with setup_env.sh already sourced.
+      Leave empty to skip.
+    type: string
+    default: ''
+
+  cache:
+    description: >
+      Enable caching (on by default).
+      Caches <workspace>/.cache unless cache-whole is true.
+    type: boolean
+    default: true
+
+  cache-whole:
+    description: >
+      When true, caches the entire workspace directory instead of only
+      <workspace>/.cache. Produces a larger cache but preserves all
+      workspace state across runs. Off by default.
+    type: boolean
+    default: false
+
+  cache-key:
+    description: >
+      (optional!) Base string used to build the cache key.
+      Preferably specify when running in a matrix to avoid cache key collisions
+      between different build configurations.
+    type: string
+    default: 'flutter-workspace'
+
+  user:
+    description: >
+      (optional) Username of the user to run flutter_workspace.py as.
+      If not specified, runs as the default user in the container (often root).
+    type: string
+    default: ''
+
+runs:
+    using: 'composite'
+    steps:
+      #  Check OS
+      - name: Check OS
+        id: os-check
+        shell: bash
+        run: |
+          OS="$(uname -s)"
+          if [[ "$OS" == "Darwin" ]]; then
+            echo "::error::This workflow does not support macOS."
+            exit 1
+          fi
+          case "$OS" in
+            MINGW*|MSYS*|CYGWIN*|Windows_NT)
+              echo "::error::This workflow does not support Windows."
+              exit 1
+              ;;
+          esac
+          if [[ ! -f /etc/os-release ]]; then
+            echo "::error::Cannot determine Linux distribution: /etc/os-release not found."
+            exit 1
+          fi
+          # shellcheck source=/dev/null
+          source /etc/os-release
+          DISTRO="${ID,,}"
+          echo "Detected distribution: ${DISTRO} ${VERSION_ID:-}"
+          if [[ "$DISTRO" != "ubuntu" && "$DISTRO" != "fedora" ]]; then
+            echo "::error::Unsupported Linux distribution '${DISTRO}'. Only Ubuntu (20-24) and Fedora are supported."
+            exit 1
+          fi
+          echo "distro=${DISTRO}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION_ID}" >> "$GITHUB_OUTPUT"
+
+          # Set up username
+          if [[ "${{ inputs.user }}" != "" ]]; then
+            echo "Using specified user: ${{ inputs.user }}"
+            echo "user=${{ inputs.user }}" >> "$GITHUB_OUTPUT"
+
+            # Get home path for specified user
+            if [[ "${{ inputs.user }}" != "" ]]; then
+              HOME_DIR=$(eval echo "~${{ inputs.user }}")
+              echo "home=${HOME_DIR}" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "No user specified, running as default container user."
+            echo "user=$USER" >> "$GITHUB_OUTPUT"
+          fi
+
+      #  Checkout 
+      - name: Checkout workspace-automation
+        uses: actions/checkout@v4
+        with:
+          repository: meta-flutter/workspace_automation
+          ref: ${{ inputs.ref }}
+
+      - name: Fix ownership
+        if: ${{ steps.os-check.outputs.user != 'root' }}
+        shell: bash
+        run: |
+          echo "Changing ownership of workspace to ${USER}"
+          sudo chown -R "${USER}:${USER}" "$GITHUB_WORKSPACE"
+
+          # Fix git permissions
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      #  Compute git ref
+      - name: Compute workspace-automation git ref
+        id: compute-ref
+        shell: bash
+        run: |
+          # Get commit SHA for checked-out ref
+          COMMIT_SHA=$(git rev-parse HEAD)
+          echo "commit-sha=$COMMIT_SHA" >> "$GITHUB_OUTPUT"
+
+      #  Cache configuration
+      # Compute the cache path and key once so both restore and save steps
+      # reference identical values.
+      - name: Compute cache configuration
+        if: ${{ inputs.cache }}
+        id: cache-cfg
+        shell: bash
+        run: |
+          if [[ "${{ inputs.cache-whole }}" == "true" ]]; then
+            echo "path=${{ github.workspace }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=${{ github.workspace }}/.cache" >> "$GITHUB_OUTPUT"
+          fi
+
+          BASE_KEY="${{ runner.os }}-${{ runner.arch }}-${{ inputs.cache-key }}"
+          # hash flutter_workspace.py + all files under configs/ for the cache key
+          CONTENT_HASH=$(cat flutter_workspace.py $(find configs/ -type f | sort) 2>/dev/null | sha256sum | cut -d' ' -f1)
+          FULL_KEY="${BASE_KEY}-${CONTENT_HASH}"
+          echo "key=${FULL_KEY}"          >> "$GITHUB_OUTPUT"
+          echo "restore-keys=${BASE_KEY}-" >> "$GITHUB_OUTPUT"
+
+      - name: Cache status
+        if: ${{ inputs.cache }}
+        shell: bash
+        run: |
+          echo "Cache enabled: ${{ inputs.cache }}"
+          echo "Cache whole workspace: ${{ inputs.cache-whole }}"
+
+          if [[ "${{ inputs.cache }}" == "true" || "${{ inputs.cache-whole }}" == "true" ]]; then
+            echo "Cache path: ${{ steps.cache-cfg.outputs.path }}"
+            echo "Cache key: ${{ steps.cache-cfg.outputs.key }}"
+            echo "Cache hit: ${{ steps.cache-restore.outputs.cache-hit }}"
+          fi
+
+      #  Cache restore
+      - name: Restore workspace cache
+        if: ${{ inputs.cache }}
+        id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ steps.cache-cfg.outputs.path }}
+          key: ${{ steps.cache-cfg.outputs.key }}
+
+      - name: Fix cache permissions
+        if: ${{ inputs.cache && steps.cache-restore.outputs.cache-hit == 'true' }}
+        shell: bash
+        run: |
+          echo "Changing ownership of cache to ${USER}"
+          mkdir -p "${{ steps.cache-cfg.outputs.path }}"
+          sudo chown -R "${USER}:${USER}" "${{ steps.cache-cfg.outputs.path }}"
+
+      #  Workspace setup
+      - name: Run flutter_workspace.py
+        id: flutter-workspace
+        shell: bash
+        env:
+          CI: 'true'
+          GITHUB_ACTIONS: 'true'
+          FLUTTER_WORKSPACE: ${{ github.workspace }}
+          USER: ${{ steps.os-check.outputs.user }}
+          HOME: ${{ steps.os-check.outputs.home }}
+          PIP_CACHE_DIR: ${{ github.workspace }}/.cache/pip
+        run: |
+          echo "Environment variables for flutter_workspace.py:"
+          env
+          
+          cd "$GITHUB_WORKSPACE"
+          pwd; ls -la
+
+          # Word-splitting of args is intentional here so
+          # that callers can pass multiple flags as a single string input.
+          # shellcheck disable=SC2086
+          sudo -E -u "$USER" bash -c " \
+            cd $GITHUB_WORKSPACE && \
+            python3 -m pip install --user -r requirements.txt && \
+            ./flutter_workspace.py ${{ inputs.args }} \
+          "
+
+      #  Post-setup command 
+      - name: Run post-setup command
+        if: ${{ inputs.post-setup-cmd != '' }}
+        shell: bash
+        env:
+          CI: 'true'
+          GITHUB_ACTIONS: 'true'
+          FLUTTER_WORKSPACE: ${{ github.workspace }}
+          USER: ${{ steps.os-check.outputs.user }}
+          HOME: ${{ steps.os-check.outputs.home }}
+          PIP_CACHE_DIR: ${{ github.workspace }}/.cache/pip
+        run: |
+          sudo -E -u "$USER" bash -c " \
+            cd $GITHUB_WORKSPACE && \
+            source ./setup_env.sh && ${{ inputs.post-setup-cmd }} \
+          "
+
+      #  Cache save 
+      # Always save the cache so that partial artefacts benefit the next run,
+      # even when post-setup-cmd fails. Skipped only when caching is
+      # disabled or the key was already an exact hit (nothing new to store).
+      - name: Save workspace cache
+        if: ${{ inputs.cache }}
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ steps.cache-cfg.outputs.path }}
+          key: ${{ steps.cache-cfg.outputs.key }}

@@ -1,0 +1,10 @@
+#!/bin/sh
+# Runs apt-get under sudo, caching .deb archives in the workspace cache.
+# Invoke without a leading sudo — sudo is called internally so PATH is preserved.
+if [ -n "$FLUTTER_WORKSPACE" ]; then
+    cache_dir="$FLUTTER_WORKSPACE/.cache/apt"
+    mkdir -p "$cache_dir"
+    exec sudo apt-get -o "Dir::Cache::archives=$cache_dir/" "$@"
+else
+    exec sudo apt-get "$@"
+fi

@@ -16,7 +16,7 @@
   "toolchain": "llvm",
   "env": {
     "LLVM_VERSION": "20.1.8",
-    "LLVM_BASE_DIR": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-llvm-${LLVM_VERSION}",
+    "LLVM_BASE_DIR": "${FLUTTER_WORKSPACE}/.tmp/toolchain-llvm-${LLVM_VERSION}",
     "LLVM_BINDIR": "${LLVM_BASE_DIR}/bin",
     "LLVM_LIBDIR": "${LLVM_BASE_DIR}/lib",
     "LLVM_CONFIG": "${LLVM_BINDIR}/llvm-config",
@@ -51,9 +51,9 @@
                     "cwd": "${LLVM_BASE_DIR}",
                     "shell": true,
                     "cmds": [
-                      "sudo apt-get remove libunwind-* -yq || true",
+                      "sudo-apt-workspace remove libunwind-* -yq || true",
                       "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/LLVM-${LLVM_VERSION}-Linux-ARM64.tar.xz\" --strip-components=1",
+                      "tar -xf \"${ARTIFACTS_DIR}/LLVM-${LLVM_VERSION}-Linux-ARM64.tar.xz\" --strip-components=1",
                       "${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu/libc++abi.a"
                     ]
                   }
@@ -70,10 +70,10 @@
                     "shell": true,
                     "cmds": [
                       "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/LLVM-${LLVM_VERSION}-Linux-ARM64.tar.xz\" --strip-components=1",
+                      "tar -xf \"${ARTIFACTS_DIR}/LLVM-${LLVM_VERSION}-Linux-ARM64.tar.xz\" --strip-components=1",
                       "${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/aarch64-unknown-linux-gnu/libc++abi.a",
-                      "sudo dnf -y update", 
-                      "sudo dnf install -y libstdc++ libstdc++-devel libstdc++-static"
+                      "sudo-dnf-workspace -y update", 
+                      "sudo-dnf-workspace install -y libstdc++ libstdc++-devel libstdc++-static"
                     ]
                   }
                 ]
@@ -91,7 +91,7 @@
                     "shell": true,
                     "cmds": [
                       "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/LLVM-${LLVM_VERSION}-macOS-ARM64.tar.xz\" --strip-components=1"
+                      "tar -xf \"${ARTIFACTS_DIR}/LLVM-${LLVM_VERSION}-macOS-ARM64.tar.xz\" --strip-components=1"
                     ]
                   }
                 ]
@@ -109,9 +109,9 @@
                     "cwd": "${LLVM_BASE_DIR}",
                     "shell": true,
                     "cmds": [
-                      "sudo apt-get remove libunwind-* -yq || true",
+                      "sudo-apt-workspace remove libunwind-* -yq || true",
                       "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/LLVM-${LLVM_VERSION}-Linux-X64.tar.xz\" --strip-components=1",
+                      "tar -xf \"${ARTIFACTS_DIR}/LLVM-${LLVM_VERSION}-Linux-X64.tar.xz\" --strip-components=1",
                       "${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++abi.a"
                     ]
                   }
@@ -128,10 +128,10 @@
                     "shell": true,
                     "cmds": [
                       "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/LLVM-${LLVM_VERSION}-Linux-X64.tar.xz\" --strip-components=1",
+                      "tar -xf \"${ARTIFACTS_DIR}/LLVM-${LLVM_VERSION}-Linux-X64.tar.xz\" --strip-components=1",
                       "${LLVM_BINDIR}/llvm-ar qsL ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++.a ${LLVM_BASE_DIR}/lib/x86_64-unknown-linux-gnu/libc++abi.a",
-                      "sudo dnf -y update", 
-                      "sudo dnf install -y libstdc++ libstdc++-devel libstdc++-static"
+                      "sudo-dnf-workspace -y update", 
+                      "sudo-dnf-workspace install -y libstdc++ libstdc++-devel libstdc++-static"
                     ]
                   }
                 ]
@@ -147,7 +147,7 @@
                     "shell": true,
                     "cmds": [
                       "mkdir -p ${LLVM_BASE_DIR}",
-                      "tar -xf \"${PLATFORM_ID_DIR}/artifacts/LLVM-${LLVM_VERSION}-macOS-X64.tar.xz\" --strip-components=1"
+                      "tar -xf \"${ARTIFACTS_DIR}/LLVM-${LLVM_VERSION}-macOS-X64.tar.xz\" --strip-components=1"
                     ]
                   }
                 ]
@@ -163,7 +163,7 @@
           "shell": true,
           "20.04": {
             "cmds": [
-              "sudo apt-get install -yq lsb-release wget software-properties-common gnupg apt-file build-essential libtool",
+              "sudo-apt-workspace install -yq lsb-release wget software-properties-common gnupg apt-file build-essential libtool",
               "wget https://apt.llvm.org/llvm.sh", 
               "chmod +x llvm.sh", 
               "sudo ./llvm.sh ${PREFER_LLVM} all", 
@@ -184,7 +184,7 @@
           "20.04": {
             "shell": true,
             "cmds": [
-              "sudo apt-get install -yq lsb-release wget software-properties-common gnupg apt-file build-essential libtool",
+              "sudo-apt-workspace install -yq lsb-release wget software-properties-common gnupg apt-file build-essential libtool",
               "wget https://apt.llvm.org/llvm.sh", 
               "chmod +x llvm.sh", 
               "sudo ./llvm.sh ${PREFER_LLVM} all", 

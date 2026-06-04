@@ -14,7 +14,7 @@
     "env": {
         "CC": "${LLVM_BINDIR}/clang",
         "CXX": "${LLVM_BINDIR}/clang++",
-        "PATH": "${LLVM_BINDIR}:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
+        "PATH": "${LLVM_BINDIR}:${FLUTTER_WORKSPACE}/.tmp/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.tmp/toolchain-common-cmake/bin:$PATH",
         "LD_LIBRARY_PATH": "${LLVM_LIBDIR}",
         "CAMERA_SRC_DIR": "${FLUTTER_WORKSPACE}/app/libcamera",
         "CAMERA_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/libcamera/buildDir",
@@ -33,7 +33,7 @@
             "aarch64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt-get install -yq libjpeg-dev libevent-dev",
+                        "sudo-apt-workspace install -yq libjpeg-dev libevent-dev",
                         "pip3 install jinja2 ply pyyaml meson sphinxcontrib-doxylink"
                     ]
                 }
@@ -41,13 +41,13 @@
             "x86_64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt-get install -yq libjpeg-dev libevent-dev",
+                        "sudo-apt-workspace install -yq libjpeg-dev libevent-dev",
                         "pip3 install jinja2 ply pyyaml meson sphinxcontrib-doxylink"
                     ]
                 },
                 "fedora": {
                     "cmds": [
-                        "sudo dnf install -y libjpeg-devel libevent-devel",
+                        "sudo-dnf-workspace install -y libjpeg-devel libevent-devel",
                         "pip3 install jinja2 ply pyyaml meson sphinxcontrib-doxylink"
                     ]
                 }

@@ -10,7 +10,7 @@
     ],
     "type": "dependency",
     "env": {
-        "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools;${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja;${PATH}",
+        "PATH": "${FLUTTER_WORKSPACE}/app/depot_tools;${FLUTTER_WORKSPACE}/.tmp/toolchain-common-ninja;${PATH}",
         "RUNTIME_MODE": "debug",
         "ENGINE_ROOT": "${FLUTTER_WORKSPACE}/flutter",
         "VPYTHON_VIRTUALENV_ROOT": "${ENGINE_ROOT}/.vpython",

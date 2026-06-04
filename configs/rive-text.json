@@ -16,8 +16,8 @@
         "VERSION": "0.8.4",
         "CC": "${LLVM_BINDIR}/clang",
         "CXX": "${LLVM_BINDIR}/clang++",
-        "PATH": "${LLVM_BINDIR}:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
-        "LD_LIBRARY_PATH": "${LLVM_LIBDIR}:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
+        "PATH": "${LLVM_BINDIR}:${FLUTTER_WORKSPACE}/.tmp/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.tmp/toolchain-common-cmake/bin:$PATH",
+        "LD_LIBRARY_PATH": "${LLVM_LIBDIR}:${FLUTTER_WORKSPACE}/.tmp/toolchain-common-cmake/lib",
         "RIVE_TEXT_SRC_DIR": "${FLUTTER_WORKSPACE}/app/rive-common",
         "RIVE_TEXT_BUILD_DIR": "${RIVE_TEXT_SRC_DIR}/build",
         "RIVE_TEXT_CMAKE_ARGS": "-D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -D ENABLE_LTO=ON"

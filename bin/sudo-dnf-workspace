@@ -1,0 +1,10 @@
+#!/bin/sh
+# Runs dnf under sudo, caching packages/metadata in the workspace cache.
+# Invoke without a leading sudo — sudo is called internally so PATH is preserved.
+if [ -n "$FLUTTER_WORKSPACE" ]; then
+    cache_dir="$FLUTTER_WORKSPACE/.cache/dnf"
+    mkdir -p "$cache_dir"
+    exec sudo dnf --setopt="cachedir=$cache_dir" --setopt=keepcache=1 "$@"
+else
+    exec sudo dnf "$@"
+fi

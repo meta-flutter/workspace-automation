@@ -14,8 +14,8 @@
     "env": {
         "CC": "${LLVM_BINDIR}/clang",
         "CXX": "${LLVM_BINDIR}/clang++",
-        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
-        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/lib",
+        "PATH": "${FLUTTER_WORKSPACE}/.tmp/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.tmp/toolchain-common-cmake/bin:$PATH",
+        "LD_LIBRARY_PATH": "${FLUTTER_WORKSPACE}/.tmp/toolchain-common-cmake/lib",
         "MAPLIBRE_SRC_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native",
         "MAPLIBRE_BUILD_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native/build",
         "MAPLIBRE_STAGING_DIR": "${FLUTTER_WORKSPACE}/app/maplibre-native/staging",
@@ -33,19 +33,19 @@
             "aarch64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt-get install -yq libwebp-dev libuv1-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libicu-dev"
+                        "sudo-apt-workspace install -yq libwebp-dev libuv1-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libicu-dev"
                     ]
                 }
             },
             "x86_64": {
                 "ubuntu": {
                     "cmds": [
-                        "sudo apt-get install -yq libwebp-dev libuv1-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libicu-dev"
+                        "sudo-apt-workspace install -yq libwebp-dev libuv1-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libicu-dev"
                     ]
                 },
                 "fedora": {
                     "cmds": [
-                        "sudo dnf install -y libwebp-devel libuv-devel libcurl-devel libjpeg-devel libpng-devel libicu-devel"
+                        "sudo-dnf-workspace install -y libwebp-devel libuv-devel libcurl-devel libjpeg-devel libpng-devel libicu-devel"
                     ]
                 }
             }

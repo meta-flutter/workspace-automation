@@ -157,5 +157,8 @@ AGL
 amdgpu
 imxgpu
 
-.docker-cache
-.cache
+# Cache
+.cache/
+.tmp/
+.docker-cache/
+docker-cache/

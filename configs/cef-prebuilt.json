@@ -46,7 +46,7 @@
                 "cwd": "${THIRD_PARTY_ROOT}",
                 "cmds": [
                     "rm -rf ${CEF_ROOT} |true",
-                    "tar xjf ${PLATFORM_ID_DIR}/artifacts/${ARCHIVE_FILE}.tar.bz2 -C ."
+                    "tar xjf ${ARTIFACTS_DIR}/${ARCHIVE_FILE}.tar.bz2 -C ."
                 ]
             },
             {
