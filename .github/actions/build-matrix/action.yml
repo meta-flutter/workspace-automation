@@ -55,12 +55,21 @@ runs:
       uses: tj-actions/changed-files@v45
       with:
         files: configs/toolchain-llvm*.json
+
+    - name: Get workflow path
+      id: workflow-path
+      shell: bash
+      run: |
+        # github.workflow_ref = "owner/repo/.github/workflows/file.yml@refs/..."
+        path=$(echo "${{ github.workflow_ref }}" | sed 's|[^/]*/[^/]*/||; s|@.*||')
+        echo "Workflow path: $path"
+        echo "path=$path" >> $GITHUB_OUTPUT
     
     - name: Check if workflow itself changed
       id: workflow-changed
       uses: tj-actions/changed-files@v45
       with:
-        files: .github/workflows/ubuntu-legacy.yml
+        files: ${{ steps.workflow-path.outputs.path }}
     
     - name: Merge changed versions with defaults
       id: merge
@@ -73,7 +82,7 @@ runs:
           const changedFiles = '${{ steps.changed-files.outputs.all_changed_files }}';
           const changedVersions = [];
           
-          if (changedFiles) {
+          if (changedFiles && context.eventName === 'pull_request') {
             const files = changedFiles.split(' ');
             for (const file of files) {
               const match = file.match(/toolchain-llvm(\d+)_/);
