@@ -32,7 +32,8 @@
         "export LLVM_LIBDIR=$LLVM_BASE_DIR/lib",
         "export LLVM_CONFIG=$LLVM_BINDIR/llvm-config",
         "export PATH=$LLVM_BINDIR:$PATH",
-        "export LD_LIBRARY_PATH=$LLVM_LIBDIR:$LD_LIBRARY_PATH"
+        "export OS_LIBPATH=\"$(uname -m)-$( [ \\\"$(uname -s)\\\" = \\\"Darwin\\\" ] && echo \\\"apple-darwin\\\" || echo \\\"unknown-linux-gnu\\\" )\"",
+        "export LD_LIBRARY_PATH=$LLVM_LIBDIR:$LLVM_LIBDIR/$OS_LIBPATH:$LD_LIBRARY_PATH"
       ]
   },
   "runtime": {
