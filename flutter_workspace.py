@@ -2893,7 +2893,11 @@ def install_minimum_runtime_deps():
             subprocess.check_output(packages)
 
         elif os_release_id == 'fedora':
-            subprocess.check_output(['sudo', 'dnf', '-y', 'update'])
+            # Refresh metadata only (equivalent of `apt update`). A full
+            # `dnf update` would upgrade every package -- including python3 --
+            # out from under this still-running interpreter, causing a C API
+            # version mismatch crash on the next lazy import.
+            subprocess.check_output(['sudo', 'dnf', '-y', 'makecache'])
             packages = 'sudo dnf -y install dnf-plugins-core git git-lfs unzip curl python3-devel python3-virtualenv libcurl-devel openssl-devel gtk3-devel gcc libcurl-devel'.split(
                 ' ')
             subprocess.check_output(packages)
