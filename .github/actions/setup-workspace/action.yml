@@ -20,7 +20,7 @@ inputs:
   ref:
     description: 'Branch, tag, or SHA of `workspace-automation` to checkout'
     type: string
-    default: 'main'
+    default: ''
 
   args:
     description: 'Additional arguments passed verbatim to flutter_workspace.py'
@@ -110,8 +110,8 @@ runs:
               echo "home=${HOME_DIR}" >> "$GITHUB_OUTPUT"
             fi
           else
-            echo "No user specified, running as default container user."
-            echo "user=$USER" >> "$GITHUB_OUTPUT"
+            echo "No user specified, running as current user $(whoami)."
+            echo "user=$(whoami)" >> "$GITHUB_OUTPUT"
           fi
 
       #  Checkout 
@@ -119,11 +119,14 @@ runs:
         uses: actions/checkout@v4
         with:
           repository: meta-flutter/workspace_automation
-          ref: ${{ inputs.ref }}
+          # default to current action ref
+          ref: ${{ inputs.ref || github.action_ref }}
 
       - name: Fix ownership
         if: ${{ steps.os-check.outputs.user != 'root' }}
         shell: bash
+        env:
+          USER: ${{ steps.os-check.outputs.user }}
         run: |
           echo "Changing ownership of workspace to ${USER}"
           sudo chown -R "${USER}:${USER}" "$GITHUB_WORKSPACE"
@@ -186,10 +189,19 @@ runs:
       - name: Fix cache permissions
         if: ${{ inputs.cache && steps.cache-restore.outputs.cache-hit == 'true' }}
         shell: bash
+        env:
+          USER: ${{ steps.os-check.outputs.user }}
         run: |
           echo "Changing ownership of cache to ${USER}"
           mkdir -p "${{ steps.cache-cfg.outputs.path }}"
           sudo chown -R "${USER}:${USER}" "${{ steps.cache-cfg.outputs.path }}"
+
+          # Ubuntu only
+          if [[ "${{ steps.os-check.outputs.distro }}" == "ubuntu" ]]; then
+            mkdir -p "${{ steps.cache-cfg.outputs.path }}/apt"
+            sudo chown -R _apt:root "${{ steps.cache-cfg.outputs.path }}/apt"
+            sudo chmod -R 744 "${{ steps.cache-cfg.outputs.path }}/apt"
+          fi
 
       #  Workspace setup
       - name: Run flutter_workspace.py
