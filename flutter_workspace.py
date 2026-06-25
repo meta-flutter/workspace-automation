@@ -1008,6 +1008,18 @@ def cache_mirror_repo(source_git_folder, dest_name):
         subprocess.check_call(cmd)
 
 
+def sync_repo_from_remote(git_folder, branch=None):
+    """Fetch from remote and pull latest changes (fast-forward only)."""
+    subprocess.check_call(['git', 'fetch', '--all'], cwd=git_folder)
+    cmd = ['git', 'pull', '--ff-only']
+    if branch:
+        cmd.extend(['origin', branch])
+    try:
+        subprocess.check_call(cmd, cwd=git_folder)
+    except subprocess.CalledProcessError:
+        print(f"WARNING: git pull failed, continuing anyway")
+
+
 def get_repo(base_folder, uri, ref, branch=None, dest_name=None):
     """ Clone Git Repo """
     if not uri:
@@ -1048,15 +1060,7 @@ def get_repo(base_folder, uri, ref, branch=None, dest_name=None):
     if os.path.exists(git_hidden_folder):
         # re-run: repo already present — update in-place
         subprocess.check_call(['git', 'reset', '--hard'], cwd=git_folder)
-        subprocess.check_call(['git', 'fetch', '--all'], cwd=git_folder)
-        cmd = ['git', 'pull', '--ff-only']
-        if branch:
-            print(f'Using branch: {branch}')
-            cmd.extend(['origin', branch])
-        try:
-            subprocess.check_call(cmd, cwd=git_folder)
-        except subprocess.CalledProcessError:
-            print(f"WARNING: git pull failed, continuing anyway")
+        sync_repo_from_remote(git_folder, branch)
 
     elif cache_exists:
         # restore full working tree (includes LFS objects and submodule content)
@@ -1064,6 +1068,7 @@ def get_repo(base_folder, uri, ref, branch=None, dest_name=None):
         if os.path.exists(git_folder):
             shutil.rmtree(git_folder)
         shutil.copytree(cache_dir, git_folder, symlinks=True)
+        sync_repo_from_remote(git_folder, branch)
         restored_from_cache = True
 
     else:
@@ -1083,6 +1088,9 @@ def get_repo(base_folder, uri, ref, branch=None, dest_name=None):
     elif branch:
         print(f'git checkout {branch}')
         subprocess.check_call(['git', 'checkout', branch], cwd=git_folder)
+        if restored_from_cache:
+            # In case the upstream branch has been force-pushed to, reset to the latest commit on the remote branch
+            subprocess.check_call(['git', 'reset', '--hard', f'origin/{branch}'], cwd=git_folder)
 
     if os.path.exists(os.path.join(git_folder, '.gitattributes')):
         subprocess.check_call(['git', 'lfs', 'fetch', '--all'], cwd=git_folder)
