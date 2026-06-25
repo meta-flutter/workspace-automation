@@ -147,7 +147,7 @@ runs:
       # Compute the cache path and key once so both restore and save steps
       # reference identical values.
       - name: Compute cache configuration
-        if: ${{ inputs.cache }}
+        if: ${{ inputs.cache == 'true' || inputs.cache-whole == 'true' }}
         id: cache-cfg
         shell: bash
         run: |
@@ -165,7 +165,7 @@ runs:
           echo "restore-keys=${BASE_KEY}-" >> "$GITHUB_OUTPUT"
 
       - name: Cache status
-        if: ${{ inputs.cache }}
+        if: ${{ inputs.cache == 'true' || inputs.cache-whole == 'true' }}
         shell: bash
         run: |
           echo "Cache enabled: ${{ inputs.cache }}"
@@ -179,7 +179,7 @@ runs:
 
       #  Cache restore
       - name: Restore workspace cache
-        if: ${{ inputs.cache }}
+        if: ${{ inputs.cache == 'true' || inputs.cache-whole == 'true' }}
         id: cache-restore
         uses: actions/cache/restore@v4
         with:
@@ -187,7 +187,7 @@ runs:
           key: ${{ steps.cache-cfg.outputs.key }}
 
       - name: Fix cache permissions
-        if: ${{ inputs.cache && steps.cache-restore.outputs.cache-hit == 'true' }}
+        if: ${{ inputs.cache == 'true' || inputs.cache-whole == 'true' }}
         shell: bash
         env:
           USER: ${{ steps.os-check.outputs.user }}
@@ -252,7 +252,7 @@ runs:
       # even when post-setup-cmd fails. Skipped only when caching is
       # disabled or the key was already an exact hit (nothing new to store).
       - name: Save workspace cache
-        if: ${{ inputs.cache }}
+        if: ${{ inputs.cache == 'true' || inputs.cache-whole == 'true' && steps.cache-restore.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@v4
         with:
           path: ${{ steps.cache-cfg.outputs.path }}
