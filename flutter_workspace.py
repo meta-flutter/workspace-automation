@@ -487,7 +487,13 @@ def main():
     if not is_exist:
         os.makedirs(app_folder)
 
-    get_workspace_repos(app_folder, configs)
+    # Construct config dict for get_workspace_repos
+    # It expects {'repos': [...], 'platforms': [...]}
+    workspace_config = {
+        'repos': globals_.get('repos', []),
+        'platforms': configs
+    }
+    get_workspace_repos(app_folder, workspace_config)
 
     #
     # Prepend depot_tools to PATH
@@ -757,9 +763,20 @@ def load_configs(config_dir: Path, flutter_version_override: str = '', enable: s
     enable_list = enable.split(',') if enable else []
     disable_list = disable.split(',') if disable else []
 
+    # Load repos.json if it exists and store in globals_config
+    repos_path = config_dir / "repos.json"
+    if repos_path.exists():
+        print(f"Loading repos config: {repos_path}")
+        repos_data = load_json_config(repos_path)
+        if isinstance(repos_data, list):
+            globals_config['repos'] = repos_data
+        else:
+            print(f"WARNING: {repos_path} did not load as a list, skipping")
+    else:
+        print(f"WARNING: repos.json not found at {repos_path}, proceeding without it")
+
     # Files to skip (not platform configs)
     skip_files = {'globals.json', 'repos.json'}
-
     # Load all platform config files (excluding globals.json and repos.json)
     configs = []
     for config_file in sorted(config_dir.glob("*.json")):
@@ -1170,6 +1187,8 @@ def get_workspace_repos(base_folder, config):
     import concurrent.futures
 
     if 'repos' not in config:
+        # print warning
+        print_banner("No `configs/repos.json` file found, skipping repo clone")
         return
 
     repos = config['repos']
