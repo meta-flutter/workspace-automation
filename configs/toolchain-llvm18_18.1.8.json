@@ -34,7 +34,7 @@
         "export LLVM_CONFIG=$LLVM_BINDIR/llvm-config",
         "export PATH=$LLVM_BINDIR:$PATH",
         "export CXXFLAGS='-stdlib=libc++ -lc++abi'",
-        "export OS_LIBPATH=\"$(uname -m)-$( [ \\\"$(uname -s)\\\" = \\\"Darwin\\\" ] && echo \\\"apple-darwin\\\" || echo \\\"unknown-linux-gnu\\\" )\"",
+        "export OS_LIBPATH=\"$(uname -m)-$( [ \\\"$(uname -s)\\\" = \\\"Darwin\\\" ] && echo 'apple-darwin' || echo 'unknown-linux-gnu' )\"",
         "export LD_LIBRARY_PATH=$LLVM_LIBDIR:$LLVM_LIBDIR/$OS_LIBPATH:$LD_LIBRARY_PATH"
       ]
   },
