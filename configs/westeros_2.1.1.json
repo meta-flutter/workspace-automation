@@ -1,0 +1,92 @@
+{
+    "id": "westeros",
+    "load": false,
+    "supported_archs": [
+        "aarch64",
+        "arm64",
+        "x86_64"
+    ],
+    "supported_host_types": [
+        "ubuntu",
+        "fedora"
+    ],
+    "type": "dependency",
+    "env": {
+        "PATH": "${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-ninja:${FLUTTER_WORKSPACE}/.config/flutter_workspace/toolchain-common-cmake/bin:$PATH",
+        "WESTEROS_SRC_DIR": "${FLUTTER_WORKSPACE}/app/westeros-2.1.1",
+        "WESTEROS_STAGING_DIR": "${FLUTTER_WORKSPACE}/app/westeros-2.1.1/external/install",
+        "SCANNER_TOOL": "wayland-scanner",
+        "PKG_CONFIG_PATH": "${FLUTTER_WORKSPACE}/app/westeros-2.1.1/external/install/lib/pkgconfig:${FLUTTER_WORKSPACE}/app/westeros-2.1.1/external/install/share/pkgconfig:$PKG_CONFIG_PATH",
+        "WESTEROS_CONFIG_ARGS": "--enable-xdgv5 --enable-rendergl --enable-app --enable-test --enable-embedded=no --enable-essos=no",
+        "WESTEROS_STAGING_FLAGS": "CPPFLAGS=-I${FLUTTER_WORKSPACE}/app/westeros-2.1.1/external/install/include LDFLAGS=-L${FLUTTER_WORKSPACE}/app/westeros-2.1.1/external/install/lib"
+    },
+    "src": [
+        {
+            "uri": "https://github.com/rdkcentral/westeros.git",
+            "rev": "cb69ee87acf80ee98ef9b62eb39454ef99bd612a",
+            "dest_name": "westeros-2.1.1"
+        }
+    ],
+    "runtime": {
+        "pre-requisites": {
+            "aarch64": {
+                "ubuntu": {
+                    "cmds": [
+                        "sudo apt-get install -yq build-essential autoconf automake libtool pkg-config libwayland-bin libwayland-dev wayland-protocols libxkbcommon-dev libxcb1-dev libegl1-mesa-dev libgles2-mesa-dev libgl1-mesa-dev libglew-dev freeglut3-dev libx11-dev libglib2.0-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev"
+                    ]
+                }
+            },
+            "x86_64": {
+                "ubuntu": {
+                    "cmds": [
+                        "sudo apt-get install -yq build-essential autoconf automake libtool pkg-config libwayland-bin libwayland-dev wayland-protocols libxkbcommon-dev libxcb1-dev libegl1-mesa-dev libgles2-mesa-dev libgl1-mesa-dev libglew-dev freeglut3-dev libx11-dev libglib2.0-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev"
+                    ]
+                },
+                "fedora": {
+                    "cmds": [
+                        "sudo dnf install -y autoconf automake libtool pkgconf-pkg-config wayland-devel wayland-protocols-devel libxkbcommon-devel libxcb-devel mesa-libEGL-devel mesa-libGLES-devel mesa-libGL-devel glew-devel freeglut-devel libX11-devel glib2-devel gstreamer1-devel gstreamer1-plugins-base-devel"
+                    ]
+                }
+            }
+        },
+        "post_cmds": [
+            {
+                "cwd": "${WESTEROS_SRC_DIR}",
+                "cmds": [
+                    "bash -c \"rm -rf ${WESTEROS_STAGING_DIR} | true\"",
+                    "mkdir -p ${WESTEROS_STAGING_DIR}",
+                    "make -C protocol",
+                    "make -C simpleshell/protocol"
+                ]
+            },
+            {
+                "cwd": "${WESTEROS_SRC_DIR}/simpleshell",
+                "cmds": [
+                    "mkdir -p m4",
+                    "autoreconf -fi",
+                    "./configure --prefix ${WESTEROS_STAGING_DIR}",
+                    "make",
+                    "make install"
+                ]
+            },
+            {
+                "cwd": "${WESTEROS_SRC_DIR}",
+                "cmds": [
+                    "mkdir -p m4",
+                    "autoreconf -fi",
+                    "./configure --prefix ${WESTEROS_STAGING_DIR} ${WESTEROS_CONFIG_ARGS} ${WESTEROS_STAGING_FLAGS}",
+                    "make",
+                    "make install"
+                ]
+            }
+        ],
+        "do_clean": [
+            {
+                "cwd": "${WESTEROS_SRC_DIR}",
+                "cmds": [
+                    "make clean"
+                ]
+            }
+        ]
+    }
+}
