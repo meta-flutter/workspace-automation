@@ -55,6 +55,7 @@
                     "cwd": "${LLVM_BASE_DIR}",
                     "shell": true,
                     "cmds": [
+                      "sudo-apt-workspace install -yq lsb-release wget software-properties-common gnupg apt-file build-essential libtool",
                       "if [ $(lsb_release -rs) = \"22.04\" ]; then sudo-apt-workspace install -yq libtinfo5; fi",
                       "sudo-apt-workspace remove libunwind-* -yq || true",
                       "mkdir -p ${LLVM_BASE_DIR}",
@@ -115,6 +116,7 @@
                     "cwd": "${LLVM_BASE_DIR}",
                     "shell": true,
                     "cmds": [
+                      "sudo-apt-workspace install -yq lsb-release wget software-properties-common gnupg apt-file build-essential libtool",
                       "if [ $(lsb_release -rs) = \"22.04\" ]; then sudo-apt-workspace install -yq libtinfo5; fi",
                       "if [ $(lsb_release -rs) = \"24.04\" ]; then wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.2_amd64.deb -O /tmp/libtinfo5_6.3-2ubuntu0.2_amd64.deb && sudo apt install /tmp/libtinfo5_6.3-2ubuntu0.2_amd64.deb; fi",
                       "sudo-apt-workspace remove libunwind-* -yq || true",
