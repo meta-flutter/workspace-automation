@@ -116,7 +116,7 @@
                     "shell": true,
                     "cmds": [
                       "if [ $(lsb_release -rs) = \"22.04\" ]; then sudo-apt-workspace install -yq libtinfo5; fi",
-                      "if [ $(lsb_release -rs) = \"24.04\" ]; then wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb -O /tmp/libtinfo5_6.3-2ubuntu0.1_amd64.deb && sudo apt install /tmp/libtinfo5_6.3-2ubuntu0.1_amd64.deb; fi",
+                      "if [ $(lsb_release -rs) = \"24.04\" ]; then wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.2_amd64.deb -O /tmp/libtinfo5_6.3-2ubuntu0.2_amd64.deb && sudo apt install /tmp/libtinfo5_6.3-2ubuntu0.2_amd64.deb; fi",
                       "sudo-apt-workspace remove libunwind-* -yq || true",
                       "mkdir -p ${LLVM_BASE_DIR}",
                       "tar -xf \"${ARTIFACTS_DIR}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04.tar.xz\" --strip-components=1",
