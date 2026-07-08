@@ -22,7 +22,8 @@
     "LLVM_CONFIG": "${LLVM_BINDIR}/llvm-config",
     "PATH": "${LLVM_BINDIR}:$PATH",
     "CXXFLAGS": "-stdlib=libc++ -lc++abi",
-    "LD_LIBRARY_PATH": "${LLVM_LIBDIR}:$LD_LIBRARY_PATH"
+    "LD_LIBRARY_PATH": "${LLVM_LIBDIR}:${LLVM_LIBDIR}/${OS_LIBPATH}:$LD_LIBRARY_PATH",
+    "LIBRARY_PATH": "${LLVM_LIBDIR}/${OS_LIBPATH}:$LIBRARY_PATH"
   },
   "append_to_runtime_env": {
       "common": [
