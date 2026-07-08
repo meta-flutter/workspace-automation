@@ -121,7 +121,7 @@
           "shell": true,
           "cmds": [
             "sudo-dnf-workspace update -y",
-            "sudo-dnf-workspace -yq install SDL2-devel libsecret-devel zenity systemd-devel ",
+            "sudo-dnf-workspace -yq install SDL2-devel libsecret-devel zenity systemd-devel libatomic",
             "sudo-dnf-workspace -yq install pugixml-devel libunwind-devel gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel gstreamer1-plugins-bad-free-extras gstreamer1-plugins-base-tools gstreamer1-plugins-good gstreamer1-plugins-good-extras gstreamer1-plugins-ugly-free",
             "sudo-dnf-workspace -yq install flatpak",
             "if command -v flatpak >/dev/null 2>&1; then flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo || echo 'Flatpak remote add failed, continuing...'; fi",
@@ -132,7 +132,7 @@
         "rhel": {
           "cmds": [
             "sudo-dnf-workspace update -y",
-            "sudo-dnf-workspace -y install zenity systemd-devel",
+            "sudo-dnf-workspace -y install zenity systemd-devel libatomic",
             "sudo-dnf-workspace -y install pugixml-devel libunwind-devel gstreamer1-devel gstreamer1-plugins-base-devel gstreamer1-plugins-bad-free-devel gstreamer1-plugins-base-tools gstreamer1-plugins-good gstreamer1-plugins-ugly-free",
             "sudo-dnf-workspace -y install flatpak",
             "if command -v flatpak >/dev/null 2>&1; then flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo || echo 'Flatpak remote add failed, continuing...'; fi",
