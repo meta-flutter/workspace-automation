@@ -19,7 +19,12 @@ kb = 1024
 
 def get_host_machine_arch():
     os.environ['HOST_ARCH'] = platform.machine()
-    return platform.machine()
+    machine = platform.machine()
+    if sys.platform == 'darwin':
+        os.environ['OS_LIBPATH'] = f'{machine}-apple-darwin'
+    else:
+        os.environ['OS_LIBPATH'] = f'{machine}-unknown-linux-gnu'
+    return machine
 
 
 def get_flutter_arch():

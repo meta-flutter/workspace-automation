@@ -514,10 +514,17 @@ def main():
     flutter_bin_cache = os.path.join(flutter_sdk_path, 'bin', 'cache')
     sdk_cache_dir = str(get_cache_folder() / 'flutter-sdk-cache')
     os.makedirs(sdk_cache_dir, exist_ok=True)
-    if not os.path.islink(flutter_bin_cache):
+    # Use a relative symlink so it resolves correctly regardless of mount point (e.g. Docker).
+    rel_cache_target = os.path.relpath(sdk_cache_dir, os.path.dirname(flutter_bin_cache))
+    if os.path.islink(flutter_bin_cache):
+        # Remove and recreate if the existing symlink doesn't match the desired relative target.
+        if os.readlink(flutter_bin_cache) != rel_cache_target:
+            os.remove(flutter_bin_cache)
+            os.symlink(rel_cache_target, flutter_bin_cache)
+    else:
         if os.path.isdir(flutter_bin_cache):
             shutil.rmtree(flutter_bin_cache)
-        os.symlink(sdk_cache_dir, flutter_bin_cache)
+        os.symlink(rel_cache_target, flutter_bin_cache)
 
     # force tool rebuild
     force_tool_rebuild(flutter_sdk_folder)
