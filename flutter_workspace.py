@@ -2422,9 +2422,15 @@ def handle_env(env_variables, env=None, build_type=None):
     
     if env is None:
         env = os.environ
+    host_arch = env.get('HOST_ARCH') or os.environ.get('HOST_ARCH')
 
     # If k starts with +, append to existing variable
     for k, v in env_variables.items():
+        if '@' in k:
+            base_k, _, key_arch = k.partition('@')
+            if key_arch != host_arch:
+                continue
+            k = base_k
         print(f'Processing env var: {k} = {v}')
 
         # Append to existing variable if the key starts with +

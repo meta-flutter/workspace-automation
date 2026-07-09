@@ -1,0 +1,13 @@
+diff --git a/cmake/cef_variables.cmake b/cmake/cef_variables.cmake
+index 23a898b..6d61f61 100644
+--- a/cmake/cef_variables.cmake
++++ b/cmake/cef_variables.cmake
+@@ -92,6 +92,8 @@ if(OS_LINUX)
+     -Wno-unused-parameter           # Don't warn about unused parameters
+     -Wno-error=comment              # Don't warn about code in comments
+     -Wno-comment                    # Don't warn about code in comments
++    -Wno-error=unused-command-line-argument # Don't error on the harmless -lc++abi compile-time flag
++    -Wno-unused-command-line-argument # Don't warn about the harmless -lc++abi compile-time flag
+     -Wno-deprecated-declarations    # Don't warn about using deprecated methods
+     )
+   list(APPEND CEF_C_COMPILER_FLAGS

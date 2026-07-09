@@ -12,8 +12,10 @@
     "type": "dependency",
     "env": {
         "PATCH_FOLDER": "${FLUTTER_WORKSPACE}/patches/cef-prebuilt",
-        "ARCHIVE_FILE": "cef_binary_128.4.9%2Bg9840ad9%2Bchromium-128.0.6613.120_linux64_minimal",
-        "ARCHIVE_FOLDER": "cef_binary_128.4.9+g9840ad9+chromium-128.0.6613.120_linux64_minimal",
+        "ARCHIVE_FILE@x86_64": "cef_binary_128.4.9%2Bg9840ad9%2Bchromium-128.0.6613.120_linux64_minimal",
+        "ARCHIVE_FILE@aarch64": "cef_binary_128.4.9%2Bg9840ad9%2Bchromium-128.0.6613.120_linuxarm64_minimal",
+        "ARCHIVE_FOLDER@x86_64": "cef_binary_128.4.9+g9840ad9+chromium-128.0.6613.120_linux64_minimal",
+        "ARCHIVE_FOLDER@aarch64": "cef_binary_128.4.9+g9840ad9+chromium-128.0.6613.120_linuxarm64_minimal",
         "THIRD_PARTY_ROOT": "${FLUTTER_WORKSPACE}/app/ivi-homescreen-plugins/plugins/webview_flutter_view/third_party",
         "CEF_ROOT": "${THIRD_PARTY_ROOT}/${ARCHIVE_FOLDER}"
     },
@@ -63,12 +65,14 @@
                     "git lfs track *.bin",
                     "git lfs track *.so",
                     "git add .",
-                    "git commit -s -m \"Initial commit\"", 
+                    "git commit -s -m \"Initial commit\"",
                     "git apply ${PATCH_FOLDER}/0001-clang-build.patch",
                     "git apply ${PATCH_FOLDER}/0002-cef-subprocess.patch",
                     "git apply ${PATCH_FOLDER}/0003-add-dylib.patch",
                     "git apply ${PATCH_FOLDER}/0004-add-dylib-header.patch",
                     "git apply ${PATCH_FOLDER}/0005-include-dylib.patch",
+                    "git apply ${PATCH_FOLDER}/0006-fix-aarch64-detection.patch",
+                    "git apply ${PATCH_FOLDER}/0007-fix-werror-unused-arg.patch",
                     "rm -rf .git",
                     "rm .gitattributes"
                 ]

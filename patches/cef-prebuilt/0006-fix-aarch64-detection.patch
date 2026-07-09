@@ -1,0 +1,12 @@
+diff --git a/cmake/cef_variables.cmake b/cmake/cef_variables.cmake
+index 9c8d55e..23a898b 100644
+--- a/cmake/cef_variables.cmake
++++ b/cmake/cef_variables.cmake
+@@ -27,6 +27,7 @@ endif()
+ # Determine the project architecture.
+ if(NOT DEFINED PROJECT_ARCH)
+   if(("${CMAKE_HOST_SYSTEM_PROCESSOR}" STREQUAL "arm64") OR
++     ("${CMAKE_HOST_SYSTEM_PROCESSOR}" STREQUAL "aarch64") OR
+      ("${CMAKE_CXX_COMPILER_ARCHITECTURE_ID}" STREQUAL "ARM64"))
+     set(PROJECT_ARCH "arm64")
+   elseif(CMAKE_SIZEOF_VOID_P MATCHES 8)
